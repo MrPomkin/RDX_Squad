@@ -39,15 +39,16 @@ async function tryModKey(bot: Bot, m: any): Promise<boolean> {
   await upsert("rdx_mods", [{ user_id: u.id, username: u.username || null, first_name: u.first_name || null, added_at: new Date().toISOString() }], "user_id");
   MODS = null;
   await modMenu(u.id, true);
-  await send(bot, chat, "🛡 <b>Ключ принят — ты модератор RDX.</b> Сообщение с ключом я удалил.\n\nЗаявки, обжалования и сообщения командирам будут приходить в бот RDX" + (BOTNAMES.main ? " @" + BOTNAMES.main : "") + " — открой его и нажми «Старт».\nКоманды: /apps, /mod, /logout");
+  await send(bot, chat, "🛡 <b>Ключ принят — ты модератор RDX.</b> Сообщение с ключом я удалил.\n\nЗаявки, обжалования и сообщения командирам будут приходить в бот RDX" + (BOTNAMES.main ? " @" + BOTNAMES.main : "") + " с кнопками — открой его и нажми «Старт».");
   for (const id of ADMINS) await send("main", id, "🛡 Новый модератор RDX: " + who(u));
   return true;
 }
 // меню команд для модератора (или вернуть обычное)
 async function modMenu(uid: number, on: boolean) {
   const base = [{ command: "start", description: "Меню" }, { command: "menu", description: "Меню" }, { command: "tokens", description: "Вопросы RDX_AI" }];
-  if (on) await tg("main", "setMyCommands", { commands: [...base, { command: "apps", description: "Новые заявки" }, { command: "mod", description: "Команды модератора" }, { command: "logout", description: "Выйти из модераторов" }], scope: { type: "chat", chat_id: uid } });
-  else await tg("main", "deleteMyCommands", { scope: { type: "chat", chat_id: uid } });
+  // команды для командиров не показываем никому, кроме создателя
+  await tg("main", "deleteMyCommands", { scope: { type: "chat", chat_id: uid } });
+  void base; void on;
 }
 const SITE = Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squad/";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -77,7 +78,7 @@ async function tg(bot: Bot, method: string, body: Record<string, unknown>) {
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const send = (bot: Bot, chat: number, text: string, extra: Record<string, unknown> = {}) =>
   tg(bot, "sendMessage", { chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: true, ...extra });
-const kb = (rows: [string, string][][]) => ({ reply_markup: { inline_keyboard: rows.map((r) => r.map(([text, data]) => data.startsWith("http") ? { text, url: data } : { text, callback_data: data })) } });
+const kb = (rows: [string, string][][]) => ({ reply_markup: { inline_keyboard: rows.map((r) => r.map(([text, data]) => data.startsWith("app:") ? { text, web_app: { url: data.slice(4) } } : data.startsWith("http") ? { text, url: data } : { text, callback_data: data })) } });
 const who = (u: any) => (u?.first_name ? esc(u.first_name) : "без имени") + (u?.username ? " (@" + esc(u.username) + ")" : "") + " · id " + u?.id;
 let BOTNAMES: Record<Bot, string> = { main: "", ai: "" };
 async function botName(bot: Bot) {
@@ -91,8 +92,12 @@ const T: Record<string, Record<string, string>> = {
   ru: {
     hello: "<b>RDX Squad</b> — Research Department Explosive\n\nЗдесь можно подать заявку в сквад, обжаловать бан, написать командирам или спросить RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Обжаловать бан", ai: "🤖 RDX_AI", help: "🆘 Написать командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Отмена", send: "✅ Отправить",
-    a_nick: "Шаг 1/5. Твой ник в Animal Company?", a_age: "Шаг 2/5. Сколько тебе лет?", a_plat: "Шаг 3/5. Где играешь?", a_exp: "Шаг 4/5. Сколько играешь в Animal Company?",
-    a_why: "Шаг 5/5. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.", a_check: "Проверь заявку:", a_done: "✅ Заявка отправлена командирам. Решение придёт сюда.",
+    a_nick: "Шаг 1/6. Твой ник в Animal Company?", a_age: "Шаг 2/6. Сколько тебе лет?", a_plat: "Шаг 3/6. Где играешь?", a_exp: "Шаг 4/6. Сколько играешь в Animal Company?",
+    a_wpn: "Шаг 5/6. Любимое оружие?", a_why: "Шаг 6/6. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
+    leave: "🚪 Выйти из сквада", l_ask: "Почему хочешь выйти из RDX? Напиши коротко.", l_done: "✅ Запрос на выход отправлен командирам.", l_not: "Ты не в составе RDX — выходить неоткуда.",
+    l_ok: "🚪 Запрос на выход одобрен. Ты больше не в составе RDX Squad. Спасибо, что был с нами.", l_no: "Командиры отклонили запрос на выход — поговори с ними.",
+    talk_on: "🕵️ <b>Командир RDX хочет поговорить с тобой перед решением по заявке.</b>\nПросто отвечай сюда — сообщения передаются командиру.", talk_off: "Командир завершил разговор.", cmdr: "💬 <b>Командир RDX:</b>",
+    member: "🎖 <b>Ты официально в составе RDX Squad.</b> Добро пожаловать!", a_check: "Проверь заявку:", a_done: "✅ Заявка отправлена командирам. Решение придёт сюда.",
     p_nick: "Ник в игре, где тебя забанили?", p_reason: "За что, по-твоему, дали бан? Когда это было?", p_why: "Почему бан стоит снять? Опиши честно — это читают командиры.", p_done: "✅ Обжалование отправлено. Ответ придёт сюда.",
     h_ask: "Напиши сообщение для командиров одним сообщением.", h_done: "✅ Передал командирам. Ответ придёт сюда.",
     ai_on: "🤖 <b>RDX_AI</b> на связи. Пиши вопрос. Выйти — /menu. Токены — /tokens.", cancelled: "Отменено.", toolong: "Слишком длинно, сократи до 1000 символов.",
@@ -103,8 +108,12 @@ const T: Record<string, Record<string, string>> = {
   en: {
     hello: "<b>RDX Squad</b> — Research Department Explosive\n\nApply to the squad, appeal a ban, message the commanders or ask RDX_AI.",
     apply: "📝 Apply", appeal: "⚖️ Appeal a ban", ai: "🤖 RDX_AI", help: "🆘 Message commanders", site: "🌐 Website", menu: "↩️ Menu", cancel: "✖️ Cancel", send: "✅ Send",
-    a_nick: "Step 1/5. Your Animal Company nickname?", a_age: "Step 2/5. How old are you?", a_plat: "Step 3/5. Where do you play?", a_exp: "Step 4/5. How long have you played Animal Company?",
-    a_why: "Step 5/5. Why RDX and how will you help the squad? A couple of sentences.", a_check: "Check your application:", a_done: "✅ Sent to the commanders. The decision will arrive here.",
+    a_nick: "Step 1/6. Your Animal Company nickname?", a_age: "Step 2/6. How old are you?", a_plat: "Step 3/6. Where do you play?", a_exp: "Step 4/6. How long have you played Animal Company?",
+    a_wpn: "Step 5/6. Favourite weapon?", a_why: "Step 6/6. Why RDX and how will you help the squad? A couple of sentences.",
+    leave: "🚪 Leave the squad", l_ask: "Why do you want to leave RDX? Keep it short.", l_done: "✅ Leave request sent to the commanders.", l_not: "You're not in the RDX roster.",
+    l_ok: "🚪 Leave request approved. You're no longer in RDX Squad. Thanks for being with us.", l_no: "Commanders declined the leave request — talk to them.",
+    talk_on: "🕵️ <b>An RDX commander wants to talk to you before deciding on your application.</b>\nJust reply here — messages go to the commander.", talk_off: "The commander ended the conversation.", cmdr: "💬 <b>RDX commander:</b>",
+    member: "🎖 <b>You're officially in RDX Squad.</b> Welcome!", a_check: "Check your application:", a_done: "✅ Sent to the commanders. The decision will arrive here.",
     p_nick: "Your in-game nickname that was banned?", p_reason: "What do you think the ban was for? When?", p_why: "Why should it be lifted? Be honest — commanders read this.", p_done: "✅ Appeal sent. The answer will arrive here.",
     h_ask: "Write your message for the commanders in one message.", h_done: "✅ Passed to the commanders. The reply will arrive here.",
     ai_on: "🤖 <b>RDX_AI</b> online. Ask away. Exit — /menu. Tokens — /tokens.", cancelled: "Cancelled.", toolong: "Too long, keep it under 1000 characters.",
@@ -115,8 +124,12 @@ const T: Record<string, Record<string, string>> = {
   uk: {
     hello: "<b>RDX Squad</b> — Research Department Explosive\n\nТут можна подати заявку в сквад, оскаржити бан, написати командирам або запитати RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Оскаржити бан", ai: "🤖 RDX_AI", help: "🆘 Написати командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Скасувати", send: "✅ Надіслати",
-    a_nick: "Крок 1/5. Твій нік в Animal Company?", a_age: "Крок 2/5. Скільки тобі років?", a_plat: "Крок 3/5. Де граєш?", a_exp: "Крок 4/5. Скільки граєш в Animal Company?",
-    a_why: "Крок 5/5. Чому RDX і чим будеш корисний скваду?", a_check: "Перевір заявку:", a_done: "✅ Заявку надіслано командирам. Рішення прийде сюди.",
+    a_nick: "Крок 1/6. Твій нік в Animal Company?", a_age: "Крок 2/6. Скільки тобі років?", a_plat: "Крок 3/6. Де граєш?", a_exp: "Крок 4/6. Скільки граєш в Animal Company?",
+    a_wpn: "Крок 5/6. Улюблена зброя?", a_why: "Крок 6/6. Чому RDX і чим будеш корисний скваду?",
+    leave: "🚪 Вийти зі скваду", l_ask: "Чому хочеш вийти з RDX? Коротко.", l_done: "✅ Запит на вихід надіслано командирам.", l_not: "Ти не у складі RDX.",
+    l_ok: "🚪 Запит на вихід схвалено. Ти більше не у складі RDX Squad. Дякуємо, що був з нами.", l_no: "Командири відхилили запит на вихід — поговори з ними.",
+    talk_on: "🕵️ <b>Командир RDX хоче поговорити з тобою перед рішенням щодо заявки.</b>\nПросто відповідай сюди.", talk_off: "Командир завершив розмову.", cmdr: "💬 <b>Командир RDX:</b>",
+    member: "🎖 <b>Ти офіційно у складі RDX Squad.</b> Ласкаво просимо!", a_check: "Перевір заявку:", a_done: "✅ Заявку надіслано командирам. Рішення прийде сюди.",
     p_nick: "Нік у грі, де тебе забанили?", p_reason: "За що, на твою думку, дали бан? Коли?", p_why: "Чому бан варто зняти? Опиши чесно.", p_done: "✅ Оскарження надіслано. Відповідь прийде сюди.",
     h_ask: "Напиши повідомлення для командирів одним повідомленням.", h_done: "✅ Передав командирам. Відповідь прийде сюди.",
     ai_on: "🤖 <b>RDX_AI</b> на зв'язку. Пиши питання. Вийти — /menu. Токени — /tokens.", cancelled: "Скасовано.", toolong: "Задовго, скороти до 1000 символів.",
@@ -240,35 +253,60 @@ const setState = (bot: Bot, uid: number, flow: string | null, step = 0, data: un
   flow ? upsert("rdx_state", [{ bot, user_id: uid, flow, step, data, updated_at: new Date().toISOString() }], "bot,user_id") : del("rdx_state?bot=eq." + bot + "&user_id=eq." + uid);
 
 // ---------- заявки ----------
-const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД", appeal: "⚖️ ОБЖАЛОВАНИЕ БАНА", help: "🆘 СООБЩЕНИЕ КОМАНДИРАМ" };
+const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД", appeal: "⚖️ ОБЖАЛОВАНИЕ БАНА", help: "🆘 СООБЩЕНИЕ КОМАНДИРАМ", leave: "🚪 ЗАПРОС НА ВЫХОД" };
+const WEAPONS = ["РПГ (гранатомёт)", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
+const BASE_MEMBERS = 6;   // бойцов на сайте: 6 + принятые (закрытые) заявки − ушедшие
+async function membersCount() { const r: any[] = await db("rdx_members?select=id&active=eq.true") || []; return BASE_MEMBERS + r.length; }
+async function isMember(uid: number) { return !!(await db("rdx_members?select=id&active=eq.true&user_id=eq." + uid))?.[0]; }
+const STATUS: Record<string, string> = { ok: "✅ <b>Одобрено</b> — проведи допрос при необходимости и нажми «Закрыть заявку»", no: "❌ <b>Отклонено</b>", closed: "🎖 <b>Закрыто — боец в составе</b>", reply: "💬 Отправлен ответ", left: "🚪 <b>Отпущен из сквада</b>", stay: "❌ <b>Выход отклонён</b>" };
 function appText(a: any) {
   const d = a.data || {};
   const rows: [string, unknown][] = a.kind === "apply"
-    ? [["Ник", d.nick], ["Telegram", d.tg ? "@" + d.tg : a.username ? "@" + a.username : ""], ["Возраст", d.age], ["Пояс", d.tz], ["Платформа", d.platform], ["Опыт", d.exp], ["Почему RDX", d.why]]
-    : a.kind === "appeal" ? [["Ник в игре", d.nick], ["За что бан", d.reason], ["Почему снять", d.why]] : [["Сообщение", d.text]];
+    ? [["Ник", d.nick], ["Telegram", d.tg ? "@" + d.tg : a.username ? "@" + a.username : ""], ["Возраст", d.age], ["Пояс", d.tz], ["Платформа", d.platform], ["Опыт", d.exp], ["Любимое оружие", d.weapon], ["Почему RDX", d.why]]
+    : a.kind === "appeal" ? [["Ник в игре", d.nick], ["За что бан", d.reason], ["Почему снять", d.why]] : a.kind === "leave" ? [["Причина", d.text]] : [["Сообщение", d.text]];
   return "<b>" + KIND[a.kind] + " #" + a.id + "</b> · " + (a.source === "site" ? "с сайта" : "из бота") + "\n"
     + (a.user_id ? "От: " + esc(d.from || "") + "\n" : "")
-    + rows.filter(([, v]) => v).map(([k, v]) => "<b>" + k + ":</b> " + esc(v)).join("\n");
+    + rows.filter(([, v]) => v).map(([k, v]) => "<b>" + k + ":</b> " + esc(v)).join("\n")
+    + (a.edited_at ? "\n\n✏️ <i>Изменено заявителем " + new Date(Date.parse(a.edited_at) + 3 * 3600e3).toISOString().slice(5, 16).replace("T", " ") + " МСК</i>" : "")
+    + (a.status && STATUS[a.status] ? "\n\n" + STATUS[a.status] : "");
 }
 function appButtons(a: any) {
-  const ok = a.kind === "appeal" ? "✅ Снять бан" : a.kind === "apply" ? "✅ Принять" : "✅ Прочитано";
+  const id = a.id, st = a.status || "new";
+  if (a.kind === "apply") {
+    if (st === "new" || st === "reply") return kb([[["✅ Принять", "dec:" + id + ":ok"], ["❌ Отклонить", "dec:" + id + ":no"]], [["🕵️ Допрос", "dec:" + id + ":talk"], ["💬 Ответить", "dec:" + id + ":reply"]]]);
+    if (st === "ok") return kb([[["🔒 Закрыть заявку", "dec:" + id + ":close"]], [["🕵️ Допрос", "dec:" + id + ":talk"], ["📜 Переписка", "dec:" + id + ":log"]]]);
+    return kb([[["📜 Переписка", "dec:" + id + ":log"]]]);
+  }
+  if (a.kind === "leave") return st === "new" ? kb([[["✅ Отпустить", "dec:" + id + ":left"], ["❌ Оставить", "dec:" + id + ":stay"]], [["💬 Ответить", "dec:" + id + ":reply"]]]) : kb([]);
+  if (st !== "new" && st !== "reply") return kb([[["💬 Ответить", "dec:" + id + ":reply"]]]);
+  const ok = a.kind === "appeal" ? "✅ Снять бан" : "✅ Прочитано";
   const no = a.kind === "appeal" ? "❌ Оставить бан" : "❌ Отклонить";
-  return kb([[[ok, "dec:" + a.id + ":ok"], [no, "dec:" + a.id + ":no"]], [["💬 Ответить", "dec:" + a.id + ":reply"]]]);
+  return kb([[[ok, "dec:" + id + ":ok"], [no, "dec:" + id + ":no"]], [["💬 Ответить", "dec:" + id + ":reply"]]]);
 }
 async function newApp(row: any) {
   const r = await ins("rdx_apps", [row]);
   const a = r?.[0];
   if (!a) return null;
-  for (const id of await staff()) await send("main", id, appText(a), appButtons(a));
+  for (const id of await staff()) {
+    const m = await send("main", id, appText(a), appButtons(a));
+    if (m?.result?.message_id) await ins("rdx_app_msgs", [{ app_id: a.id, chat_id: id, message_id: m.result.message_id }], "return=minimal");
+  }
   return a;
 }
+// обновить карточку заявки у всех командиров (после решения или правки с сайта)
+async function refreshCards(a: any) {
+  const msgs: any[] = await db("rdx_app_msgs?select=chat_id,message_id&app_id=eq." + a.id) || [];
+  for (const m of msgs) await tg("main", "editMessageText", { chat_id: m.chat_id, message_id: m.message_id, text: appText(a), parse_mode: "HTML", reply_markup: appButtons(a).reply_markup });
+}
+const appUid = async (a: any) => a.user_id || (a.username ? (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + enc(a.username)))?.[0]?.user_id : null);
 // доставка решения: по user_id, а для заявок с сайта — когда человек откроет бота
 async function deliver(a: any) {
   const uid = a.user_id || (a.username ? (await db("rdx_users?select=user_id,lang&started=eq.true&username=ilike." + enc(a.username)))?.[0]?.user_id : null);
   if (!uid) return false;
   const u = (await db("rdx_users?select=lang&user_id=eq." + uid))?.[0] || {};
   const lu = { language_code: u.lang || "ru" };
-  const head = a.status === "ok" ? (a.kind === "apply" ? t(lu, "accepted") : a.kind === "appeal" ? t(lu, "ap_ok") : "") : a.status === "no" ? (a.kind === "apply" ? t(lu, "rejected") : a.kind === "appeal" ? t(lu, "ap_no") : "") : "";
+  const head = a.status === "ok" ? (a.kind === "apply" ? t(lu, "accepted") : a.kind === "appeal" ? t(lu, "ap_ok") : "") : a.status === "no" ? (a.kind === "apply" ? t(lu, "rejected") : a.kind === "appeal" ? t(lu, "ap_no") : "")
+    : a.status === "closed" ? t(lu, "member") : a.status === "left" ? t(lu, "l_ok") : a.status === "stay" ? t(lu, "l_no") : "";
   const txt = [head, a.answer ? t(lu, "reply") + "\n" + esc(a.answer) : ""].filter(Boolean).join("\n\n");
   if (!txt) return true;
   const r = await send("main", uid, txt);
@@ -277,8 +315,8 @@ async function deliver(a: any) {
 }
 
 // ---------- бот RDX ----------
-function menu(u: any) {
-  return kb([[[t(u, "apply"), "go:apply"]], [[t(u, "appeal"), "go:appeal"], [t(u, "help"), "go:help"]], [[t(u, "ai"), "go:ai"], [t(u, "site"), SITE]]]);
+function menu(u: any, member = false) {
+  return kb([[member ? [t(u, "leave"), "go:leave"] : [t(u, "apply"), "go:apply"]], [[t(u, "appeal"), "go:appeal"], [t(u, "help"), "go:help"]], [[t(u, "ai"), "go:ai"], [t(u, "site"), "app:" + SITE]]]);
 }
 const PLAT = ["Quest 3/3S", "Quest 2", "Quest Pro", "PC VR"];
 async function startFlow(u: any, chat: number, flow: string) {
@@ -286,8 +324,13 @@ async function startFlow(u: any, chat: number, flow: string) {
   if (flow === "apply") { await setState("main", u.id, "apply", 0, {}); await send("main", chat, t(u, "a_nick"), kb([[[t(u, "cancel"), "go:menu"]]])); return; }
   if (flow === "appeal") { await setState("main", u.id, "appeal", 0, {}); await send("main", chat, t(u, "p_nick"), kb([[[t(u, "cancel"), "go:menu"]]])); return; }
   if (flow === "help") { await setState("main", u.id, "help", 0, {}); await send("main", chat, t(u, "h_ask"), kb([[[t(u, "cancel"), "go:menu"]]])); return; }
+  const member = await isMember(u.id);
+  if (flow === "leave") {
+    if (!member) { await send("main", chat, t(u, "l_not"), menu(u, false)); return; }
+    await setState("main", u.id, "leave", 0, {}); await send("main", chat, t(u, "l_ask"), kb([[[t(u, "cancel"), "go:menu"]]])); return;
+  }
   await setState("main", u.id, null);
-  await send("main", chat, t(u, "hello"), menu(u));
+  await send("main", chat, t(u, "hello"), menu(u, member));
 }
 async function flowStep(u: any, chat: number, st: any, text: string) {
   const d = st.data || {};
@@ -297,8 +340,9 @@ async function flowStep(u: any, chat: number, st: any, text: string) {
     if (st.step === 0) { d.nick = text.slice(0, 40); await setState("main", u.id, "apply", 1, d); await send("main", chat, t(u, "a_age"), cancel); return; }
     if (st.step === 1) { d.age = text.slice(0, 3); await setState("main", u.id, "apply", 2, d); await send("main", chat, t(u, "a_plat"), kb([PLAT.slice(0, 2).map((p) => [p, "pl:" + p]) as any, PLAT.slice(2).map((p) => [p, "pl:" + p]) as any, [[t(u, "cancel"), "go:menu"]]])); return; }
     if (st.step === 2) { d.platform = text.slice(0, 30); await setState("main", u.id, "apply", 3, d); await askExp(u, chat); return; }
-    if (st.step === 3) { d.exp = text.slice(0, 30); await setState("main", u.id, "apply", 4, d); await send("main", chat, t(u, "a_why"), cancel); return; }
-    if (st.step === 4) { d.why = text.slice(0, 1000); await setState("main", u.id, "apply", 5, d); await confirm(u, chat, "apply", d); return; }
+    if (st.step === 3) { d.exp = text.slice(0, 30); await setState("main", u.id, "apply", 4, d); await send("main", chat, t(u, "a_wpn"), kb([[[WEAPONS[0], "wp:0"], [WEAPONS[1], "wp:1"]], [[WEAPONS[2], "wp:2"], [WEAPONS[3], "wp:3"]], [[WEAPONS[4], "wp:4"]], [[t(u, "cancel"), "go:menu"]]])); return; }
+    if (st.step === 4) { d.weapon = text.slice(0, 40); await setState("main", u.id, "apply", 5, d); await send("main", chat, t(u, "a_why"), cancel); return; }
+    if (st.step === 5) { d.why = text.slice(0, 1000); await setState("main", u.id, "apply", 6, d); await confirm(u, chat, "apply", d); return; }
   }
   if (st.flow === "appeal") {
     if (st.step === 0) { d.nick = text.slice(0, 40); await setState("main", u.id, "appeal", 1, d); await send("main", chat, t(u, "p_reason"), cancel); return; }
@@ -306,6 +350,17 @@ async function flowStep(u: any, chat: number, st: any, text: string) {
     if (st.step === 2) { d.why = text.slice(0, 1000); await setState("main", u.id, "appeal", 3, d); await confirm(u, chat, "appeal", d); return; }
   }
   if (st.flow === "help") { d.text = text.slice(0, 1000); await setState("main", u.id, "help", 1, d); await confirm(u, chat, "help", d); return; }
+  if (st.flow === "leave") { d.text = text.slice(0, 1000); await setState("main", u.id, "leave", 1, d); await confirm(u, chat, "leave", d); return; }
+  if (st.flow === "talk" && await isMod(u)) {   // командир ведёт допрос: сообщение уходит человеку
+    const a = (await db("rdx_apps?select=*&id=eq." + Number(d.id)))?.[0];
+    const uid = a ? await appUid(a) : null;
+    if (!a || !uid) { await send("main", chat, "Человек ещё не открыл бота — написать ему пока нельзя."); return; }
+    const lu = (await db("rdx_users?select=lang&user_id=eq." + uid))?.[0] || {};
+    const r = await send("main", uid, t({ language_code: lu.lang || "ru" }, "cmdr") + "\n" + esc(text));
+    await ins("rdx_talks", [{ app_id: a.id, dir: "out", by_name: u.first_name || "", text: text.slice(0, 2000) }], "return=minimal");
+    if (!r.ok) await send("main", chat, "Не доставлено: " + esc(r.description || "ошибка"));
+    return;
+  }
   if (st.flow === "reply" && await isMod(u)) {   // командир пишет ответ на заявку
     const a = (await db("rdx_apps?select=*&id=eq." + Number(d.id)))?.[0];
     await setState("main", u.id, null);
@@ -332,12 +387,13 @@ async function onMain(up: any) {
     const st = await getState("main", u.id);
     if (data.startsWith("pl:") && st?.flow === "apply" && st.step === 2) return flowStep(u, chat, st, data.slice(3));
     if (data.startsWith("ex:") && st?.flow === "apply" && st.step === 3) return flowStep(u, chat, st, data.slice(3));
+    if (data.startsWith("wp:") && st?.flow === "apply" && st.step === 4) return flowStep(u, chat, st, WEAPONS[Number(data.slice(3))] || "");
     if (data.startsWith("sub:") && st && st.flow === data.slice(4)) {
       await setState("main", u.id, null);
       const kind = st.flow;
       await newApp({ kind, source: "bot", user_id: u.id, username: u.username || null, data: { ...st.data, from: (u.first_name || "") + (u.username ? " @" + u.username : "") + " · id " + u.id } });
       await tg("main", "editMessageReplyMarkup", { chat_id: chat, message_id: c.message.message_id, reply_markup: { inline_keyboard: [] } });
-      await send("main", chat, t(u, kind === "apply" ? "a_done" : kind === "appeal" ? "p_done" : "h_done"), menu(u));
+      await send("main", chat, t(u, kind === "apply" ? "a_done" : kind === "appeal" ? "p_done" : kind === "leave" ? "l_done" : "h_done"), menu(u, await isMember(u.id)));
       return;
     }
     if (data.startsWith("dec:")) {
@@ -346,10 +402,51 @@ async function onMain(up: any) {
       const a = (await db("rdx_apps?select=*&id=eq." + Number(id)))?.[0];
       if (!a) return;
       if (act === "reply") { await setState("main", u.id, "reply", 0, { id: a.id }); await send("main", chat, "Напиши ответ на #" + a.id + " одним сообщением:", kb([[["✖️ Отмена", "go:menu"]]])); return; }
+      if (act === "talk") {
+        const uid = await appUid(a);
+        if (!uid) { await send("main", chat, "⏳ Человек ещё не открыл бота — допрос начнётся, когда он нажмёт «Старт». Попробуй позже."); return; }
+        await patch("rdx_apps?id=eq." + a.id, { talk_open: true, talk_by: u.id, user_id: uid });
+        await setState("main", u.id, "talk", 0, { id: a.id });
+        const lu = (await db("rdx_users?select=lang&user_id=eq." + uid))?.[0] || {};
+        await send("main", uid, t({ language_code: lu.lang || "ru" }, "talk_on"));
+        await send("main", chat, "🕵️ <b>Допрос по заявке #" + a.id + "</b> (" + esc(a.data?.nick || "") + ")\nПиши сообщения — бот перешлёт их человеку. Ответы придут сюда.", kb([[["📜 Переписка", "dec:" + a.id + ":log"], ["⏹ Завершить", "dec:" + a.id + ":endtalk"]]]));
+        return;
+      }
+      if (act === "endtalk") {
+        await patch("rdx_apps?id=eq." + a.id, { talk_open: false });
+        await setState("main", u.id, null);
+        const uid = await appUid(a);
+        if (uid) { const lu = (await db("rdx_users?select=lang&user_id=eq." + uid))?.[0] || {}; await send("main", uid, t({ language_code: lu.lang || "ru" }, "talk_off")); }
+        await send("main", chat, "⏹ Допрос по #" + a.id + " завершён.", appButtons(a)); return;
+      }
+      if (act === "log") {
+        const r: any[] = await db("rdx_talks?select=dir,by_name,text,created_at&app_id=eq." + a.id + "&order=created_at.asc&limit=60") || [];
+        const tm = (x: string) => new Date(Date.parse(x) + 3 * 3600e3).toISOString().slice(11, 16);
+        await send("main", chat, r.length ? "<b>📜 Переписка по #" + a.id + "</b>\n\n" + r.map((x) => tm(x.created_at) + " " + (x.dir === "out" ? "🎖 " + esc(x.by_name || "командир") : "👤 " + esc(a.data?.nick || "заявитель")) + ": " + esc(x.text)).join("\n").slice(0, 3900) : "Переписки по #" + a.id + " ещё нет.");
+        return;
+      }
+      if (act === "close") {
+        if (a.status !== "ok") return;
+        const uid = await appUid(a);
+        await ins("rdx_members", [{ user_id: uid, username: a.username || a.data?.tg || null, nick: a.data?.nick || null, app_id: a.id, active: true }], "return=minimal");
+        await patch("rdx_apps?id=eq." + a.id, { status: "closed", talk_open: false, decided_by: String(u.id), decided_at: new Date().toISOString() });
+        const na = { ...a, status: "closed" };
+        await deliver(na); await refreshCards(na);
+        await send("main", chat, "🎖 " + esc(a.data?.nick || "Боец") + " в составе. Бойцов теперь: <b>" + await membersCount() + "</b>"); return;
+      }
+      if (act === "left" || act === "stay") {
+        if (act === "left") await patch("rdx_members?active=eq.true&user_id=eq." + a.user_id, { active: false, left_at: new Date().toISOString() });
+        await patch("rdx_apps?id=eq." + a.id, { status: act, decided_by: String(u.id), decided_at: new Date().toISOString() });
+        const na = { ...a, status: act };
+        await deliver(na); await refreshCards(na);
+        if (act === "left") await send("main", chat, "🚪 Отпущен. Бойцов теперь: <b>" + await membersCount() + "</b>");
+        return;
+      }
       await patch("rdx_apps?id=eq." + a.id, { status: act, decided_by: String(u.id), decided_at: new Date().toISOString() });
-      const okd = await deliver({ ...a, status: act });
-      const mark = act === "ok" ? "\n\n✅ <b>Одобрено</b>" : "\n\n❌ <b>Отклонено</b>";
-      await tg("main", "editMessageText", { chat_id: chat, message_id: c.message.message_id, text: appText(a) + mark + " · " + esc(u.first_name || "") + (okd ? "" : "\n⏳ Человек ещё не открыл бота — сообщу, когда откроет."), parse_mode: "HTML", reply_markup: kb([[["💬 Ответить", "dec:" + a.id + ":reply"]]]).reply_markup });
+      const na = { ...a, status: act };
+      const okd = await deliver(na);
+      await refreshCards(na);
+      if (!okd) await send("main", chat, "⏳ #" + a.id + ": человек ещё не открыл бота — сообщу ему, когда откроет.");
     }
     return;
   }
@@ -374,6 +471,14 @@ async function onMain(up: any) {
   if (text.startsWith("/") && await isMod(u) && await adminCmd("main", u, chat, text)) return;
   const st = await getState("main", u.id);
   if (!text) return;
+  if (!st || st.flow === "ai") {
+    const talk = (await db("rdx_apps?select=id,talk_by,data&talk_open=eq.true&user_id=eq." + u.id + "&order=created_at.desc&limit=1"))?.[0];
+    if (talk?.talk_by) {
+      await ins("rdx_talks", [{ app_id: talk.id, dir: "in", by_name: u.first_name || "", text: text.slice(0, 2000) }], "return=minimal");
+      await send("main", Number(talk.talk_by), "👤 <b>" + esc(talk.data?.nick || u.first_name || "Заявитель") + "</b> (#" + talk.id + "):\n" + esc(text), kb([[["📜 Переписка", "dec:" + talk.id + ":log"], ["⏹ Завершить", "dec:" + talk.id + ":endtalk"]]]));
+      return;
+    }
+  }
   if (st?.flow === "ai") return askAI("main", chat, u, text);
   if (st) return flowStep(u, chat, st, text);
   return startFlow(u, chat, "menu");
@@ -414,8 +519,18 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     await del("rdx_mods?user_id=eq." + u.id); MODS = null; await modMenu(u.id, false);
     await say("Ты больше не модератор RDX."); return true;
   }
-  if (cmd === "/mod" || (!owner && (cmd === "/admin" || cmd === "/help"))) {
-    await say("<b>Команды модератора RDX</b>\n/apps — новые заявки (кнопки «Принять», «Отклонить», «Ответить»)\n/logout — выйти из модераторов" + (owner ? "\n\nСоздателю: /admin — все команды" : "")); return true;
+  if (cmd === "/fire" && args[0]) {   // уволить бойца
+    const id = await findUser(args[0]);
+    const nick = args[0].replace(/^@/, "");
+    const r: any[] = await db("rdx_members?select=id,user_id,nick&active=eq.true&" + (id ? "user_id=eq." + id : "or=(username.ilike." + enc(nick) + ",nick.ilike." + enc(nick) + ")")) || [];
+    if (!r.length) { await say("Не нашёл такого бойца в составе."); return true; }
+    await patch("rdx_members?id=eq." + r[0].id, { active: false, left_at: new Date().toISOString() });
+    if (r[0].user_id) await send("main", Number(r[0].user_id), "🚪 Тебя исключили из RDX Squad.");
+    await say("🚪 " + esc(r[0].nick || args[0]) + " исключён. Бойцов теперь: <b>" + await membersCount() + "</b>"); return true;
+  }
+  if (cmd === "/roster") {
+    const r: any[] = await db("rdx_members?select=nick,username,joined_at&active=eq.true&order=joined_at") || [];
+    await say("<b>Состав RDX</b> — бойцов на сайте: " + await membersCount() + " (" + BASE_MEMBERS + " основателей + " + r.length + " принятых)" + (r.length ? "\n\n" + r.map((x, i) => (i + 1) + ". " + esc(x.nick || "") + (x.username ? " @" + esc(x.username) : "")).join("\n") : "")); return true;
   }
   if (owner && cmd === "/mods") {
     const r: any[] = await db("rdx_mods?select=user_id,username,first_name,added_at&order=added_at") || [];
@@ -461,27 +576,70 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     }
   }
   if (cmd === "/admin" || cmd === "/help") {
-    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/mods — модераторы · /unmod @ник — снять\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
+    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/mods — модераторы · /unmod @ник — снять\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
     return true;
   }
   return false;
 }
 
 // ---------- заявка с сайта ----------
+const CODE_ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function newCode() {   // 25 символов из 32 = 125 бит: подобрать невозможно
+  const r = crypto.getRandomValues(new Uint8Array(25));
+  const c = [...r].map((x) => CODE_ABC[x % 32]).join("");
+  return "RDX-" + c.match(/.{5}/g)!.join("-");
+}
+const sha = async (x: string) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(x)))].map((v) => v.toString(16).padStart(2, "0")).join("");
+const normCode = (c: unknown) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^RDX/, "");
+async function ipHashOf(req: Request) { return (await sha("rdx:" + (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?"))).slice(0, 24); }
+function appFields(b: any) {
+  return { nick: String(b.nick || "").trim().slice(0, 40), age: String(b.age || "").slice(0, 3), tz: String(b.tz || "").slice(0, 40), platform: String(b.platform || "").slice(0, 30),
+    exp: String(b.exp || "").slice(0, 20), weapon: WEAPONS.includes(String(b.weapon)) ? String(b.weapon) : "", why: String(b.why || "").trim().slice(0, 1200) };
+}
+async function siteFind(req: Request, b: any) {
+  const ip = await ipHashOf(req);
+  const tries: any[] = await db("rdx_quota?select=id&subject=eq.edit:" + ip + "&at=gt." + enc(new Date(Date.now() - 3600e3).toISOString())) || [];
+  if (tries.length >= 30) return { err: { ok: false, error: "rate", status: 429 } };
+  await ins("rdx_quota", [{ subject: "edit:" + ip }], "return=minimal");
+  const code = normCode(b.code);
+  if (code.length !== 25) return { err: { ok: false, error: "code" } };
+  const a = (await db("rdx_apps?select=*&kind=eq.apply&edit_hash=eq." + await sha(code)))?.[0];
+  return a ? { a } : { err: { ok: false, error: "code" } };
+}
+async function siteGet(req: Request, b: any) {
+  const { a, err } = await siteFind(req, b);
+  if (err) return err;
+  const d = a.data || {};
+  return { ok: true, id: a.id, state: a.status, editable: a.status === "new" || a.status === "reply", data: { nick: d.nick, tg: d.tg, age: d.age, tz: d.tz, platform: d.platform, exp: d.exp, weapon: d.weapon, why: d.why } };
+}
+async function siteEdit(req: Request, b: any) {
+  const { a, err } = await siteFind(req, b);
+  if (err) return err;
+  if (!(a.status === "new" || a.status === "reply")) return { ok: false, error: "locked" };
+  const f = appFields(b);
+  if (!f.nick || !f.why) return { ok: false, error: "bad" };
+  const data = { ...a.data, ...f };
+  const now = new Date().toISOString();
+  await patch("rdx_apps?id=eq." + a.id, { data, edited_at: now });
+  const na = { ...a, data, edited_at: now };
+  await refreshCards(na);
+  return { ok: true, id: a.id };
+}
 async function siteApply(req: Request, b: any) {
   if (b.website) return { ok: true };   // ловушка для ботов
   const nick = String(b.nick || "").trim().slice(0, 40), tgName = String(b.tg || "").trim().replace(/^@/, "").slice(0, 32), why = String(b.why || "").trim().slice(0, 1200);
   if (!nick || !/^[A-Za-z0-9_]{5,32}$/.test(tgName) || !why) return { ok: false, error: "bad" };
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
-  const ipHash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("rdx:" + ip)))].slice(0, 12).map((x) => x.toString(16).padStart(2, "0")).join("");
+  void ip; const ipHash = await ipHashOf(req);
   const recent: any[] = await db("rdx_apps?select=id&ip_hash=eq." + ipHash + "&created_at=gt." + enc(new Date(Date.now() - 3600e3).toISOString())) || [];
   if (recent.length >= 3) return { ok: false, error: "rate", status: 429 };
   const known = (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + enc(tgName)))?.[0]?.user_id || null;
-  const a = await newApp({ kind: "apply", source: "site", user_id: known, username: tgName, ip_hash: ipHash,
-    data: { nick, tg: tgName, age: String(b.age || "").slice(0, 3), tz: String(b.tz || "").slice(0, 40), platform: String(b.platform || "").slice(0, 30), exp: String(b.exp || "").slice(0, 20), why, lang: String(b.lang || "").slice(0, 5), from: "сайт · @" + tgName } });
+  const code = newCode();
+  const a = await newApp({ kind: "apply", source: "site", user_id: known, username: tgName, ip_hash: ipHash, edit_hash: await sha(normCode(code)),
+    data: { ...appFields(b), nick, why, tg: tgName, lang: String(b.lang || "").slice(0, 5), from: "сайт · @" + tgName } });
   if (!a) return { ok: false, error: "db" };
-  if (known) await send("main", known, "📝 Заявка с сайта получена. Решение придёт сюда.");
-  return { ok: true, bot: await botName("main") };
+  if (known) await send("main", known, "📝 Заявка с сайта #" + a.id + " получена. Решение придёт сюда.");
+  return { ok: true, id: a.id, code, bot: await botName("main") };
 }
 
 // ---------- настройка ботов ----------
@@ -499,10 +657,11 @@ async function setup(url: string) {
   await tg("main", "setMyCommands", { commands: cmdsMain });
   await tg("ai", "setMyCommands", { commands: cmdsAI });
   for (const id of ADMINS) {
-    const adm = [{ command: "apps", description: "Новые заявки" }, { command: "admin", description: "Команды командира" }];
+    const adm = [{ command: "apps", description: "Новые заявки" }, { command: "roster", description: "Состав" }, { command: "admin", description: "Все команды" }];
     await tg("main", "setMyCommands", { commands: [...cmdsMain, ...adm], scope: { type: "chat", chat_id: id } });
     await tg("ai", "setMyCommands", { commands: [...cmdsAI, { command: "admin", description: "Команды командира" }], scope: { type: "chat", chat_id: id } });
   }
+  await tg("main", "setChatMenuButton", { menu_button: { type: "web_app", text: "Сайт RDX", web_app: { url: SITE } } });
   await tg("main", "setMyName", { name: "RDX Squad" });
   await tg("main", "setMyShortDescription", { short_description: "RDX Squad — Research Department Explosive. Заявка в сквад, обжалование бана, RDX_AI." });
   await tg("main", "setMyDescription", { description: "Бот сквада RDX (Research Department Explosive) в Animal Company.\n\n📝 Заявка в сквад\n⚖️ Обжалование бана\n🆘 Связь с командирами\n🤖 RDX_AI\n\nНажми «Старт»." });
@@ -530,6 +689,11 @@ Deno.serve(async (req) => {
   }
   // сайт
   const b = await req.json().catch(() => null);
+  if (b?.type === "stats") return new Response(JSON.stringify({ ok: true, members: await membersCount(), efficiency: 100 }), { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "max-age=30" } });
+  if (b?.type === "get" || b?.type === "edit") {
+    const r: any = await (b.type === "get" ? siteGet(req, b) : siteEdit(req, b)).catch((e) => { console.error("edit", e); return { ok: false, error: "err" }; });
+    return new Response(JSON.stringify(r), { status: r.status || (r.ok ? 200 : 400), headers: { ...CORS, "Content-Type": "application/json" } });
+  }
   if (b?.type === "apply") {
     const r: any = await siteApply(req, b).catch((e) => { console.error("apply", e); return { ok: false, error: "err" }; });
     return new Response(JSON.stringify(r), { status: r.status || (r.ok ? 200 : 400), headers: { ...CORS, "Content-Type": "application/json" } });
