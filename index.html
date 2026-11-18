@@ -325,7 +325,56 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
 .toast{position:fixed;left:50%;bottom:28px;z-index:80;visibility:hidden;transform:translate(-50%,calc(100% + 60px));background:var(--ink);color:#141414;padding:12px 18px;border-radius:12px;font-weight:600;transition:transform .5s var(--spring)}
 .toast.show{visibility:visible;transform:translate(-50%,0)}
 
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}#faller{display:none}.finale .sub,.finale .cta{opacity:1;transform:none}}
+/* ===== ещё больше движения ===== */
+html.lenis,html.lenis body{height:auto}
+html.lenis{scroll-behavior:auto}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+/* полоса прогресса и глубина */
+#prog{position:fixed;left:0;top:0;height:3px;width:100%;z-index:70;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--or3),var(--or),var(--or2));box-shadow:0 0 14px rgba(255,122,26,.7)}
+#prog::after{content:"";position:absolute;right:-3px;top:-3px;width:9px;height:9px;border-radius:50%;background:#ffd29a;box-shadow:0 0 16px 4px rgba(255,160,77,.9)}
+#depth{position:fixed;left:max(14px,1.4vw);bottom:18px;z-index:40;font:600 11px/1.5 var(--mono);letter-spacing:.14em;color:var(--dim);writing-mode:vertical-rl;transform:rotate(180deg);pointer-events:none}
+#depth b{color:var(--or);font-weight:600}
+@media (max-width:700px){#depth{display:none}}
+/* огромная эмблема за заголовком */
+.hero-emb{position:absolute;right:-8vw;top:50%;width:min(62vw,860px);aspect-ratio:1;transform:translateY(-50%);opacity:.07;pointer-events:none;perspective:900px}
+.hero-emb svg{width:100%;height:100%;transform:rotateX(var(--hx,0deg)) rotateY(var(--hy,0deg)) rotate(var(--hr,0deg));transition:transform .2s linear}
+.title .row{will-change:transform,filter,opacity}
+/* глитч заголовка */
+.title.glitch .row:first-child{animation:glitch .42s steps(2) 1}
+@keyframes glitch{0%{text-shadow:4px 0 var(--or),-4px 0 #4af;transform:translate(2px,-1px)}25%{text-shadow:-6px 0 var(--or),5px 0 #4af;transform:translate(-3px,2px)}50%{text-shadow:3px 2px var(--or),-3px -2px #4af;clip-path:inset(20% 0 45% 0)}75%{text-shadow:none;clip-path:inset(60% 0 5% 0);transform:translate(4px,0)}100%{text-shadow:none;clip-path:none;transform:none}}
+/* секции «наезжают» при прокрутке */
+.curtain>.wrap{transform:translateY(calc((1 - var(--e,1)) * 90px)) scale(calc(.93 + var(--e,1) * .07));opacity:calc(.15 + var(--e,1) * .85);transform-origin:50% 0;will-change:transform,opacity}
+.sec-head h2{transform:skewY(var(--skew,0deg));transition:transform .3s var(--ease)}
+/* лента опасности растёт с прокруткой */
+.tape{height:10px;margin:0 auto;max-width:1180px;background:repeating-linear-gradient(45deg,var(--or) 0 12px,#141414 12px 24px);transform:scaleX(var(--t,0));transform-origin:var(--to,left);border-radius:2px;opacity:.85}
+/* закреплённый горизонтальный трек направлений */
+.pin{position:relative;height:300vh}
+.pin-in{position:sticky;top:0;height:calc(100svh / var(--fit));display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.pin-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:34px}
+.pin-head h2{margin:10px 0 0;font:900 clamp(38px,6vw,84px)/.95 var(--display);letter-spacing:-.03em;text-transform:uppercase}
+.pin-track{display:flex;gap:22px;padding-left:max(18px,calc((100vw/var(--fit) - 1180px)/2 + 18px));will-change:transform}
+.pcard{position:relative;flex:none;width:clamp(280px,34vw,470px);height:clamp(330px,48vh,470px);border-radius:26px;padding:30px;background:linear-gradient(160deg,var(--panel2),var(--bg2));border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;transform:rotate(var(--pr,0deg)) translateY(var(--py,0px));transition:border-color .3s}
+.pcard:hover{border-color:var(--or)}
+.pcard .bigN{position:absolute;right:-10px;bottom:-40px;font:900 220px/1 var(--display);color:transparent;-webkit-text-stroke:2px rgba(255,122,26,.25);transform:translateX(var(--nx,0px))}
+.pcard .n{font:600 12px/1 var(--mono);color:var(--or);letter-spacing:.14em}
+.pcard h3{font:900 clamp(30px,3.4vw,44px)/1 var(--display);margin:auto 0 12px;text-transform:uppercase}
+.pcard p{margin:0;color:var(--muted);max-width:300px}
+.pcard .bar{height:4px;background:var(--line);border-radius:2px;margin-top:22px;overflow:hidden}
+.pcard .bar i{display:block;height:100%;width:var(--w,40%);background:var(--or);transform:scaleX(var(--fill,0));transform-origin:left;transition:transform 1.2s var(--ease)}
+.pin-prog{display:flex;align-items:center;gap:12px;margin-top:30px;padding-left:max(18px,calc((100vw/var(--fit) - 1180px)/2 + 18px))}
+.pin-prog i{width:200px;height:2px;background:var(--line2);position:relative}
+.pin-prog i::after{content:"";position:absolute;inset:0;background:var(--or);transform:scaleX(var(--pp,0));transform-origin:left}
+@media (max-width:900px){.pin{height:auto}.pin-in{position:static;height:auto;padding:80px 0}.pin-track{flex-direction:column;padding:0 18px;transform:none!important}.pcard{width:100%;height:auto;min-height:250px;transform:none!important}.pin-prog{display:none}}
+/* буквы ссылок перекатываются */
+.roll{display:inline-flex;overflow:hidden;vertical-align:top}
+.roll span{display:inline-block;position:relative;transition:transform .45s var(--ease);transition-delay:calc(var(--i) * 18ms)}
+.roll span::after{content:attr(data-c);position:absolute;left:0;top:100%;color:var(--or)}
+a:hover>.roll span{transform:translateY(-100%)}
+/* взрыв по клику */
+.boom{position:fixed;z-index:88;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid var(--or);pointer-events:none}
+/* галерея — «карусель» */
+.shot{transform:perspective(1100px) rotateY(var(--gr,0deg)) scale(var(--gs,1));transition:transform .25s linear}
+*,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}#faller{display:none}.finale .sub,.finale .cta{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -343,6 +392,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
 <div class="cur" id="cur"></div>
 <div class="cur-ring" id="ring"><span id="ringTxt"></span></div>
 <canvas id="trail"></canvas>
+<div id="prog"></div>
+<div id="depth">DEPTH <b id="depthN">000</b> M</div>
 
 <header class="nav" id="nav">
   <div class="wrap nav-in">
@@ -394,6 +445,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
 <main id="top">
   <section class="hero" id="hero">
     <canvas id="embers"></canvas>
+    <div class="hero-emb" id="heroEmb" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div>
     <div class="mono coords" aria-hidden="true">DOC · RDX-0001<br><span id="clock">00:00:00</span> UTC<br>SECTOR · AC/VR</div>
     <div class="wrap hero-in">
       <div class="dossier mono rv"><span data-i18n="hero.tag1">Animal Company</span><span data-i18n="hero.tag2">Сквад</span><span data-i18n="hero.tag3">Набор открыт</span></div>
@@ -414,7 +466,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
 
   <div class="band"><div class="track" data-speed="1"><span data-i18n="band.a">Research <em></em> Department <em></em> Explosive <em></em> RDX Squad <em></em></span></div></div>
 
-  <section id="about">
+  <section id="about" class="curtain">
     <div class="wrap">
       <div class="sec-head">
         <div><div class="idx">01 / <span data-i18n="about.idx">Досье</span></div><h2 class="split" data-i18n="about.h">Кто мы</h2></div>
@@ -453,18 +505,27 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
     </div>
   </section>
 
-  <section style="padding-top:0">
-    <div class="wrap">
-      <div class="dirs">
-        <div class="dir rv"><span class="n">R-01</span><h3 data-i18n="dir.1h">Разведка</h3><p data-i18n="dir.1p">Изучаем карты, тайники и короткие пути.</p></div>
-        <div class="dir rv"><span class="n">R-02</span><h3 data-i18n="dir.2h">Тактика</h3><p data-i18n="dir.2p">Играем командой: роли, сигналы, связки.</p></div>
-        <div class="dir rv"><span class="n">R-03</span><h3 data-i18n="dir.3h">Испытания</h3><p data-i18n="dir.3p">Проверяем механики и ставим внутренние рекорды.</p></div>
-        <div class="dir rv"><span class="n">R-04</span><h3 data-i18n="dir.4h">Подрыв</h3><p data-i18n="dir.4p">Ивенты и турниры, где мы выкладываемся на максимум.</p></div>
+  <div class="wrap"><div class="tape" data-tape></div></div>
+  <section class="pin" id="dirs" style="padding:0">
+    <div class="pin-in">
+      <div class="wrap pin-head">
+        <div><div class="idx">01.5 / <span data-i18n="dir.idx">Направления</span></div><h2 class="split" data-i18n="dir.h">Отделы RDX</h2></div>
+        <p class="rv" style="max-width:380px;color:var(--muted);margin:0" data-i18n="dir.p">Каждый в скваде знает свою роль. Листай — отделы проедут мимо.</p>
       </div>
+      <div class="pin-track" id="pinTrack">
+        <article class="pcard tilt"><span class="bigN">01</span><span class="n">R-01 · RECON</span><h3 data-i18n="dir.1h">Разведка</h3><p data-i18n="dir.1p">Изучаем карты, тайники и короткие пути.</p><div class="bar"><i style="--w:86%"></i></div></article>
+        <article class="pcard tilt"><span class="bigN">02</span><span class="n">R-02 · TACTICS</span><h3 data-i18n="dir.2h">Тактика</h3><p data-i18n="dir.2p">Играем командой: роли, сигналы, связки.</p><div class="bar"><i style="--w:92%"></i></div></article>
+        <article class="pcard tilt"><span class="bigN">03</span><span class="n">R-03 · TRIALS</span><h3 data-i18n="dir.3h">Испытания</h3><p data-i18n="dir.3p">Проверяем механики и ставим внутренние рекорды.</p><div class="bar"><i style="--w:74%"></i></div></article>
+        <article class="pcard tilt"><span class="bigN">04</span><span class="n">R-04 · DETONATE</span><h3 data-i18n="dir.4h">Подрыв</h3><p data-i18n="dir.4p">Ивенты и турниры, где мы выкладываемся на максимум.</p><div class="bar"><i style="--w:98%"></i></div></article>
+        <article class="pcard tilt" style="background:var(--or);border-color:var(--or)"><span class="bigN" style="-webkit-text-stroke-color:rgba(0,0,0,.25)">05</span><span class="n" style="color:#141414">R-05 · YOU</span><h3 style="color:#141414" data-i18n="dir.5h">Ты?</h3><p style="color:#2a1a0e" data-i18n="dir.5p">Подай заявку — и выбери свой отдел.</p><a class="btn btn-ghost magnet" href="#apply" style="margin-top:22px;align-self:flex-start;color:#141414;border-color:#141414" data-cursor="GO"><span class="lbl" data-i18n="hero.apply">Подать заявку</span></a></article>
+        <div style="flex:none;width:8vw"></div>
+      </div>
+      <div class="pin-prog mono"><span id="pinN">01/05</span><i id="pinBar"></i></div>
     </div>
   </section>
+  <div class="wrap"><div class="tape" data-tape style="--to:right"></div></div>
 
-  <section id="gallery" style="padding-bottom:60px">
+  <section id="gallery" class="curtain" style="padding-bottom:60px">
     <div class="wrap">
       <div class="sec-head">
         <div><div class="idx">02 / <span data-i18n="gal.idx">Полевые снимки</span></div><h2 class="split" data-i18n="gal.h">Снимки</h2></div>
@@ -476,7 +537,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
 
   <div class="band alt"><div class="track" data-speed="-1"><span data-i18n="band.b">Набор открыт <em></em> Заявка за 2 минуты <em></em> Ответ в Telegram <em></em></span></div></div>
 
-  <section id="apply">
+  <section id="apply" class="curtain">
     <div class="wrap apply">
       <div class="steps-side">
         <div class="idx">03 / <span data-i18n="apply.idx">Набор</span></div>
@@ -525,7 +586,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
     </div>
   </section>
 
-  <section id="help">
+  <section id="help" class="curtain">
     <div class="wrap">
       <div class="sec-head">
         <div><div class="idx">04 / <span data-i18n="help.idx">Поддержка</span></div><h2 class="split" data-i18n="help.h">Нужна помощь</h2></div>
@@ -564,6 +625,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 calc(30px + env(safe-area
 </div></footer>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
 <script>
 /* ===== настройки ===== */
 const CFG = {
@@ -593,7 +655,7 @@ const I18N = {
     "about.c2h":"Кодекс","about.c2p":"Своих не бросаем. Без читов, без токсичности к своим, без кидалова. Проиграли — разобрали ошибки, выиграли — тоже разобрали.",
     "about.c3h":"Операции","about.c3p":"Совместные заходы, тренировки и ивенты внутри сквада. Расписание и сборы — в Telegram.",
     "about.c4h":"Рост","about.c4p":"Новичков учим. Звания внутри сквада получают за вклад и активность, а не за то, кто громче.",
-    "dir.1h":"Разведка","dir.1p":"Изучаем карты, тайники и короткие пути.","dir.2h":"Тактика","dir.2p":"Играем командой: роли, сигналы, связки.",
+    "dir.idx":"Направления","dir.h":"Отделы RDX","dir.p":"Каждый в скваде знает свою роль. Листай — отделы проедут мимо.","dir.5h":"Ты?","dir.5p":"Подай заявку — и выбери свой отдел.","dir.1h":"Разведка","dir.1p":"Изучаем карты, тайники и короткие пути.","dir.2h":"Тактика","dir.2p":"Играем командой: роли, сигналы, связки.",
     "dir.3h":"Испытания","dir.3p":"Проверяем механики и ставим внутренние рекорды.","dir.4h":"Подрыв","dir.4p":"Ивенты и турниры, где мы выкладываемся на максимум.",
     "gal.idx":"Полевые снимки","gal.h":"Снимки","gal.hint":"Тяни","gal.cap":"Снимок",
     "apply.idx":"Набор","apply.h":"Заявка в сквад","apply.s1b":"Заполни анкету","apply.s1":"Пара минут: ник, Telegram, о себе.",
@@ -627,7 +689,7 @@ const I18N = {
     "about.c2h":"Code","about.c2p":"Nobody gets left behind. No cheats, no toxicity to teammates, no scams. Lost — we review it. Won — we review that too.",
     "about.c3h":"Operations","about.c3p":"Squad runs, training and internal events. Schedules live in Telegram.",
     "about.c4h":"Growth","about.c4p":"We teach newcomers. Ranks are earned by contribution and activity, not by who is loudest.",
-    "dir.1h":"Recon","dir.1p":"Maps, stashes and shortcuts.","dir.2h":"Tactics","dir.2p":"Roles, callouts, combos.","dir.3h":"Trials","dir.3p":"Testing mechanics and setting squad records.","dir.4h":"Detonate","dir.4p":"Events and tournaments where we go all in.",
+    "dir.idx":"Departments","dir.h":"RDX units","dir.p":"Everyone in the squad knows their role. Keep scrolling — the units roll by.","dir.5h":"You?","dir.5p":"Apply and pick your unit.","dir.1h":"Recon","dir.1p":"Maps, stashes and shortcuts.","dir.2h":"Tactics","dir.2p":"Roles, callouts, combos.","dir.3h":"Trials","dir.3p":"Testing mechanics and setting squad records.","dir.4h":"Detonate","dir.4p":"Events and tournaments where we go all in.",
     "gal.idx":"Field shots","gal.h":"Shots","gal.hint":"Drag","gal.cap":"Shot",
     "apply.idx":"Recruiting","apply.h":"Join the squad","apply.s1b":"Fill the form","apply.s1":"Two minutes: nick, Telegram, about you.",
     "apply.s2b":"We review","apply.s2":"Commanders read every application.","apply.s3b":"Reply in Telegram","apply.s3":"The RDX bot will send the decision. Open it first.",
@@ -660,7 +722,7 @@ const I18N = {
     "about.c2h":"Кодекс","about.c2p":"Своїх не кидаємо. Без читів, без токсичності, без шахрайства.",
     "about.c3h":"Операції","about.c3p":"Спільні заходи, тренування та івенти. Розклад — у Telegram.",
     "about.c4h":"Ріст","about.c4p":"Новачків навчаємо. Звання — за внесок і активність.",
-    "dir.1h":"Розвідка","dir.1p":"Карти, схованки й короткі шляхи.","dir.2h":"Тактика","dir.2p":"Ролі, сигнали, зв'язки.","dir.3h":"Випробування","dir.3p":"Перевіряємо механіки й ставимо рекорди.","dir.4h":"Підрив","dir.4p":"Івенти й турніри на максимум.",
+    "dir.idx":"Напрями","dir.h":"Відділи RDX","dir.p":"Кожен у скваді знає свою роль. Гортай — відділи проїдуть повз.","dir.5h":"Ти?","dir.5p":"Подай заявку й обери свій відділ.","dir.1h":"Розвідка","dir.1p":"Карти, схованки й короткі шляхи.","dir.2h":"Тактика","dir.2p":"Ролі, сигнали, зв'язки.","dir.3h":"Випробування","dir.3p":"Перевіряємо механіки й ставимо рекорди.","dir.4h":"Підрив","dir.4p":"Івенти й турніри на максимум.",
     "gal.idx":"Польові знімки","gal.h":"Знімки","gal.hint":"Тягни","gal.cap":"Знімок",
     "apply.idx":"Набір","apply.h":"Заявка у сквад","apply.s1b":"Заповни анкету","apply.s1":"Пара хвилин: нік, Telegram, про себе.",
     "apply.s2b":"Ми переглядаємо","apply.s2":"Командири читають кожну заявку.","apply.s3b":"Відповідь у Telegram","apply.s3":"Бот RDX напише рішення. Відкрий його заздалегідь.",
@@ -694,7 +756,8 @@ function applyLang(){
   $$("[data-i18n]").forEach(el => { const v = d[el.dataset.i18n]; if (v != null) el.innerHTML = v; });
   $$("[data-i18n-html]").forEach(el => { const v = d[el.dataset.i18nHtml]; if (v != null) el.innerHTML = v; });
   $$("#lang button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
-  renderFaq(); renderGallery(); splitAll();
+  renderFaq(); renderGallery(); splitAll(); rollLinks();
+  document.querySelector("#gal")?.dispatchEvent(new Event("scroll"));
 }
 $("#lang").innerHTML = LANGS.map(l => `<button type="button" data-l="${l}">${l.toUpperCase()}</button>`).join("");
 $("#lang").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; lang = b.dataset.l; try { localStorage.setItem("rdx_lang", lang); } catch (er) {} applyLang(); });
@@ -729,7 +792,7 @@ function renderGallery(){
   g.addEventListener("scroll", () => {
     const p = g.scrollLeft / Math.max(1, g.scrollWidth - g.clientWidth); $("#galBar").style.setProperty("--gp", p.toFixed(3));
     const mid = g.getBoundingClientRect().width / 2;
-    g.querySelectorAll(".shot img").forEach(img => { const r = img.parentElement.getBoundingClientRect(); img.style.setProperty("--px", ((r.left + r.width / 2 - mid) / mid * -18).toFixed(1) + "px"); });
+    g.querySelectorAll(".shot img").forEach(img => { const sh = img.parentElement, r = sh.getBoundingClientRect(), o = (r.left + r.width / 2 - mid) / mid; img.style.setProperty("--px", (o * -18).toFixed(1) + "px"); sh.style.setProperty("--gr", clamp(o * -14, -20, 20).toFixed(2) + "deg"); sh.style.setProperty("--gs", (1 - Math.min(.12, Math.abs(o) * .08)).toFixed(3)); });
   }, { passive: true });
 })();
 
@@ -793,7 +856,8 @@ function cursor(){
     const k = last ? Math.min(3, (now - last) / 16.667) : 1; last = now;
     rx = lerp(rx, mx, 1 - Math.pow(.82, k)); ry = lerp(ry, my, 1 - Math.pow(.82, k));
     dot.style.transform = `translate(${mx}px,${my}px)`;
-    ring.style.transform = `translate(${rx}px,${ry}px)` + (ring.classList.contains("down") ? " scale(.8)" : "");
+    const vx = mx - rx, vy2 = my - ry, sp = Math.min(1, Math.hypot(vx, vy2) / 120), ang = Math.atan2(vy2, vx);
+    ring.style.transform = `translate(${rx}px,${ry}px) rotate(${ang}rad) scale(${(1 + sp * .6).toFixed(3)},${(1 - sp * .3).toFixed(3)}) rotate(${-ang}rad)` + (ring.classList.contains("down") ? " scale(.8)" : "");
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     TRAIL.pts = TRAIL.pts.filter(p => (p.life -= (p.decay || .028) * k) > 0);
     for (const p of TRAIL.pts){
@@ -948,12 +1012,12 @@ function faller(){
   // если эмблема не видна (reduced motion выключен, но например старый браузер) — имя всё равно появится
   new IntersectionObserver(es => { if (es[0].isIntersecting && es[0].intersectionRatio > .6) setTimeout(() => fin.classList.add("named"), 1800); }, { threshold: .6 }).observe(fin);
 }
-function burstAt(x, y){
+function burstAt(x, y, count = 46){
   const cv = $("#trail"), ctx = cv.getContext("2d");
   if (!document.body.classList.contains("mouse")){
     const d = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * d; cv.height = innerHeight * d; ctx.setTransform(d, 0, 0, d, 0, 0);
   }
-  const ps = Array.from({ length: 46 }, () => { const a = Math.PI + Math.random() * Math.PI, v = 2 + Math.random() * 7; return { x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, s: 1.5 + Math.random() * 3, g: .22, decay: .02, h: Math.random() < .3 }; });
+  const ps = Array.from({ length: count }, () => { const a = Math.PI + Math.random() * Math.PI, v = 2 + Math.random() * 7; return { x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, s: 1.5 + Math.random() * 3, g: .22, decay: .02, h: Math.random() < .3 }; });
   if (document.body.classList.contains("mouse")) { TRAIL.pts.push(...ps); return; }
   let last = 0;
   (function f(now){
@@ -997,11 +1061,116 @@ function form(){
   });
 }
 
+/* ===== плавная прокрутка (только мышь) ===== */
+let lenis = null;
+function smooth(){
+  if (!fine || still || !window.Lenis) return;
+  lenis = new Lenis({ lerp: .085, wheelMultiplier: .95, smoothWheel: true });
+  (function raf(t){ lenis.raf(t); requestAnimationFrame(raf); })(performance.now());
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href^="#"]'); if (!a) return;
+    const id = a.getAttribute("href"); if (id.length < 2) return;
+    const el = document.querySelector(id); if (!el) return;
+    e.preventDefault(); lenis.scrollTo(el, { offset: id === "#top" ? 0 : -70, duration: 1.6 });
+  });
+  $("#gal").setAttribute("data-lenis-prevent", ""); $("#mmenu").setAttribute("data-lenis-prevent", "");
+}
+
+/* ===== движок прокрутки: всё, что зависит от положения страницы ===== */
+function scrollFx(){
+  const prog = $("#prog"), depthN = $("#depthN"), rows = $$("#title .row"), lead = $(".hero-sub"), emb = $("#heroEmb");
+  const curtains = $$(".curtain"), tapes = $$("[data-tape]"), pin = $("#dirs"), track = $("#pinTrack"), cards = $$("#pinTrack .pcard"), pinN = $("#pinN"), pinBar = $("#pinBar");
+  const root = document.documentElement;
+  let ly = scrollY, vy = 0, mx = 0, my = 0, last = 0, pinDone = new Set();
+  addEventListener("pointermove", e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
+  function frame(now){
+    const k = last ? Math.min(3, (now - last) / 16.667) : 1; last = now;
+    const y = scrollY, vh = innerHeight, max = Math.max(1, root.scrollHeight - vh), f = fit();
+    vy = lerp(vy, y - ly, .2 * k); ly = y;
+    const p = clamp(y / max, 0, 1);
+    prog.style.transform = `scaleX(${p.toFixed(4)})`;
+    depthN.textContent = String(Math.round(p * 999)).padStart(3, "0");
+    root.style.setProperty("--skew", clamp(vy * -.06, -4, 4).toFixed(2) + "deg");
+    // герой разлетается
+    const hp = clamp(y / (vh * .85), 0, 1);
+    if (rows[0]) {
+      rows[0].style.transform = `translateX(${(-hp * 22).toFixed(2)}vw) scale(${(1 - hp * .1).toFixed(3)})`;
+      rows[1].style.transform = `translateX(${(hp * 22).toFixed(2)}vw) scale(${(1 - hp * .1).toFixed(3)})`;
+      rows.forEach(r => { r.style.opacity = (1 - hp * 1.1).toFixed(3); r.style.filter = hp > .02 ? `blur(${(hp * 10).toFixed(1)}px)` : ""; });
+      lead.style.transform = `translateY(${(-hp * 80).toFixed(1)}px)`; lead.style.opacity = (1 - hp * 1.4).toFixed(3);
+    }
+    emb.style.setProperty("--hr", (y * .06).toFixed(2) + "deg"); emb.style.setProperty("--hy", (mx * 24).toFixed(2) + "deg"); emb.style.setProperty("--hx", (-my * 18).toFixed(2) + "deg");
+    // секции наезжают
+    for (const c of curtains) {
+      const r = c.getBoundingClientRect(); const e = clamp((vh - r.top) / (vh * .7), 0, 1);
+      c.style.setProperty("--e", (e * e * (3 - 2 * e)).toFixed(3));
+    }
+    for (const t of tapes) { const r = t.getBoundingClientRect(); t.style.setProperty("--t", clamp((vh - r.top) / (vh * .8), 0, 1).toFixed(3)); }
+    // горизонтальный трек
+    if (pin && innerWidth > 900) {
+      const r = pin.getBoundingClientRect(), total = pin.offsetHeight * f - vh;
+      const pp = clamp(-r.top / Math.max(1, total), 0, 1);
+      const dist = track.scrollWidth - innerWidth / f + 40;
+      track.style.transform = `translateX(${(-pp * dist).toFixed(1)}px)`;
+      pinBar.style.setProperty("--pp", pp.toFixed(3));
+      pinN.textContent = String(Math.min(5, 1 + Math.floor(pp * 5))).padStart(2, "0") + "/05";
+      cards.forEach((c, i) => {
+        const cr = c.getBoundingClientRect(), mid = (cr.left + cr.width / 2) / innerWidth - .5;
+        c.style.setProperty("--pr", (mid * -6).toFixed(2) + "deg"); c.style.setProperty("--py", (Math.abs(mid) * 60).toFixed(1) + "px");
+        c.querySelector(".bigN").style.setProperty("--nx", (mid * 120).toFixed(1) + "px");
+        if (mid < .35 && !pinDone.has(i)) { pinDone.add(i); const b = c.querySelector(".bar i"); if (b) b.style.setProperty("--fill", 1); }
+      });
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  // периодический глитч заголовка
+  setInterval(() => { if (scrollY < innerHeight && !document.hidden) { const t = $("#title"); t.classList.remove("glitch"); void t.offsetWidth; t.classList.add("glitch"); } }, 4200);
+}
+
+/* ===== расшифровка заголовков при появлении ===== */
+const GLYPHS = "RDX#%&@$*/\\<>=+01ABCDEFGHJKLMNPQRSTUVWXYZ";
+function scramble(el){
+  if (still) return;
+  el.querySelectorAll(".w>i").forEach((i, wi) => {
+    const fin = i.dataset.t || i.textContent; i.dataset.t = fin;
+    const t0 = performance.now() + wi * 90, dur = 700;
+    (function f(now){
+      const k = clamp((now - t0) / dur, 0, 1), n = Math.floor(k * fin.length);
+      i.textContent = fin.slice(0, n) + [...fin.slice(n)].map(c => c === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0]).join("");
+      if (k < 1) requestAnimationFrame(f); else i.textContent = fin;
+    })(performance.now());
+  });
+}
+function scrambleWatch(){
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), { threshold: .5 });
+  $$(".sec-head h2, .pin-head h2").forEach(h => io.observe(h));
+}
+
+/* ===== буквы ссылок в меню ===== */
+function rollLinks(){
+  $$(".links a").forEach(a => {
+    const t = a.textContent.trim();
+    a.innerHTML = `<span class="roll">${[...t].map((c, i) => `<span style="--i:${i}" data-c="${c === " " ? "\u00a0" : c}">${c === " " ? "&nbsp;" : c}</span>`).join("")}</span>`;
+  });
+}
+
+/* ===== взрыв по клику ===== */
+function clickBoom(){
+  if (still) return;
+  addEventListener("pointerdown", e => {
+    if (e.target.closest("input,textarea,select,.gal")) return;
+    burstAt(e.clientX, e.clientY, 18);
+    const b = document.createElement("div"); b.className = "boom"; b.style.left = e.clientX + "px"; b.style.top = e.clientY + "px"; document.body.appendChild(b);
+    b.animate([{ transform: "scale(.3)", opacity: 1 }, { transform: "scale(5)", opacity: 0 }], { duration: 650, easing: "cubic-bezier(.2,.8,.2,1)" }).onfinish = () => b.remove();
+  });
+}
+
 /* ===== старт ===== */
 $("#year").textContent = new Date().getFullYear();
 splitTitle(); applyLang(); tgLinks();
-boot(() => { reveals(); titleFx(); });
-cursor(); embers(); bands(); navFx(); form(); faller();
+boot(() => { reveals(); titleFx(); scrambleWatch(); });
+smooth(); cursor(); embers(); bands(); navFx(); form(); faller(); scrollFx(); clickBoom();
 </script>
 </body>
 </html>

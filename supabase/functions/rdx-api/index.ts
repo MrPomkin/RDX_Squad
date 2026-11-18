@@ -3,7 +3,8 @@
 //  • POST от Telegram ?bot=main (бот RDX)         → меню, заявка, обжалование бана, сообщение командирам, RDX_AI
 //  • POST от Telegram ?bot=ai   (бот RDX_AI)      → ИИ-помощник с токенами
 //  • GET  ?setup=<RDX_SETUP_KEY>                  → вебхуки, команды и описания обоих ботов
-// Секреты функции: RDX_BOT_TOKEN, RDX_AI_TOKEN, RDX_HOOK_SECRET, RDX_SETUP_KEY, RDX_ADMINS (id через запятую),
+// Секреты функции: RDX_BOT_TOKEN, RDX_AI_TOKEN, RDX_HOOK_SECRET, RDX_SETUP_KEY, RDX_ADMINS (id создателя),
+// RDX_MOD_KEY_HASH (SHA-256 ключа модератора: кто ввёл ключ в любом из ботов — модератор, принимает заявки),
 // AI_API_KEY (Gemini), SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Таблицы: rdx_* (миграция — supabase/rdx_tables.sql).
 
 const SB = Deno.env.get("SUPABASE_URL")!;
@@ -11,6 +12,43 @@ const SK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TOK = { main: Deno.env.get("RDX_BOT_TOKEN") || "", ai: Deno.env.get("RDX_AI_TOKEN") || "" };
 const HOOK = Deno.env.get("RDX_HOOK_SECRET") || "";
 const ADMINS = (Deno.env.get("RDX_ADMINS") || "6474321250").split(",").map((x) => Number(x.trim())).filter(Boolean);
+const OWNER_NICK = (Deno.env.get("RDX_OWNER_USERNAME") || "Mr_Wugi4").toLowerCase();
+// создатель — по id или по нику; модераторы — те, кто ввёл ключ модератора
+const isOwner = (u: any) => ADMINS.includes(Number(u?.id)) || String(u?.username || "").toLowerCase() === OWNER_NICK;
+let MODS: { at: number; ids: number[] } | null = null;
+async function modIds(): Promise<number[]> {
+  if (!MODS || Date.now() - MODS.at > 30000) MODS = { at: Date.now(), ids: ((await db("rdx_mods?select=user_id")) || []).map((r: any) => Number(r.user_id)) };
+  return MODS.ids;
+}
+const isMod = async (u: any) => isOwner(u) || (await modIds()).includes(Number(u?.id));
+// кому слать заявки: создатель + модераторы
+const staff = async () => [...new Set([...ADMINS, ...(await modIds())])];
+const KEY_RE = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+async function tryModKey(bot: Bot, m: any): Promise<boolean> {
+  const raw = String(m.text || "").trim().toUpperCase();
+  if (!KEY_RE.test(raw) || m.chat?.type !== "private") return false;
+  const u = m.from, chat = m.chat.id;
+  await tg(bot, "deleteMessage", { chat_id: chat, message_id: m.message_id });   // ключ не должен висеть в чате
+  const since = new Date(Date.now() - 3600e3).toISOString();
+  const tries: any[] = await db("rdx_quota?select=id&subject=eq.key:" + u.id + "&at=gt." + enc(since)) || [];
+  if (tries.length >= 5) { await send(bot, chat, "Слишком много попыток. Подожди час."); return true; }
+  await ins("rdx_quota", [{ subject: "key:" + u.id }], "return=minimal");
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  if (hash !== Deno.env.get("RDX_MOD_KEY_HASH")) { await send(bot, chat, "Ключ не подошёл."); return true; }
+  if (isOwner(u)) { await send(bot, chat, "👑 Ты создатель — у тебя и так все права."); return true; }
+  await upsert("rdx_mods", [{ user_id: u.id, username: u.username || null, first_name: u.first_name || null, added_at: new Date().toISOString() }], "user_id");
+  MODS = null;
+  await modMenu(u.id, true);
+  await send(bot, chat, "🛡 <b>Ключ принят — ты модератор RDX.</b> Сообщение с ключом я удалил.\n\nЗаявки, обжалования и сообщения командирам будут приходить в бот RDX" + (BOTNAMES.main ? " @" + BOTNAMES.main : "") + " — открой его и нажми «Старт».\nКоманды: /apps, /mod, /logout");
+  for (const id of ADMINS) await send("main", id, "🛡 Новый модератор RDX: " + who(u));
+  return true;
+}
+// меню команд для модератора (или вернуть обычное)
+async function modMenu(uid: number, on: boolean) {
+  const base = [{ command: "start", description: "Меню" }, { command: "menu", description: "Меню" }, { command: "tokens", description: "Вопросы RDX_AI" }];
+  if (on) await tg("main", "setMyCommands", { commands: [...base, { command: "apps", description: "Новые заявки" }, { command: "mod", description: "Команды модератора" }, { command: "logout", description: "Выйти из модераторов" }], scope: { type: "chat", chat_id: uid } });
+  else await tg("main", "deleteMyCommands", { scope: { type: "chat", chat_id: uid } });
+}
 const SITE = Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squad/";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 type Bot = "main" | "ai";
@@ -110,7 +148,7 @@ async function quota(uid: number, take: boolean) {
   const rows: any[] = await db("rdx_quota?select=at&subject=eq.tg:" + uid + "&at=gt." + enc(since) + "&order=at.asc") || [];
   const t5 = Date.now() - 5 * 3600e3;
   const in5 = rows.filter((r) => Date.parse(r.at) > t5);
-  const res = { ...tr, unlimited: bn.unlimited || ADMINS.includes(uid), l5, lw, used5: in5.length, usedw: rows.length,
+  const res = { ...tr, unlimited: bn.unlimited || ADMINS.includes(uid) || (await modIds()).includes(uid), l5, lw, used5: in5.length, usedw: rows.length,
     reset5: in5[0] ? Date.parse(in5[0].at) + 5 * 3600e3 : 0, resetw: rows[0] ? Date.parse(rows[0].at) + 7 * 86400e3 : 0, ok: true };
   if (!res.unlimited && (res.used5 >= l5 || res.usedw >= lw)) res.ok = false;
   if (take && res.ok && !res.unlimited) { await ins("rdx_quota", [{ subject: "tg:" + uid }], "return=minimal"); res.used5++; res.usedw++; }
@@ -221,7 +259,7 @@ async function newApp(row: any) {
   const r = await ins("rdx_apps", [row]);
   const a = r?.[0];
   if (!a) return null;
-  for (const id of ADMINS) await send("main", id, appText(a), appButtons(a));
+  for (const id of await staff()) await send("main", id, appText(a), appButtons(a));
   return a;
 }
 // доставка решения: по user_id, а для заявок с сайта — когда человек откроет бота
@@ -268,7 +306,7 @@ async function flowStep(u: any, chat: number, st: any, text: string) {
     if (st.step === 2) { d.why = text.slice(0, 1000); await setState("main", u.id, "appeal", 3, d); await confirm(u, chat, "appeal", d); return; }
   }
   if (st.flow === "help") { d.text = text.slice(0, 1000); await setState("main", u.id, "help", 1, d); await confirm(u, chat, "help", d); return; }
-  if (st.flow === "reply" && ADMINS.includes(u.id)) {   // командир пишет ответ на заявку
+  if (st.flow === "reply" && await isMod(u)) {   // командир пишет ответ на заявку
     const a = (await db("rdx_apps?select=*&id=eq." + Number(d.id)))?.[0];
     await setState("main", u.id, null);
     if (!a) { await send("main", chat, "Заявка не найдена."); return; }
@@ -303,7 +341,7 @@ async function onMain(up: any) {
       return;
     }
     if (data.startsWith("dec:")) {
-      if (!ADMINS.includes(u.id)) return tg("main", "answerCallbackQuery", { callback_query_id: c.id, text: t(u, "nope"), show_alert: true });
+      if (!(await isMod(u))) return tg("main", "answerCallbackQuery", { callback_query_id: c.id, text: t(u, "nope"), show_alert: true });
       const [, id, act] = data.split(":");
       const a = (await db("rdx_apps?select=*&id=eq." + Number(id)))?.[0];
       if (!a) return;
@@ -332,7 +370,8 @@ async function onMain(up: any) {
   }
   if (text === "/menu" || text === "/cancel") return startFlow(u, chat, "menu");
   if (text === "/tokens") return send("main", chat, await tokensText(u.id));
-  if (text.startsWith("/") && ADMINS.includes(u.id) && await adminCmd("main", u, chat, text)) return;
+  if (await tryModKey("main", m)) return;
+  if (text.startsWith("/") && await isMod(u) && await adminCmd("main", u, chat, text)) return;
   const st = await getState("main", u.id);
   if (!text) return;
   if (st?.flow === "ai") return askAI("main", chat, u, text);
@@ -350,7 +389,8 @@ async function onAI(up: any) {
   const me = await botName("ai");
   if (text.startsWith("/start")) return send("ai", chat, "🤖 <b>RDX_AI</b> — помощник RDX Squad.\nПиши вопрос. Токены: /tokens\nЗаявка, обжалование бана и связь с командирами — в боте RDX" + (await botName("main") ? " @" + BOTNAMES.main : "") + ".");
   if (text.startsWith("/tokens")) return send("ai", chat, await tokensText(u.id), group ? { reply_parameters: { message_id: m.message_id } } : {});
-  if (text.startsWith("/") && ADMINS.includes(u.id) && await adminCmd("ai", u, chat, text)) return;
+  if (await tryModKey("ai", m)) return;
+  if (text.startsWith("/") && await isMod(u) && await adminCmd("ai", u, chat, text)) return;
   if (group) {
     const called = (me && text.toLowerCase().includes("@" + me.toLowerCase())) || m.reply_to_message?.from?.username === me || /^(rdx[_ ]?ai|рдх)[\s,!]/i.test(text);
     if (!called) return;
@@ -369,12 +409,32 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
   const [cmd0, ...args] = text.split(/\s+/);
   const cmd = cmd0.split("@")[0].toLowerCase();
   const say = (s: string) => send(bot, chat, s);
+  const owner = isOwner(u);
+  if (cmd === "/logout" && !owner) {
+    await del("rdx_mods?user_id=eq." + u.id); MODS = null; await modMenu(u.id, false);
+    await say("Ты больше не модератор RDX."); return true;
+  }
+  if (cmd === "/mod" || (!owner && (cmd === "/admin" || cmd === "/help"))) {
+    await say("<b>Команды модератора RDX</b>\n/apps — новые заявки (кнопки «Принять», «Отклонить», «Ответить»)\n/logout — выйти из модераторов" + (owner ? "\n\nСоздателю: /admin — все команды" : "")); return true;
+  }
+  if (owner && cmd === "/mods") {
+    const r: any[] = await db("rdx_mods?select=user_id,username,first_name,added_at&order=added_at") || [];
+    await say(r.length ? "<b>Модераторы RDX</b>\n" + r.map((x, i) => (i + 1) + ". " + esc(x.first_name || "") + (x.username ? " @" + esc(x.username) : "") + " · id " + x.user_id).join("\n") + "\n\nСнять: /unmod @ник" : "Модераторов пока нет. Ключ модератора вводится в любом из ботов RDX.");
+    return true;
+  }
+  if (owner && cmd === "/unmod" && args[0]) {
+    const id = await findUser(args[0]) ?? (await db("rdx_mods?select=user_id&username=ilike." + enc(args[0].replace(/^@/, ""))))?.[0]?.user_id;
+    if (!id) { await say("Не нашёл такого модератора."); return true; }
+    await del("rdx_mods?user_id=eq." + id); MODS = null; await modMenu(Number(id), false);
+    await say("✅ " + esc(args[0]) + " больше не модератор."); await send("main", Number(id), "Тебя сняли с модераторов RDX."); return true;
+  }
   if (cmd === "/apps") {
     const r: any[] = await db("rdx_apps?select=*&status=eq.new&order=created_at.desc&limit=10") || [];
     if (!r.length) { await say("Новых заявок нет."); return true; }
     for (const a of r.reverse()) await send("main", chat, appText(a), appButtons(a));
     return true;
   }
+  if (!owner) return false;   // дальше — только создатель
   if (["/grant", "/tokens", "/reset", "/add", "/unlim"].includes(cmd) && args[0]) {
     const uid = await findUser(args[0]);
     if (!uid) { await say("Не знаю " + esc(args[0]) + ": человек должен хоть раз открыть бота RDX."); return true; }
@@ -401,7 +461,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     }
   }
   if (cmd === "/admin" || cmd === "/help") {
-    await say("<b>Команды командира</b>\n/apps — новые заявки\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
+    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/mods — модераторы · /unmod @ник — снять\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
     return true;
   }
   return false;
