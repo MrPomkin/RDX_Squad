@@ -162,10 +162,10 @@ section{position:relative;padding:120px 0}
 @media (max-width:760px){.sec-head{grid-template-columns:1fr}}
 
 /* появление */
-.rv{opacity:0;transform:translateY(40px);transition:opacity .9s var(--ease),transform 1s var(--ease)}
-.rv.in{opacity:1;transform:none}
+.rv{opacity:0;transform:translateY(40px);filter:blur(6px);transition:opacity 1.1s var(--ease),transform 1.3s var(--ease),filter 1.1s var(--ease)}
+.rv.in{opacity:1;transform:none;filter:none}
 .split .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.06em}
-.split .w>i{display:inline-block;font-style:normal;transform:translateY(105%);transition:transform .9s var(--ease)}
+.split .w>i{display:inline-block;font-style:normal;transform:translateY(105%) rotate(4deg);transition:transform 1.2s var(--ease)}
 .split.in .w>i{transform:none}
 
 /* о нас */
@@ -343,8 +343,8 @@ html.lenis{scroll-behavior:auto}
 .title.glitch .row:first-child{animation:glitch .42s steps(2) 1}
 @keyframes glitch{0%{text-shadow:4px 0 var(--or),-4px 0 #4af;transform:translate(2px,-1px)}25%{text-shadow:-6px 0 var(--or),5px 0 #4af;transform:translate(-3px,2px)}50%{text-shadow:3px 2px var(--or),-3px -2px #4af;clip-path:inset(20% 0 45% 0)}75%{text-shadow:none;clip-path:inset(60% 0 5% 0);transform:translate(4px,0)}100%{text-shadow:none;clip-path:none;transform:none}}
 /* секции «наезжают» при прокрутке */
-.curtain>.wrap{transform:translateY(calc((1 - var(--e,1)) * 90px)) scale(calc(.93 + var(--e,1) * .07));opacity:calc(.15 + var(--e,1) * .85);transform-origin:50% 0;will-change:transform,opacity}
-.sec-head h2{transform:skewY(var(--skew,0deg));transition:transform .3s var(--ease)}
+.curtain>.wrap{transform-origin:50% 30%;will-change:transform,opacity}
+.sec-head h2{transform:skewY(var(--skew,0deg));transition:transform .6s var(--ease)}
 /* лента опасности растёт с прокруткой */
 .tape{height:10px;margin:0 auto;max-width:1180px;background:repeating-linear-gradient(45deg,var(--or) 0 12px,#141414 12px 24px);transform:scaleX(var(--t,0));transform-origin:var(--to,left);border-radius:2px;opacity:.85}
 /* закреплённый горизонтальный трек направлений */
@@ -374,6 +374,22 @@ a:hover>.roll span{transform:translateY(-100%)}
 .boom{position:fixed;z-index:88;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid var(--or);pointer-events:none}
 /* галерея — «карусель» */
 .shot{transform:perspective(1100px) rotateY(var(--gr,0deg)) scale(var(--gs,1));transition:transform .25s linear}
+/* «переключение экрана»: секция уходит назад, следующая наезжает */
+.curtain>.wrap{transform:translateY(calc((1 - var(--e,1)) * 90px)) scale(calc((.93 + var(--e,1) * .07) * (1 - var(--x,0) * .07)));opacity:calc((.15 + var(--e,1) * .85) * (1 - var(--x,0) * .55))}
+#sweep{position:fixed;left:0;right:0;top:0;height:100vh;z-index:55;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent 0,rgba(255,122,26,0) 40%,rgba(255,122,26,.16) 49%,rgba(255,210,154,.55) 50%,rgba(255,122,26,.16) 51%,transparent 60%);background-size:100% 220%;background-repeat:no-repeat}
+#sweep.go{animation:sweep .9s cubic-bezier(.45,0,.2,1) both}
+@keyframes sweep{0%{opacity:1;background-position:0 100%}100%{opacity:1;background-position:0 -20%}}
+#scr-label{position:fixed;right:max(18px,2vw);top:96px;z-index:56;font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--or);opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .4s,transform .6s var(--ease)}
+#scr-label.show{opacity:.9;transform:none}
+/* несколько эмблем падают и сливаются в одну */
+.shard{position:fixed;left:0;top:0;z-index:-1;width:clamp(54px,6vw,110px);pointer-events:none;will-change:transform,opacity;opacity:0;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5)) blur(var(--sb,0px))}
+.shard svg{display:block;width:100%}
+#faller.merge{animation:mergeFlash .7s var(--ease)}
+@keyframes mergeFlash{0%{filter:drop-shadow(0 0 0 rgba(255,160,77,0)) brightness(1)}35%{filter:drop-shadow(0 0 40px rgba(255,160,77,.95)) brightness(1.6)}100%{filter:drop-shadow(0 18px 24px rgba(0,0,0,.55)) brightness(1)}}
+/* расшифровка без дрожания: ширина слова зафиксирована */
+.w>i.scr{display:inline-block;white-space:nowrap;overflow:hidden;vertical-align:top}
+@media (prefers-reduced-motion:reduce){.shard,#sweep,#scr-label{display:none}
 *,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}#faller{display:none}.finale .sub,.finale .cta{opacity:1;transform:none}}
 </style>
 </head>
@@ -393,6 +409,8 @@ a:hover>.roll span{transform:translateY(-100%)}
 <div class="cur-ring" id="ring"><span id="ringTxt"></span></div>
 <canvas id="trail"></canvas>
 <div id="prog"></div>
+<div id="sweep"></div>
+<div id="scr-label"></div>
 <div id="depth">DEPTH <b id="depthN">000</b> M</div>
 
 <header class="nav" id="nav">
@@ -440,6 +458,10 @@ a:hover>.roll span{transform:translateY(-100%)}
   </defs>
 </svg>
 
+<div class="shard" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div>
+<div class="shard" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div>
+<div class="shard" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div>
+<div class="shard" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div>
 <div id="faller" aria-hidden="true"><div class="flame"></div><div class="spinbox"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div></div>
 
 <main id="top">
@@ -854,7 +876,7 @@ function cursor(){
   });
   (function loop(now){
     const k = last ? Math.min(3, (now - last) / 16.667) : 1; last = now;
-    rx = lerp(rx, mx, 1 - Math.pow(.82, k)); ry = lerp(ry, my, 1 - Math.pow(.82, k));
+    rx = lerp(rx, mx, 1 - Math.pow(.86, k)); ry = lerp(ry, my, 1 - Math.pow(.86, k));
     dot.style.transform = `translate(${mx}px,${my}px)`;
     const vx = mx - rx, vy2 = my - ry, sp = Math.min(1, Math.hypot(vx, vy2) / 120), ang = Math.atan2(vy2, vx);
     ring.style.transform = `translate(${rx}px,${ry}px) rotate(${ang}rad) scale(${(1 + sp * .6).toFixed(3)},${(1 - sp * .3).toFixed(3)}) rotate(${-ang}rad)` + (ring.classList.contains("down") ? " scale(.8)" : "");
@@ -979,6 +1001,7 @@ function faller(){
   if (still) return;
   const el = $("#faller"), pad = $("#pad"), fin = $("#finale"), flame = el.querySelector(".flame");
   let landed = false, cur = { x: 0, y: 0, r: 0 }, last = 0, prevY = scrollY, fallV = 0;
+  const shards = $$(".shard").map((el, i) => ({ el, fx: [.12, .34, .58, .82][i], sp: [1.18, .86, 1.32, .94][i], ph: i * 1.7, sc: [.7, .55, .62, .5][i], x: 0, y: -200, r: 0, o: 0 }));
   function target(){
     const vw = innerWidth, vh = innerHeight, size = el.offsetWidth;
     const pr = pad.getBoundingClientRect();
@@ -998,13 +1021,29 @@ function faller(){
   function loop(now){
     const k = last ? Math.min(3, (now - last) / 16.667) : 1; last = now;
     const t = target();
-    const a = 1 - Math.pow(.86, k);
+    const a = 1 - Math.pow(.9, k);
     cur.x = lerp(cur.x, t.x, a); cur.y = lerp(cur.y, t.y, a); cur.r = lerp(cur.r, t.r, a);
     fallV = lerp(fallV, scrollY - prevY, .2); prevY = scrollY;
     flame.style.setProperty("--fl", clamp(Math.abs(fallV) / 25, 0, 1) * (1 - t.near));
     el.style.transform = `translate(${cur.x.toFixed(1)}px,${cur.y.toFixed(1)}px) rotate(${landed ? 0 : cur.r.toFixed(2)}deg) scale(${(1 + t.near * .45).toFixed(3)})`;
+    // осколки: падают своими путями с разной скоростью, у финала стягиваются к площадке и сливаются
+    const vw = innerWidth, vh = innerHeight, max = Math.max(1, document.documentElement.scrollHeight - vh), pg = clamp(scrollY / max, 0, 1);
+    const sz = el.offsetWidth;
+    for (const s of shards) {
+      const fallY = ((pg * s.sp * 3.2 + s.ph * .13) % 1.25) * (vh + 300) - 220;
+      const fx = s.fx * vw + Math.sin(pg * 9 + s.ph) * vw * .04;
+      const e = t.near;
+      const tx = lerp(fx, t.x + (sz - s.el.offsetWidth) / 2, e), ty = lerp(fallY, t.y + (sz - s.el.offsetWidth) / 2, e);
+      const b = 1 - Math.pow(.88, k);
+      s.x = lerp(s.x, tx, b); s.y = lerp(s.y, ty, b); s.r = lerp(s.r, (1 - e) * ((pg * 1400 * s.sp + s.ph * 40) % 360), b);
+      const o = landed ? 0 : (pg < .02 ? 0 : (e > .9 ? (1 - e) * 8 : .42 + e * .45));
+      s.o = lerp(s.o, o, b);
+      s.el.style.opacity = s.o.toFixed(3);
+      s.el.style.setProperty("--sb", ((1 - e) * (1 - s.sc) * 3).toFixed(1) + "px");
+      s.el.style.transform = `translate(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px) rotate(${s.r.toFixed(1)}deg) scale(${lerp(s.sc, 1.2, e).toFixed(3)})`;
+    }
     const settled = t.near > .985 && Math.hypot(cur.x - t.x, cur.y - t.y) < 3;
-    if (settled && !landed){ landed = true; el.classList.add("landed"); fin.classList.add("hit"); burstAt(t.x + el.offsetWidth / 2, t.y + el.offsetWidth * .9); setTimeout(() => fin.classList.add("named"), 520); }
+    if (settled && !landed){ landed = true; el.classList.add("landed", "merge"); setTimeout(() => el.classList.remove("merge"), 800); fin.classList.add("hit"); burstAt(t.x + el.offsetWidth / 2, t.y + el.offsetWidth * .9); setTimeout(() => fin.classList.add("named"), 520); }
     if (!settled && t.near < .9 && landed){ landed = false; el.classList.remove("landed"); fin.classList.remove("hit"); }
     requestAnimationFrame(loop);
   }
@@ -1081,7 +1120,10 @@ function scrollFx(){
   const prog = $("#prog"), depthN = $("#depthN"), rows = $$("#title .row"), lead = $(".hero-sub"), emb = $("#heroEmb");
   const curtains = $$(".curtain"), tapes = $$("[data-tape]"), pin = $("#dirs"), track = $("#pinTrack"), cards = $$("#pinTrack .pcard"), pinN = $("#pinN"), pinBar = $("#pinBar");
   const root = document.documentElement;
-  let ly = scrollY, vy = 0, mx = 0, my = 0, last = 0, pinDone = new Set();
+  let ly = scrollY, vy = 0, mx = 0, my = 0, last = 0, pinDone = new Set(), hpS = 0, ppS = 0, curScreen = -1, sweepT = 0;
+  const sweep = $("#sweep"), label = $("#scr-label");
+  const screens = ["#top", "#about", "#dirs", "#gallery", "#apply", "#help", "#finale"].map(q => $(q)).filter(Boolean);
+  const names = { top: "00 · RDX", about: "01 · DOSSIER", dirs: "01.5 · UNITS", gallery: "02 · FIELD", apply: "03 · RECRUIT", help: "04 · SUPPORT", finale: "05 · LANDING" };
   addEventListener("pointermove", e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
   function frame(now){
     const k = last ? Math.min(3, (now - last) / 16.667) : 1; last = now;
@@ -1090,9 +1132,9 @@ function scrollFx(){
     const p = clamp(y / max, 0, 1);
     prog.style.transform = `scaleX(${p.toFixed(4)})`;
     depthN.textContent = String(Math.round(p * 999)).padStart(3, "0");
-    root.style.setProperty("--skew", clamp(vy * -.06, -4, 4).toFixed(2) + "deg");
+    root.style.setProperty("--skew", clamp(vy * -.035, -2.5, 2.5).toFixed(2) + "deg");
     // герой разлетается
-    const hp = clamp(y / (vh * .85), 0, 1);
+    hpS = lerp(hpS, clamp(y / (vh * .85), 0, 1), 1 - Math.pow(.8, k)); const hp = hpS;
     if (rows[0]) {
       rows[0].style.transform = `translateX(${(-hp * 22).toFixed(2)}vw) scale(${(1 - hp * .1).toFixed(3)})`;
       rows[1].style.transform = `translateX(${(hp * 22).toFixed(2)}vw) scale(${(1 - hp * .1).toFixed(3)})`;
@@ -1103,13 +1145,14 @@ function scrollFx(){
     // секции наезжают
     for (const c of curtains) {
       const r = c.getBoundingClientRect(); const e = clamp((vh - r.top) / (vh * .7), 0, 1);
-      c.style.setProperty("--e", (e * e * (3 - 2 * e)).toFixed(3));
+      const x = clamp((-r.bottom + vh * .9) / (vh * .7), 0, 1);   // секция уходит вверх — отъезжает назад
+      c.style.setProperty("--e", (e * e * (3 - 2 * e)).toFixed(3)); c.style.setProperty("--x", (x * x).toFixed(3));
     }
     for (const t of tapes) { const r = t.getBoundingClientRect(); t.style.setProperty("--t", clamp((vh - r.top) / (vh * .8), 0, 1).toFixed(3)); }
     // горизонтальный трек
     if (pin && innerWidth > 900) {
       const r = pin.getBoundingClientRect(), total = pin.offsetHeight * f - vh;
-      const pp = clamp(-r.top / Math.max(1, total), 0, 1);
+      ppS = lerp(ppS, clamp(-r.top / Math.max(1, total), 0, 1), 1 - Math.pow(.82, k)); const pp = ppS;
       const dist = track.scrollWidth - innerWidth / f + 40;
       track.style.transform = `translateX(${(-pp * dist).toFixed(1)}px)`;
       pinBar.style.setProperty("--pp", pp.toFixed(3));
@@ -1121,6 +1164,15 @@ function scrollFx(){
         if (mid < .35 && !pinDone.has(i)) { pinDone.add(i); const b = c.querySelector(".bar i"); if (b) b.style.setProperty("--fill", 1); }
       });
     }
+    // эффект «переключения экрана», когда середину экрана пересекает новая секция
+    let idx = 0;
+    screens.forEach((el, i) => { if (el.getBoundingClientRect().top < vh * .5) idx = i; });
+    if (idx !== curScreen) {
+      if (curScreen !== -1 && now - sweepT > 700) { sweep.classList.remove("go"); void sweep.offsetWidth; sweep.classList.add("go"); sweepT = now; }
+      curScreen = idx;
+      label.textContent = names[screens[idx].id] || ""; label.classList.add("show");
+      clearTimeout(label._t); label._t = setTimeout(() => label.classList.remove("show"), 1600);
+    }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -1129,16 +1181,17 @@ function scrollFx(){
 }
 
 /* ===== расшифровка заголовков при появлении ===== */
-const GLYPHS = "RDX#%&@$*/\\<>=+01ABCDEFGHJKLMNPQRSTUVWXYZ";
+const GLYPHS = "RDXSQUAEOKNMHT";
 function scramble(el){
   if (still) return;
   el.querySelectorAll(".w>i").forEach((i, wi) => {
     const fin = i.dataset.t || i.textContent; i.dataset.t = fin;
-    const t0 = performance.now() + wi * 90, dur = 700;
+    i.style.width = i.getBoundingClientRect().width / fit() + "px"; i.classList.add("scr");   // ширина не скачет
+    const t0 = performance.now() + 250 + wi * 110, dur = 900;
     (function f(now){
       const k = clamp((now - t0) / dur, 0, 1), n = Math.floor(k * fin.length);
       i.textContent = fin.slice(0, n) + [...fin.slice(n)].map(c => c === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0]).join("");
-      if (k < 1) requestAnimationFrame(f); else i.textContent = fin;
+      if (k < 1) requestAnimationFrame(f); else { i.textContent = fin; i.style.width = ""; i.classList.remove("scr"); }
     })(performance.now());
   });
 }
