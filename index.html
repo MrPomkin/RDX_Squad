@@ -402,6 +402,18 @@ a:hover>.roll span{transform:translateY(-100%)}
 .curtain>.wrap{transform:translateY(calc((1 - var(--e,1)) * 90px)) scale(calc((.93 + var(--e,1) * .07) * (1 - var(--x,0) * .07)));opacity:calc((.15 + var(--e,1) * .85) * (1 - var(--x,0) * .55))}
 #scr-label{position:fixed;right:max(18px,2vw);top:96px;z-index:56;font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--or);opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .4s,transform .6s var(--ease)}
 #scr-label.show{opacity:.9;transform:none}
+/* участок свободного падения */
+.drop{position:relative;height:250vh;padding:0}
+.drop-in{position:sticky;top:0;height:calc(100svh / var(--fit));overflow:hidden;display:grid;place-items:center;pointer-events:none}
+.drop-lines{position:absolute;inset:0;opacity:var(--fall,0);transition:opacity .4s}
+.drop-lines i{position:absolute;left:var(--l);top:100%;width:2px;height:var(--h);border-radius:2px;background:linear-gradient(transparent,rgba(255,160,77,.55),transparent);animation:streak 1.6s linear var(--d) infinite}
+@keyframes streak{to{transform:translateY(calc(-100svh / var(--fit) - 220px))}}
+.drop-word{font:900 clamp(90px,22vw,340px)/.8 var(--display);letter-spacing:-.05em;text-align:center;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.07);transform:translateY(var(--dw,0px)) scale(var(--ds,1));user-select:none}
+.drop-meter{position:absolute;left:max(18px,4vw);bottom:12%;display:flex;flex-direction:column;gap:6px}
+.drop-meter b{font:900 clamp(40px,6vw,86px)/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.band.alt.hit{animation:bandHit .7s var(--ease)}
+@keyframes bandHit{0%{transform:rotate(1.2deg) scale(1.02)}18%{transform:rotate(-1.6deg) scale(1.06) translateY(14px);filter:brightness(1.6)}40%{transform:rotate(2.2deg) scale(1.01) translateY(-6px)}70%{transform:rotate(.6deg) scale(1.03)}100%{transform:rotate(1.2deg) scale(1.02)}}
+#faller.falling{filter:drop-shadow(0 0 30px rgba(255,140,60,.55)) drop-shadow(0 18px 24px rgba(0,0,0,.55))}
 /* несколько эмблем падают и сливаются в одну */
 .shard{position:fixed;left:0;top:0;z-index:28;width:var(--sd,72px);pointer-events:none;will-change:transform,opacity;opacity:0;transition:opacity .9s;filter:drop-shadow(0 10px 14px rgba(0,0,0,.5))}
 .shard.on{opacity:.95}
@@ -578,7 +590,14 @@ a:hover>.roll span{transform:translateY(-100%)}
     <div class="gal" id="gal"></div>
   </section>
 
-  <div class="band alt"><div class="track" data-speed="-1"><span data-i18n="band.b">Набор открыт <em></em> Заявка за 2 минуты <em></em> Ответ в Telegram <em></em></span></div></div>
+  <section class="drop" id="drop" aria-hidden="true">
+    <div class="drop-in">
+      <div class="drop-lines"><i style="--l:0%;--d:0.00s;--h:60px"></i><i style="--l:37%;--d:0.23s;--h:113px"></i><i style="--l:74%;--d:0.46s;--h:166px"></i><i style="--l:11%;--d:0.69s;--h:79px"></i><i style="--l:48%;--d:0.92s;--h:132px"></i><i style="--l:85%;--d:1.15s;--h:185px"></i><i style="--l:22%;--d:1.38s;--h:98px"></i><i style="--l:59%;--d:0.01s;--h:151px"></i><i style="--l:96%;--d:0.24s;--h:64px"></i><i style="--l:33%;--d:0.47s;--h:117px"></i><i style="--l:70%;--d:0.70s;--h:170px"></i><i style="--l:7%;--d:0.93s;--h:83px"></i><i style="--l:44%;--d:1.16s;--h:136px"></i><i style="--l:81%;--d:1.39s;--h:189px"></i><i style="--l:18%;--d:0.02s;--h:102px"></i><i style="--l:55%;--d:0.25s;--h:155px"></i><i style="--l:92%;--d:0.48s;--h:68px"></i><i style="--l:29%;--d:0.71s;--h:121px"></i></div>
+      <div class="drop-word">FREE<br>FALL</div>
+      <div class="drop-meter mono"><span data-i18n="drop.label">Свободное падение</span><b id="dropAlt">0999</b><span>m</span></div>
+    </div>
+  </section>
+  <div class="band alt" id="impactBand"><div class="track" data-speed="-1"><span data-i18n="band.b">Набор открыт <em></em> Заявка за 2 минуты <em></em> Ответ в Telegram <em></em></span></div></div>
 
   <section id="apply" class="curtain">
     <div class="wrap apply">
@@ -714,7 +733,7 @@ const I18N = {
     "hero.lead":"<b>Research Department Explosive.</b> Мы исследуем каждый уголок Animal Company, проводим регулярные рейды и захватываем позиции других кланов.",
     "hero.apply":"Подать заявку","hero.bot":"Открыть бота","hero.scroll":"Листай",
     "band.a":"Research <em></em> Department <em></em> Explosive <em></em> RDX Squad <em></em>",
-    "band.b":"Набор открыт <em></em> Заявка за 2 минуты <em></em> Ответ в Telegram <em></em>",
+    "drop.label":"Свободное падение","band.b":"Набор открыт <em></em> Заявка за 2 минуты <em></em> Ответ в Telegram <em></em>",
     "about.idx":"Досье","about.h":"Кто мы","about.p":"Небольшая команда игроков, которые любят разбирать игру до винтика и играть вместе, а не каждый сам за себя.",
     "about.manifest":"Мы — <span class=\"hl\">исследовательский отдел</span>. Ищем секреты карт, проверяем механики и тактики, а потом применяем их в игре. <span class=\"hl\">Взрывной</span> — потому что так мы и играем.",
     "about.s1":"бойцов в составе","about.s2":"эффективность","about.s3":"дней в неделю онлайн",
@@ -748,7 +767,7 @@ const I18N = {
     "hero.lead":"<b>Research Department Explosive.</b> We explore every corner of Animal Company, run regular raids and take over the positions of other clans.",
     "hero.apply":"Apply now","hero.bot":"Open the bot","hero.scroll":"Scroll",
     "band.a":"Research <em></em> Department <em></em> Explosive <em></em> RDX Squad <em></em>",
-    "band.b":"Recruiting <em></em> Apply in 2 minutes <em></em> Reply in Telegram <em></em>",
+    "drop.label":"Free fall","band.b":"Recruiting <em></em> Apply in 2 minutes <em></em> Reply in Telegram <em></em>",
     "about.idx":"Dossier","about.h":"Who we are","about.p":"A small team of players who love taking the game apart and playing together instead of solo.",
     "about.manifest":"We are the <span class=\"hl\">research department</span>. We hunt map secrets, test mechanics and tactics, then use them in real games. <span class=\"hl\">Explosive</span> — because that's how we play.",
     "about.s1":"members","about.s2":"efficiency","about.s3":"days a week online",
@@ -781,7 +800,7 @@ const I18N = {
     "hero.lead":"<b>Research Department Explosive.</b> Ми досліджуємо кожен куточок Animal Company, проводимо регулярні рейди та захоплюємо позиції інших кланів.",
     "hero.apply":"Подати заявку","hero.bot":"Відкрити бота","hero.scroll":"Гортай",
     "band.a":"Research <em></em> Department <em></em> Explosive <em></em> RDX Squad <em></em>",
-    "band.b":"Набір відкрито <em></em> Заявка за 2 хвилини <em></em> Відповідь у Telegram <em></em>",
+    "drop.label":"Вільне падіння","band.b":"Набір відкрито <em></em> Заявка за 2 хвилини <em></em> Відповідь у Telegram <em></em>",
     "about.idx":"Досьє","about.h":"Хто ми","about.p":"Невелика команда гравців, які люблять розбирати гру до гвинтика й грати разом.",
     "about.manifest":"Ми — <span class=\"hl\">дослідницький відділ</span>. Шукаємо секрети карт, перевіряємо механіки й тактики, а потім застосовуємо їх у грі. <span class=\"hl\">Вибуховий</span> — бо так ми й граємо.",
     "about.s1":"бійців у складі","about.s2":"ефективність","about.s3":"днів на тиждень онлайн",
@@ -1105,7 +1124,14 @@ function faller(){
       b.vx *= .9; b.va += (b.vx - rvx) * .8 + (Math.random() - .5) * 1.2;
     }
   }
-  function placeMain(x, y, sc){ main.style.transform = `translate(${(x - main.offsetWidth / 2).toFixed(1)}px,${(y - main.offsetWidth / 2).toFixed(1)}px) scale(${sc})`; }
+  function placeMain(x, y, sc, rot = 0){ main.style.transform = `translate(${(x - main.offsetWidth / 2).toFixed(1)}px,${(y - main.offsetWidth / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sc})`; }
+  const drop = $("#drop"), band = $("#impactBand"), dropIn = drop.querySelector(".drop-in"), alt = $("#dropAlt"), word = drop.querySelector(".drop-word");
+  let midDone = false, fallX = 0, fallY = 0, fallR = 0;
+  // разбить эмблему на части в точке (x, y)
+  function shatter(x, y, up){
+    main.classList.remove("show", "falling");
+    B.forEach((b, i) => { b.x = x + (i - 1.5) * 14; b.y = y; b.vx = (i - 1.5) * 2.2 + (Math.random() - .5) * 1.5; b.vy = -(up ? 4.5 : 1) - Math.random() * 2.5; b.va = (Math.random() - .5) * 6; b.alive = true; b.el.classList.add("on"); });
+  }
   function loop(now){
     const k = last ? Math.min(2.5, (now - last) / 16.667) : 1; last = now;
     const dScroll = scrollY - prevY; prevY = scrollY;
@@ -1136,6 +1162,55 @@ function faller(){
         if (b.y > vh + b.r * 2 || b.y < -vh) spawn(b, now);   // улетела — падает заново сверху
       }
       if (near) state = "gather";
+      // середина страницы: эмблемы слетаются в одну над участком свободного падения
+      const dr = drop.getBoundingClientRect();
+      if (dr.top > vh) midDone = false;
+      if (!midDone && !near && dr.top < vh * .55 && dr.bottom > vh * 1.2 && dScroll >= 0) state = "midgather";
+    }
+    if (state === "midgather") {
+      const MM = { x: vw / 2, y: vh * .3 };
+      let done = 0;
+      for (const b of B) {
+        if (!b.alive) { b.x = MM.x + (Math.random() - .5) * vw * .7; b.y = -60 - Math.random() * 80; b.alive = true; b.el.classList.add("on"); }
+        b.vx += (MM.x - b.x) * .01 * k; b.vy += (MM.y - b.y) * .01 * k;
+        b.vx *= Math.pow(.88, k); b.vy *= Math.pow(.88, k);
+        b.x += b.vx * k; b.y += b.vy * k; b.a += (b.va = lerp(b.va, 12, .05)) * k;
+        if (Math.hypot(b.x - MM.x, b.y - MM.y) < 14) done++;
+      }
+      const dr = drop.getBoundingClientRect();
+      if (dr.top > vh * .8) state = "fall";
+      else if (done >= B.length - 1 && B.every((b) => Math.hypot(b.x - MM.x, b.y - MM.y) < 46)) {
+        state = "midfall"; fallX = MM.x; fallY = MM.y; fallR = 0;
+        B.forEach((b) => { b.el.classList.remove("on"); b.alive = false; });
+        main.getAnimations().forEach((a) => a.cancel());
+        main.classList.add("show", "merge", "falling"); main.classList.remove("landed");
+        placeMain(fallX, fallY, 1.3); burstAt(MM.x, MM.y, 30);
+        setTimeout(() => main.classList.remove("merge"), 800);
+      }
+    }
+    if (state === "midfall") {
+      // долгое падение: эмблема висит в кадре, страница уезжает вверх — как будто она летит вниз
+      const dr = drop.getBoundingClientRect(), br = band.getBoundingClientRect(), size = main.offsetWidth * 1.3;
+      const stopY = br.top + br.height * .2 - size * .5;   // где она коснётся ленты
+      const p = clamp(-dr.top / Math.max(1, dr.height - vh), 0, 1);
+      const ty = Math.min(vh * .44, stopY), tx = vw / 2 + Math.sin(p * Math.PI * 3) * vw * (phone ? .12 : .18);
+      fallX = lerp(fallX, tx, 1 - Math.pow(.9, k)); fallY = lerp(fallY, ty, 1 - Math.pow(.84, k));
+      fallR += (1.4 + Math.abs(dScroll) * .25) * k;
+      placeMain(fallX, fallY, 1.3, fallR);
+      dropIn.style.setProperty("--fall", clamp(Math.abs(dScroll) / 14 + .35, 0, 1).toFixed(2));
+      alt.textContent = String(Math.max(0, Math.round((1 - p) * 999))).padStart(4, "0");
+      word.style.setProperty("--dw", (-p * 220).toFixed(1) + "px"); word.style.setProperty("--ds", (1 + p * .25).toFixed(3));
+      if (stopY <= vh * .44 + 1 && Math.abs(fallY - stopY) < 6) {   // удар о ленту
+        state = "fall"; midDone = true;
+        band.classList.remove("hit"); void band.offsetWidth; band.classList.add("hit");
+        burstAt(fallX, stopY + size * .45, 60);
+        const boom = document.createElement("div"); boom.className = "boom"; boom.style.left = fallX + "px"; boom.style.top = (stopY + size * .4) + "px"; document.body.appendChild(boom);
+        boom.animate([{ transform: "scale(.4)", opacity: 1 }, { transform: "scale(9)", opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.8,.2,1)" }).onfinish = () => boom.remove();
+        shatter(fallX, stopY, true);
+        dropIn.style.setProperty("--fall", 0);
+      } else if (dr.top > vh * .7) {   // пролистали обратно вверх — снова на части
+        state = "fall"; shatter(fallX, fallY, false); dropIn.style.setProperty("--fall", 0);
+      }
     }
     if (state === "gather") {
       let done = 0;
