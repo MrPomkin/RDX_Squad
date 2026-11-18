@@ -1,0 +1,39 @@
+# Публикация сайта RDX Squad на GitHub Pages через GitHub Actions.
+# Включить: Settings → Pages → Source: GitHub Actions. Свой домен: Settings → Pages → Custom domain.
+name: Deploy site
+
+on:
+  push:
+    branches: [main, ccr-a0d3cc16-vyns31]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Собрать папку сайта (без серверного кода)
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r assets img _site/
+          if [ -f CNAME ]; then cp CNAME _site/; fi
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
