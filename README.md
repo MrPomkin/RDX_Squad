@@ -9,5 +9,3 @@
 - `supabase/rdx_tables.sql` — таблицы.
 
 Токены ботов хранятся только в секретах Supabase-функции, в репозитории их нет.
-
-Команды командира в боте RDX: `/apps`, `/admin`, `/tokens @ник`, `/reset @ник`, `/add @ник 10 [дней]`, `/unlim @ник [дней|off]`, `/grant @ник vip|premium|plus|ultra|max [дней|навсегда]`, `/grant @ник none`.
