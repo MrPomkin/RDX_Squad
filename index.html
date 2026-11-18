@@ -291,7 +291,7 @@ form.f.sent .f-done svg path{stroke-dashoffset:0}
 .q .a p{margin:0 0 24px;color:var(--muted);max-width:760px}
 
 /* приземление эмблемы */
-#faller{position:fixed;left:0;top:0;z-index:30;width:clamp(64px,9vw,150px);pointer-events:none;will-change:transform;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55))}
+#faller{position:fixed;left:0;top:0;z-index:30;opacity:0;transition:opacity .25s;width:clamp(64px,9vw,150px);pointer-events:none;will-change:transform;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55))}
 #faller .spinbox{transform-style:preserve-3d}
 #faller .flame{position:absolute;left:50%;bottom:80%;width:34%;height:120%;margin-left:-17%;border-radius:50%;background:radial-gradient(ellipse at 50% 100%,rgba(255,160,77,.75),rgba(255,122,26,.25) 45%,transparent 70%);filter:blur(6px);opacity:var(--fl,0);transform-origin:50% 100%}
 #faller.landed .spinbox{animation:spin3d 1.3s var(--ease) both}
@@ -376,20 +376,18 @@ a:hover>.roll span{transform:translateY(-100%)}
 .shot{transform:perspective(1100px) rotateY(var(--gr,0deg)) scale(var(--gs,1));transition:transform .25s linear}
 /* «переключение экрана»: секция уходит назад, следующая наезжает */
 .curtain>.wrap{transform:translateY(calc((1 - var(--e,1)) * 90px)) scale(calc((.93 + var(--e,1) * .07) * (1 - var(--x,0) * .07)));opacity:calc((.15 + var(--e,1) * .85) * (1 - var(--x,0) * .55))}
-#sweep{position:fixed;left:0;right:0;top:0;height:100vh;z-index:55;pointer-events:none;opacity:0;
-  background:linear-gradient(180deg,transparent 0,rgba(255,122,26,0) 40%,rgba(255,122,26,.16) 49%,rgba(255,210,154,.55) 50%,rgba(255,122,26,.16) 51%,transparent 60%);background-size:100% 220%;background-repeat:no-repeat}
-#sweep.go{animation:sweep .9s cubic-bezier(.45,0,.2,1) both}
-@keyframes sweep{0%{opacity:1;background-position:0 100%}100%{opacity:1;background-position:0 -20%}}
 #scr-label{position:fixed;right:max(18px,2vw);top:96px;z-index:56;font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--or);opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .4s,transform .6s var(--ease)}
 #scr-label.show{opacity:.9;transform:none}
 /* несколько эмблем падают и сливаются в одну */
-.shard{position:fixed;left:0;top:0;z-index:-1;width:clamp(54px,6vw,110px);pointer-events:none;will-change:transform,opacity;opacity:0;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5)) blur(var(--sb,0px))}
+.shard{position:fixed;left:0;top:0;z-index:28;width:var(--sd,72px);pointer-events:none;will-change:transform,opacity;opacity:0;transition:opacity .5s;filter:drop-shadow(0 10px 14px rgba(0,0,0,.5))}
+.shard.on{opacity:.95}
 .shard svg{display:block;width:100%}
+#faller.show{opacity:1}
 #faller.merge{animation:mergeFlash .7s var(--ease)}
 @keyframes mergeFlash{0%{filter:drop-shadow(0 0 0 rgba(255,160,77,0)) brightness(1)}35%{filter:drop-shadow(0 0 40px rgba(255,160,77,.95)) brightness(1.6)}100%{filter:drop-shadow(0 18px 24px rgba(0,0,0,.55)) brightness(1)}}
 /* расшифровка без дрожания: ширина слова зафиксирована */
 .w>i.scr{display:inline-block;white-space:nowrap;overflow:hidden;vertical-align:top}
-@media (prefers-reduced-motion:reduce){.shard,#sweep,#scr-label{display:none}
+@media (prefers-reduced-motion:reduce){.shard,#scr-label{display:none}
 *,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}#faller{display:none}.finale .sub,.finale .cta{opacity:1;transform:none}}
 </style>
 </head>
@@ -409,7 +407,6 @@ a:hover>.roll span{transform:translateY(-100%)}
 <div class="cur-ring" id="ring"><span id="ringTxt"></span></div>
 <canvas id="trail"></canvas>
 <div id="prog"></div>
-<div id="sweep"></div>
 <div id="scr-label"></div>
 <div id="depth">DEPTH <b id="depthN">000</b> M</div>
 
@@ -996,60 +993,122 @@ function count(el){
   (function f(now){ const k = Math.min(1, (now - t0) / 1600), e = 1 - Math.pow(1 - k, 4); el.textContent = Math.round(to * e) + suf; if (k < 1) requestAnimationFrame(f); })(t0);
 }
 
-/* ===== эмблема падает вниз, пока листаешь, и приземляется в конце ===== */
+/* ===== эмблемы падают, отскакивают от кнопок и заголовков, в конце сливаются в одну и запрыгивают на место ===== */
 function faller(){
   if (still) return;
-  const el = $("#faller"), pad = $("#pad"), fin = $("#finale"), flame = el.querySelector(".flame");
-  let landed = false, cur = { x: 0, y: 0, r: 0 }, last = 0, prevY = scrollY, fallV = 0;
-  const shards = $$(".shard").map((el, i) => ({ el, fx: [.12, .34, .58, .82][i], sp: [1.18, .86, 1.32, .94][i], ph: i * 1.7, sc: [.7, .55, .62, .5][i], x: 0, y: -200, r: 0, o: 0 }));
-  function target(){
-    const vw = innerWidth, vh = innerHeight, size = el.offsetWidth;
-    const pr = pad.getBoundingClientRect();
-    const padX = pr.left + pr.width / 2 - size / 2, padY = pr.top + pr.height / 2 - size / 2;
-    const max = document.documentElement.scrollHeight - vh;
-    const p = clamp(scrollY / Math.max(1, max), 0, 1);
-    // путь: справа сверху вниз по краю, волнообразно; у финала притягивается к площадке
-    // в свободном поле справа от контента; если поля нет — эмблема выглядывает из-за края
-    const gutter = (vw - 1180 * fit()) / 2;
-    const side = gutter > size + 40 ? vw - gutter / 2 - size / 2 : vw - size * .72;
-    const wobble = Math.sin(p * Math.PI * 5) * (vw > 900 ? vw * .025 : 8);
-    const pathX = side + wobble, pathY = lerp(-size * 1.2, vh * .7, Math.min(1, p * 1.25));
-    const near = clamp(1 - (pr.top - vh * .2) / (vh * .9), 0, 1);   // насколько близко финал
-    const e = near * near * (3 - 2 * near);
-    return { x: lerp(pathX, padX, e), y: lerp(pathY, padY, e), r: (1 - e) * (p * 900 % 360 - 180) * .25, near: e };
-  }
-  function loop(now){
-    const k = last ? Math.min(3, (now - last) / 16.667) : 1; last = now;
-    const t = target();
-    const a = 1 - Math.pow(.9, k);
-    cur.x = lerp(cur.x, t.x, a); cur.y = lerp(cur.y, t.y, a); cur.r = lerp(cur.r, t.r, a);
-    fallV = lerp(fallV, scrollY - prevY, .2); prevY = scrollY;
-    flame.style.setProperty("--fl", clamp(Math.abs(fallV) / 25, 0, 1) * (1 - t.near));
-    el.style.transform = `translate(${cur.x.toFixed(1)}px,${cur.y.toFixed(1)}px) rotate(${landed ? 0 : cur.r.toFixed(2)}deg) scale(${(1 + t.near * .45).toFixed(3)})`;
-    // осколки: падают своими путями с разной скоростью, у финала стягиваются к площадке и сливаются
-    const vw = innerWidth, vh = innerHeight, max = Math.max(1, document.documentElement.scrollHeight - vh), pg = clamp(scrollY / max, 0, 1);
-    const sz = el.offsetWidth;
-    for (const s of shards) {
-      const fallY = ((pg * s.sp * 3.2 + s.ph * .13) % 1.25) * (vh + 300) - 220;
-      const fx = s.fx * vw + Math.sin(pg * 9 + s.ph) * vw * .04;
-      const e = t.near;
-      const tx = lerp(fx, t.x + (sz - s.el.offsetWidth) / 2, e), ty = lerp(fallY, t.y + (sz - s.el.offsetWidth) / 2, e);
-      const b = 1 - Math.pow(.88, k);
-      s.x = lerp(s.x, tx, b); s.y = lerp(s.y, ty, b); s.r = lerp(s.r, (1 - e) * ((pg * 1400 * s.sp + s.ph * 40) % 360), b);
-      const o = landed ? 0 : (pg < .02 ? 0 : (e > .9 ? (1 - e) * 8 : .42 + e * .45));
-      s.o = lerp(s.o, o, b);
-      s.el.style.opacity = s.o.toFixed(3);
-      s.el.style.setProperty("--sb", ((1 - e) * (1 - s.sc) * 3).toFixed(1) + "px");
-      s.el.style.transform = `translate(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px) rotate(${s.r.toFixed(1)}deg) scale(${lerp(s.sc, 1.2, e).toFixed(3)})`;
+  const main = $("#faller"), pad = $("#pad"), fin = $("#finale"), flame = main.querySelector(".flame");
+  if (flame) flame.remove();
+  const phone = innerWidth < 700;
+  const els = $$(".shard");
+  const B = els.map((el, i) => {
+    const d = (phone ? [46, 40, 52, 38] : [72, 58, 84, 64])[i];
+    el.style.setProperty("--sd", d + "px");
+    return { el, r: d / 2, x: 0, y: 0, vx: 0, vy: 0, a: Math.random() * 360, va: 0, alive: false, t: i * 900 };
+  });
+  const G = .34, REST = .55, FRIC = .985;
+  let state = "fall", last = 0, prevY = scrollY, t0 = performance.now(), mergedAt = 0, colliders = [], collT = 0;
+  const spawn = (b, now) => { b.x = innerWidth * (.15 + Math.random() * .7); b.y = -b.r * 2 - Math.random() * 120; b.vx = (Math.random() - .5) * 2.4; b.vy = Math.random() * 1.5; b.va = (Math.random() - .5) * 6; b.alive = true; b.el.classList.add("on"); };
+  function collect(){
+    // препятствия: кнопки и надписи, которые сейчас на экране
+    colliders = [];
+    for (const el of $$(".btn, .sec-head h2, .pin-head h2, .title .row, .fullname, .lead, .dossier, .stat b, .hcard h3, .card h3, .pcard h3, .q button span")) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < -50 || r.top > innerHeight + 50 || r.width < 8 || getComputedStyle(el).opacity < .2) continue;
+      colliders.push(r);
     }
-    const settled = t.near > .985 && Math.hypot(cur.x - t.x, cur.y - t.y) < 3;
-    if (settled && !landed){ landed = true; el.classList.add("landed", "merge"); setTimeout(() => el.classList.remove("merge"), 800); fin.classList.add("hit"); burstAt(t.x + el.offsetWidth / 2, t.y + el.offsetWidth * .9); setTimeout(() => fin.classList.add("named"), 520); }
-    if (!settled && t.near < .9 && landed){ landed = false; el.classList.remove("landed"); fin.classList.remove("hit"); }
+  }
+  function hitRect(b, r, dScroll){
+    const cx = clamp(b.x, r.left, r.right), cy = clamp(b.y, r.top, r.bottom);
+    const dx = b.x - cx, dy = b.y - cy, d2 = dx * dx + dy * dy;
+    if (d2 >= b.r * b.r) return;
+    let nx, ny, d = Math.sqrt(d2);
+    if (d < .001) { // центр внутри прямоугольника — выталкиваем по ближайшей стороне
+      const l = b.x - r.left, rr = r.right - b.x, t = b.y - r.top, bb = r.bottom - b.y, m = Math.min(l, rr, t, bb);
+      nx = m === l ? -1 : m === rr ? 1 : 0; ny = m === t ? -1 : m === bb ? 1 : 0; d = 0;
+    } else { nx = dx / d; ny = dy / d; }
+    const pen = b.r - d; b.x += nx * pen; b.y += ny * pen;
+    const ovy = -dScroll;   // препятствие едет вместе со страницей
+    const rvx = b.vx, rvy = b.vy - ovy, vn = rvx * nx + rvy * ny;
+    if (vn < 0) {
+      b.vx -= (1 + REST) * vn * nx; b.vy -= (1 + REST) * vn * ny;
+      b.vx *= .96; b.va += (b.vx - rvx) * 2.2 + (Math.random() - .5) * 3;
+      if (Math.abs(vn) > 6 && Math.random() < .5) burstAt(b.x - nx * b.r, b.y - ny * b.r, 6);
+    }
+  }
+  function placeMain(x, y, sc){ main.style.transform = `translate(${(x - main.offsetWidth / 2).toFixed(1)}px,${(y - main.offsetWidth / 2).toFixed(1)}px) scale(${sc})`; }
+  function loop(now){
+    const k = last ? Math.min(2.5, (now - last) / 16.667) : 1; last = now;
+    const dScroll = scrollY - prevY; prevY = scrollY;
+    const vw = innerWidth, vh = innerHeight;
+    const pr = pad.getBoundingClientRect(), px = pr.left + pr.width / 2, py = pr.top + pr.height / 2;
+    const near = pr.top < vh * .8 && pr.bottom > 0;
+    const M = { x: px, y: Math.max(70, py - pr.height * 1.05) };   // точка слияния над площадкой
+    if (now - collT > 120) { collect(); collT = now; }
+
+    if (state === "fall") {
+      for (const b of B) {
+        if (!b.alive) { if (now - t0 > b.t && scrollY > 40) spawn(b, now); else continue; }
+        b.vy += G * k; b.vx *= Math.pow(FRIC, k); b.vy *= Math.pow(.995, k);
+        b.vy = clamp(b.vy, -26, 16); b.va *= Math.pow(.98, k);
+        b.x += b.vx * k; b.y += b.vy * k; b.a += b.va * k;
+        for (const r of colliders) hitRect(b, r, dScroll);
+        for (const o of B) if (o !== b && o.alive) {   // эмблемы толкают друг друга
+          const dx = b.x - o.x, dy = b.y - o.y, d = Math.hypot(dx, dy), m = b.r + o.r;
+          if (d > 0 && d < m) { const p2 = (m - d) / 2, nx = dx / d, ny = dy / d; b.x += nx * p2; b.y += ny * p2; o.x -= nx * p2; o.y -= ny * p2; const rv = (b.vx - o.vx) * nx + (b.vy - o.vy) * ny; if (rv < 0) { b.vx -= rv * nx * .8; b.vy -= rv * ny * .8; o.vx += rv * nx * .8; o.vy += rv * ny * .8; } }
+        }
+        if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) * REST; }
+        if (b.x > vw - b.r) { b.x = vw - b.r; b.vx = -Math.abs(b.vx) * REST; }
+        if (b.y > vh + b.r * 2 || b.y < -vh) spawn(b, now);   // улетела — падает заново сверху
+      }
+      if (near) state = "gather";
+    }
+    if (state === "gather") {
+      let done = 0;
+      for (const b of B) {
+        if (!b.alive) { b.x = M.x + (Math.random() - .5) * vw * .6; b.y = -60; b.alive = true; b.el.classList.add("on"); }
+        // пружина к точке слияния
+        b.vx += (M.x - b.x) * .012 * k; b.vy += (M.y - b.y) * .012 * k;
+        b.vx *= Math.pow(.88, k); b.vy *= Math.pow(.88, k);
+        b.x += b.vx * k; b.y += b.vy * k; b.a += (b.va = lerp(b.va, 14, .05)) * k;
+        if (Math.hypot(b.x - M.x, b.y - M.y) < 10) done++;
+      }
+      if (done === B.length || (done >= B.length - 1 && B.every((b) => Math.hypot(b.x - M.x, b.y - M.y) < 40))) {
+        state = "merged"; mergedAt = now;
+        B.forEach((b) => { b.el.classList.remove("on"); b.alive = false; });
+        main.classList.add("show", "merge"); main.classList.remove("landed");
+        placeMain(M.x, M.y, 1);
+        burstAt(M.x, M.y, 30);
+        // прыжок на площадку: вверх и вниз по дуге
+        const dx = px - M.x, dy = py - M.y, w = main.offsetWidth / 2;
+        main.animate([
+          { transform: `translate(${M.x - w}px,${M.y - w}px) scale(.6)` },
+          { transform: `translate(${M.x - w}px,${M.y - w}px) scale(1.15)`, offset: .18 },
+          { transform: `translate(${M.x + dx * .5 - w}px,${M.y - 90 - w}px) scale(1.05) rotate(-12deg)`, offset: .55 },
+          { transform: `translate(${px - w}px,${py - w}px) scale(1.75,1.05)`, offset: .82 },
+          { transform: `translate(${px - w}px,${py - w}px) scale(1.45)` },
+        ], { duration: 1150, easing: "cubic-bezier(.3,.7,.3,1)" }).onfinish = () => {
+          if (state !== "merged") return;
+          state = "landed"; placeMain(px, py, 1.45);
+          main.classList.add("landed"); fin.classList.add("hit"); burstAt(px, py + main.offsetWidth * .5, 46);
+          setTimeout(() => fin.classList.add("named"), 450);
+        };
+        setTimeout(() => main.classList.remove("merge"), 800);
+      }
+      if (!near && pr.top > vh * 1.1) state = "fall";
+    }
+    if (state === "landed") placeMain(px, py, 1.45);
+    // ушли от финала — эмблема разлетается обратно на части
+    if ((state === "landed" || state === "merged") && pr.top > vh * .95) {
+      state = "fall"; main.getAnimations().forEach((a) => a.cancel());
+      main.classList.remove("show", "landed"); fin.classList.remove("hit");
+      B.forEach((b) => { b.x = px; b.y = Math.min(py, vh - 40); b.vx = (Math.random() - .5) * 14; b.vy = -6 - Math.random() * 8; b.va = (Math.random() - .5) * 20; b.alive = true; b.el.classList.add("on"); });
+    }
+    for (const b of B) b.el.style.transform = `translate(${(b.x - b.r).toFixed(1)}px,${(b.y - b.r).toFixed(1)}px) rotate(${(b.a % 360).toFixed(1)}deg)`;
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
-  // если эмблема не видна (reduced motion выключен, но например старый браузер) — имя всё равно появится
-  new IntersectionObserver(es => { if (es[0].isIntersecting && es[0].intersectionRatio > .6) setTimeout(() => fin.classList.add("named"), 1800); }, { threshold: .6 }).observe(fin);
+  // запасной вариант: имя появится, даже если анимация не успела
+  new IntersectionObserver(es => { if (es[0].isIntersecting && es[0].intersectionRatio > .6) setTimeout(() => fin.classList.add("named"), 3200); }, { threshold: .6 }).observe(fin);
 }
 function burstAt(x, y, count = 46){
   const cv = $("#trail"), ctx = cv.getContext("2d");
@@ -1121,7 +1180,7 @@ function scrollFx(){
   const curtains = $$(".curtain"), tapes = $$("[data-tape]"), pin = $("#dirs"), track = $("#pinTrack"), cards = $$("#pinTrack .pcard"), pinN = $("#pinN"), pinBar = $("#pinBar");
   const root = document.documentElement;
   let ly = scrollY, vy = 0, mx = 0, my = 0, last = 0, pinDone = new Set(), hpS = 0, ppS = 0, curScreen = -1, sweepT = 0;
-  const sweep = $("#sweep"), label = $("#scr-label");
+  const label = $("#scr-label");
   const screens = ["#top", "#about", "#dirs", "#gallery", "#apply", "#help", "#finale"].map(q => $(q)).filter(Boolean);
   const names = { top: "00 · RDX", about: "01 · DOSSIER", dirs: "01.5 · UNITS", gallery: "02 · FIELD", apply: "03 · RECRUIT", help: "04 · SUPPORT", finale: "05 · LANDING" };
   addEventListener("pointermove", e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
@@ -1168,7 +1227,6 @@ function scrollFx(){
     let idx = 0;
     screens.forEach((el, i) => { if (el.getBoundingClientRect().top < vh * .5) idx = i; });
     if (idx !== curScreen) {
-      if (curScreen !== -1 && now - sweepT > 700) { sweep.classList.remove("go"); void sweep.offsetWidth; sweep.classList.add("go"); sweepT = now; }
       curScreen = idx;
       label.textContent = names[screens[idx].id] || ""; label.classList.add("show");
       clearTimeout(label._t); label._t = setTimeout(() => label.classList.remove("show"), 1600);
