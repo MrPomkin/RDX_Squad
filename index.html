@@ -29,6 +29,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth;background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);overflow-x:hidden}
 header.nav,main,footer{zoom:var(--fit)}
@@ -162,8 +163,22 @@ section{position:relative;padding:120px 0}
 @media (max-width:760px){.sec-head{grid-template-columns:1fr}}
 
 /* появление */
-.rv{opacity:0;transform:translateY(40px);filter:blur(6px);transition:opacity 1.1s var(--ease),transform 1.3s var(--ease),filter 1.1s var(--ease)}
-.rv.in{opacity:1;transform:none;filter:none}
+@property --rvm{syntax:"<percentage>";inherits:false;initial-value:120%}
+.rv{opacity:0;transform:translateY(46px) scale(.97);filter:blur(8px);--rvm:-30%;
+  -webkit-mask-image:linear-gradient(180deg,#000 var(--rvm),transparent calc(var(--rvm) + 30%));mask-image:linear-gradient(180deg,#000 var(--rvm),transparent calc(var(--rvm) + 30%));
+  transition:opacity 1.1s var(--ease),transform 1.4s var(--ease),filter 1.2s var(--ease),--rvm 1.4s cubic-bezier(.65,0,.15,1)}
+.rv.done{-webkit-mask-image:none;mask-image:none}
+.rv.in{opacity:1;transform:none;filter:none;--rvm:100%}
+/* слова в тексте появляются по одному */
+.wd{display:inline-block;opacity:0;transform:translateY(.7em) rotate(3deg);filter:blur(5px);transition:opacity .8s var(--ease),transform 1s var(--ease),filter .8s var(--ease);transition-delay:calc(160ms + var(--d,0) * 24ms)}
+.in .wd,.wd.in{opacity:1;transform:none;filter:none}
+/* карточки и строки списков — лесенкой */
+.in .stat,.card.in>.ico,.card.in>h3,.card.in>.tag{animation:pop .9s var(--ease) both}
+.in .stat:nth-child(2){animation-delay:.12s}.in .stat:nth-child(3){animation-delay:.24s}
+@keyframes pop{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+.steps-side li{opacity:0;transform:translateX(-24px);transition:opacity .8s var(--ease),transform 1s var(--ease)}
+.steps-side li.in{opacity:1;transform:none}
+.steps-side li:nth-child(2){transition-delay:.12s}.steps-side li:nth-child(3){transition-delay:.24s}
 .split .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.06em}
 .split .w>i{display:inline-block;font-style:normal;transform:translateY(105%) rotate(4deg);transition:transform 1.2s var(--ease)}
 .split.in .w>i{transform:none}
@@ -235,9 +250,9 @@ form.f::before{content:"";position:absolute;inset:0 0 auto;height:6px;background
 .fld{position:relative}
 .fld.full{grid-column:1/-1}
 .fld>input,.fld>select,.fld>textarea{width:100%;background:#16181b;border:1px solid var(--line);border-radius:14px;padding:24px 16px 10px;outline:none;transition:border-color .25s,box-shadow .25s,background .25s;appearance:none}
-.fld>textarea{min-height:120px;resize:vertical}
+.fld>textarea{padding-top:32px;min-height:120px;resize:vertical}
 .fld>select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px;background-repeat:no-repeat}
-.fld>label{position:absolute;left:17px;top:17px;color:var(--dim);pointer-events:none;transition:transform .25s var(--ease),color .25s,font-size .25s;transform-origin:left top}
+.fld>label{position:absolute;left:17px;top:17px;right:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dim);pointer-events:none;transition:transform .25s var(--ease),color .25s,font-size .25s;transform-origin:left top}
 .fld>input:focus,.fld>select:focus,.fld>textarea:focus{border-color:var(--or);box-shadow:0 0 0 4px var(--or-soft);background:#191b1f}
 .fld>input:focus+label,.fld>input:not(:placeholder-shown)+label,.fld>textarea:focus+label,.fld>textarea:not(:placeholder-shown)+label,.fld>select+label{transform:translateY(-10px) scale(.78);color:var(--or2)}
 .fld .bar{position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--or);transform:scaleX(0);transition:transform .4s var(--ease)}
@@ -388,7 +403,7 @@ a:hover>.roll span{transform:translateY(-100%)}
 #scr-label{position:fixed;right:max(18px,2vw);top:96px;z-index:56;font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--or);opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .4s,transform .6s var(--ease)}
 #scr-label.show{opacity:.9;transform:none}
 /* несколько эмблем падают и сливаются в одну */
-.shard{position:fixed;left:0;top:0;z-index:28;width:var(--sd,72px);pointer-events:none;will-change:transform,opacity;opacity:0;transition:opacity .5s;filter:drop-shadow(0 10px 14px rgba(0,0,0,.5))}
+.shard{position:fixed;left:0;top:0;z-index:28;width:var(--sd,72px);pointer-events:none;will-change:transform,opacity;opacity:0;transition:opacity .9s;filter:drop-shadow(0 10px 14px rgba(0,0,0,.5))}
 .shard.on{opacity:.95}
 .shard svg{display:block;width:100%}
 #faller.show{opacity:1}
@@ -396,7 +411,7 @@ a:hover>.roll span{transform:translateY(-100%)}
 @keyframes mergeFlash{0%{filter:drop-shadow(0 0 0 rgba(255,160,77,0)) brightness(1)}35%{filter:drop-shadow(0 0 40px rgba(255,160,77,.95)) brightness(1.6)}100%{filter:drop-shadow(0 18px 24px rgba(0,0,0,.55)) brightness(1)}}
 /* расшифровка без дрожания: ширина слова зафиксирована */
 .w>i.scr{display:inline-block;white-space:nowrap;overflow:hidden;vertical-align:top}
-@media (prefers-reduced-motion:reduce){#scr-label{display:none}
+@media (prefers-reduced-motion:reduce){#scr-label{display:none}.wd,.steps-side li{opacity:1!important;transform:none!important;filter:none!important}.rv{-webkit-mask-image:none!important;mask-image:none!important}
 *,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}.finale .sub,.finale .cta{opacity:1;transform:none}}
 </style>
 </head>
@@ -604,7 +619,7 @@ a:hover>.roll span{transform:translateY(-100%)}
               <label class="chip"><input type="radio" name="weapon" value="Револьверы"><span data-i18n="f.w3">Револьверы</span></label>
               <label class="chip"><input type="radio" name="weapon" value="Гранаты"><span data-i18n="f.w4">Гранаты</span></label>
             </div></div>
-          <div class="fld full"><textarea id="a_why" name="why" placeholder=" " required maxlength="1200"></textarea><label for="a_why" data-i18n="f.why">Почему RDX и чем будешь полезен</label><i class="bar"></i></div>
+          <div class="fld full"><textarea id="a_why" name="why" placeholder=" " required maxlength="1200"></textarea><label for="a_why" data-i18n="f.why">О себе: почему RDX</label><i class="bar"></i></div>
         </div>
         <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         <p class="f-err" id="applyErr" role="alert"></p>
@@ -713,7 +728,7 @@ const I18N = {
     "apply.s2b":"Мы смотрим","apply.s2":"Командиры читают каждую заявку.","apply.s3b":"Ответ в Telegram","apply.s3":"Бот RDX напишет решение. Открой его заранее.",
     "f.nick":"Ник в Animal Company","f.tg":"Telegram (@ник)","f.age":"Возраст","f.tz":"Часовой пояс","f.tz0":"—","f.platform":"Где играешь",
     "f.weapon":"Любимое оружие","f.w0":"РПГ (гранатомёт)","f.w1":"Медик","f.w2":"Ближний бой","f.w3":"Револьверы","f.w4":"Гранаты","f.wreq":"Выбери любимое оружие","f.num":"Номер заявки","f.code":"Секретный код — сохрани его. По нему можно изменить заявку, пока её не рассмотрели. Никому не показывай.","f.copy":"Скопировать код","f.editlink":"Ошибся в заявке? Изменить по коду","f.editcode":"Код заявки (RDX-XXXXX-…)","f.load":"Открыть заявку","f.editing":"Изменение заявки №","f.save":"Сохранить изменения","f.saved":"Изменения сохранены — командиры уже видят обновлённую анкету.","f.badcode":"Код не подошёл. Проверь его и попробуй ещё раз.","f.locked":"Эту заявку уже рассмотрели — изменить её нельзя. Напиши командирам в боте.","f.cancel":"Отмена","f.new":"Новая заявка","f.exp":"Сколько играешь","f.e1":"меньше месяца","f.e2":"1–6 месяцев","f.e3":"полгода+","f.e4":"больше года",
-    "f.why":"Почему RDX и чем будешь полезен","f.note":"Ответ придёт от бота RDX в Telegram — открой его и нажми «Старт», иначе бот не сможет тебе написать.",
+    "f.why":"О себе: почему RDX","f.note":"Ответ придёт от бота RDX в Telegram — открой его и нажми «Старт», иначе бот не сможет тебе написать.",
     "f.send":"Отправить заявку","f.doneh":"Заявка у нас","f.donep":"Ответ придёт от бота RDX. Если ещё не открыл его — сделай это сейчас.",
     "f.req":"Заполни ник, Telegram и пару слов о себе","f.tgbad":"Telegram-ник: латиница, цифры и _, от 5 символов","f.fail":"Не получилось отправить. Попробуй ещё раз или подай заявку через бота.","f.rate":"Слишком много заявок. Попробуй позже.",
     "help.idx":"Поддержка","help.h":"Нужна помощь","help.p":"Всё решается через бота RDX в Telegram: заявки, обжалование бана и вопросы к RDX_AI.",
@@ -746,7 +761,7 @@ const I18N = {
     "apply.s2b":"We review","apply.s2":"Commanders read every application.","apply.s3b":"Reply in Telegram","apply.s3":"The RDX bot will send the decision. Open it first.",
     "f.nick":"Animal Company nickname","f.tg":"Telegram (@username)","f.age":"Age","f.tz":"Time zone","f.tz0":"—","f.platform":"Platform",
     "f.weapon":"Favourite weapon","f.w0":"RPG (launcher)","f.w1":"Medic","f.w2":"Melee","f.w3":"Revolvers","f.w4":"Grenades","f.wreq":"Pick your favourite weapon","f.num":"Application number","f.code":"Secret code — save it. You can edit the application with it until it is reviewed. Never share it.","f.copy":"Copy code","f.editlink":"Made a mistake? Edit with your code","f.editcode":"Application code (RDX-XXXXX-…)","f.load":"Open application","f.editing":"Editing application #","f.save":"Save changes","f.saved":"Saved — the commanders already see the updated form.","f.badcode":"That code didn't work. Check it and try again.","f.locked":"This application has already been reviewed and can no longer be edited. Message the commanders in the bot.","f.cancel":"Cancel","f.new":"New application","f.exp":"Playing for","f.e1":"under a month","f.e2":"1–6 months","f.e3":"6 months+","f.e4":"over a year",
-    "f.why":"Why RDX and how you'll help","f.note":"The reply comes from the RDX bot in Telegram — open it and press Start, otherwise it can't message you.",
+    "f.why":"About you: why RDX","f.note":"The reply comes from the RDX bot in Telegram — open it and press Start, otherwise it can't message you.",
     "f.send":"Send application","f.doneh":"Got it","f.donep":"The RDX bot will reply. If you haven't opened it yet, do it now.",
     "f.req":"Fill in nickname, Telegram and a few words about you","f.tgbad":"Telegram username: latin letters, digits and _, 5+ characters","f.fail":"Couldn't send. Try again or apply through the bot.","f.rate":"Too many applications. Try later.",
     "help.idx":"Support","help.h":"Need help","help.p":"Everything goes through the RDX bot in Telegram: applications, ban appeals and RDX_AI.",
@@ -779,7 +794,7 @@ const I18N = {
     "apply.s2b":"Ми переглядаємо","apply.s2":"Командири читають кожну заявку.","apply.s3b":"Відповідь у Telegram","apply.s3":"Бот RDX напише рішення. Відкрий його заздалегідь.",
     "f.nick":"Нік в Animal Company","f.tg":"Telegram (@нік)","f.age":"Вік","f.tz":"Часовий пояс","f.tz0":"—","f.platform":"Де граєш",
     "f.weapon":"Улюблена зброя","f.w0":"РПГ (гранатомет)","f.w1":"Медик","f.w2":"Ближній бій","f.w3":"Револьвери","f.w4":"Гранати","f.wreq":"Обери улюблену зброю","f.num":"Номер заявки","f.code":"Секретний код — збережи його. За ним можна змінити заявку, поки її не розглянули. Нікому не показуй.","f.copy":"Скопіювати код","f.editlink":"Помилився в заявці? Змінити за кодом","f.editcode":"Код заявки (RDX-XXXXX-…)","f.load":"Відкрити заявку","f.editing":"Зміна заявки №","f.save":"Зберегти зміни","f.saved":"Зміни збережено — командири вже бачать оновлену анкету.","f.badcode":"Код не підійшов. Перевір і спробуй ще раз.","f.locked":"Цю заявку вже розглянули — змінити її не можна. Напиши командирам у боті.","f.cancel":"Скасувати","f.new":"Нова заявка","f.exp":"Скільки граєш","f.e1":"менше місяця","f.e2":"1–6 місяців","f.e3":"пів року+","f.e4":"понад рік",
-    "f.why":"Чому RDX і чим будеш корисний","f.note":"Відповідь прийде від бота RDX у Telegram — відкрий його й натисни «Старт».",
+    "f.why":"Про себе: чому RDX","f.note":"Відповідь прийде від бота RDX у Telegram — відкрий його й натисни «Старт».",
     "f.send":"Надіслати заявку","f.doneh":"Заявка в нас","f.donep":"Відповідь прийде від бота RDX.",
     "f.req":"Заповни нік, Telegram і пару слів про себе","f.tgbad":"Telegram-нік: латиниця, цифри та _, від 5 символів","f.fail":"Не вдалося надіслати. Спробуй ще раз або через бота.","f.rate":"Забагато заявок. Спробуй пізніше.",
     "help.idx":"Підтримка","help.h":"Потрібна допомога","help.p":"Усе вирішується через бота RDX у Telegram.",
@@ -807,7 +822,7 @@ function applyLang(){
   $$("[data-i18n]").forEach(el => { const v = d[el.dataset.i18n]; if (v != null) el.innerHTML = v; });
   $$("[data-i18n-html]").forEach(el => { const v = d[el.dataset.i18nHtml]; if (v != null) el.innerHTML = v; });
   $$("#lang button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
-  renderFaq(); renderGallery(); splitAll(); rollLinks();
+  renderFaq(); renderGallery(); splitAll(); rollLinks(); wordify();
   document.querySelector("#gal")?.dispatchEvent(new Event("scroll"));
 }
 $("#lang").innerHTML = LANGS.map(l => `<button type="button" data-l="${l}">${l.toUpperCase()}</button>`).join("");
@@ -846,6 +861,28 @@ function renderGallery(){
     g.querySelectorAll(".shot img").forEach(img => { const sh = img.parentElement, r = sh.getBoundingClientRect(), o = (r.left + r.width / 2 - mid) / mid; img.style.setProperty("--px", (o * -18).toFixed(1) + "px"); sh.style.setProperty("--gr", clamp(o * -14, -20, 20).toFixed(2) + "deg"); sh.style.setProperty("--gs", (1 - Math.min(.12, Math.abs(o) * .08)).toFixed(3)); });
   }, { passive: true });
 })();
+
+/* ===== слова в абзацах — для появления по одному ===== */
+function wordify(){
+  $$(".lead, .sec-head p, .pin-head p, .card p, .pcard p, .hcard p, .dir p, .steps-side li span, .f-note").forEach(el => {
+    let i = 0;
+    const walk = (node) => {
+      for (const n of [...node.childNodes]) {
+        if (n.nodeType === 3) {
+          if (!n.textContent.trim()) continue;
+          const frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach(w => {
+            if (!w) return;
+            if (/^\s+$/.test(w)) { frag.appendChild(document.createTextNode(w)); return; }
+            const sp = document.createElement("span"); sp.className = "wd"; sp.style.setProperty("--d", i++); sp.textContent = w; frag.appendChild(sp);
+          });
+          n.replaceWith(frag);
+        } else if (n.nodeType === 1 && !n.classList.contains("wd")) walk(n);
+      }
+    };
+    walk(el);
+  });
+}
 
 /* ===== разбивка заголовков на слова ===== */
 function splitAll(){
@@ -1016,8 +1053,10 @@ function reveals(){
   const io = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return;
     e.target.classList.add("in"); io.unobserve(e.target);
+    if (e.target.classList.contains("rv")) setTimeout(() => e.target.classList.add("done"), 1600);
     e.target.querySelectorAll("[data-count]").forEach(count);
   }), { threshold: .14, rootMargin: "0px 0px -6% 0px" });
+  $$(".steps-side li").forEach(el => io.observe(el));
   $$(".rv,.split").forEach((el, i) => { el.style.transitionDelay = (el.classList.contains("rv") ? (i % 4) * 70 : 0) + "ms"; io.observe(el); });
 }
 function count(el){
@@ -1036,9 +1075,10 @@ function faller(){
     el.style.setProperty("--sd", d + "px");
     return { el, r: d / 2, x: 0, y: 0, vx: 0, vy: 0, a: Math.random() * 360, va: 0, alive: false, t: i * 900 };
   });
-  const G = .34, REST = .55, FRIC = .985;
+  const G = .11, REST = .22, FRIC = .99;   // медленно и мягко
+  let drive = 0;   // насколько активно листают вниз (0…1)
   let state = "fall", last = 0, prevY = scrollY, t0 = performance.now(), mergedAt = 0, colliders = [], collT = 0;
-  const spawn = (b, now) => { b.x = innerWidth * (.15 + Math.random() * .7); b.y = -b.r * 2 - Math.random() * 120; b.vx = (Math.random() - .5) * 2.4; b.vy = Math.random() * 1.5; b.va = (Math.random() - .5) * 6; b.alive = true; b.el.classList.add("on"); };
+  const spawn = (b, now) => { b.x = innerWidth * (.15 + Math.random() * .7); b.y = -b.r * 2 - Math.random() * 120; b.vx = (Math.random() - .5) * 1; b.vy = .5 + Math.random() * .8; b.va = (Math.random() - .5) * 2.5; b.alive = true; b.el.classList.add("on"); };
   function collect(){
     // препятствия: кнопки и надписи, которые сейчас на экране
     colliders = [];
@@ -1058,12 +1098,11 @@ function faller(){
       nx = m === l ? -1 : m === rr ? 1 : 0; ny = m === t ? -1 : m === bb ? 1 : 0; d = 0;
     } else { nx = dx / d; ny = dy / d; }
     const pen = b.r - d; b.x += nx * pen; b.y += ny * pen;
-    const ovy = -dScroll;   // препятствие едет вместе со страницей
+    const ovy = clamp(-dScroll, -6, 6) * .5;   // препятствие едет вместе со страницей (толкает мягко)
     const rvx = b.vx, rvy = b.vy - ovy, vn = rvx * nx + rvy * ny;
     if (vn < 0) {
       b.vx -= (1 + REST) * vn * nx; b.vy -= (1 + REST) * vn * ny;
-      b.vx *= .96; b.va += (b.vx - rvx) * 2.2 + (Math.random() - .5) * 3;
-      if (Math.abs(vn) > 6 && Math.random() < .5) burstAt(b.x - nx * b.r, b.y - ny * b.r, 6);
+      b.vx *= .9; b.va += (b.vx - rvx) * .8 + (Math.random() - .5) * 1.2;
     }
   }
   function placeMain(x, y, sc){ main.style.transform = `translate(${(x - main.offsetWidth / 2).toFixed(1)}px,${(y - main.offsetWidth / 2).toFixed(1)}px) scale(${sc})`; }
@@ -1076,11 +1115,16 @@ function faller(){
     const M = { x: px, y: Math.max(70, py - pr.height * 1.05) };   // точка слияния над площадкой
     if (now - collT > 120) { collect(); collT = now; }
 
+    // падают, только когда листают вниз; в самом начале страницы и при прокрутке вверх — не падают
+    drive = lerp(drive, dScroll > .5 ? 1 : 0, dScroll > .5 ? .25 : .03);
+    const goingUp = dScroll < -.5, atTop = scrollY < vh * .35;
     if (state === "fall") {
       for (const b of B) {
-        if (!b.alive) { if (now - t0 > 600 + b.t) spawn(b, now); else continue; }
-        b.vy += G * k; b.vx *= Math.pow(FRIC, k); b.vy *= Math.pow(.995, k);
-        b.vy = clamp(b.vy, -26, 16); b.va *= Math.pow(.98, k);
+        if (!b.alive) { if (!atTop && !goingUp && drive > .5 && now - t0 > b.t) spawn(b, now); else continue; }
+        if (goingUp || atTop) { b.el.classList.remove("on"); b.alive = false; b.t = now - t0 + 400 + Math.random() * 1500; continue; }   // при прокрутке вверх тихо исчезают
+        const g = G * (.25 + drive * .75);   // перестали листать — почти зависают
+        b.vy += g * k; b.vx *= Math.pow(FRIC, k); b.vy *= Math.pow(.985, k);
+        b.vy = clamp(b.vy, -8, 6.5); b.va = clamp(b.va * Math.pow(.97, k), -4, 4);
         b.x += b.vx * k; b.y += b.vy * k; b.a += b.va * k;
         for (const r of colliders) hitRect(b, r, dScroll);
         for (const o of B) if (o !== b && o.alive) {   // эмблемы толкают друг друга
@@ -1132,7 +1176,7 @@ function faller(){
     if ((state === "landed" || state === "merged") && pr.top > vh * .95) {
       state = "fall"; main.getAnimations().forEach((a) => a.cancel());
       main.classList.remove("show", "landed"); fin.classList.remove("hit");
-      B.forEach((b) => { b.x = px; b.y = Math.min(py, vh - 40); b.vx = (Math.random() - .5) * 14; b.vy = -6 - Math.random() * 8; b.va = (Math.random() - .5) * 20; b.alive = true; b.el.classList.add("on"); });
+      B.forEach((b) => { b.x = px; b.y = Math.min(py, vh - 40); b.vx = (Math.random() - .5) * 5; b.vy = -2 - Math.random() * 3; b.va = (Math.random() - .5) * 5; b.alive = true; b.el.classList.add("on"); });
     }
     for (const b of B) b.el.style.transform = `translate(${(b.x - b.r).toFixed(1)}px,${(b.y - b.r).toFixed(1)}px) rotate(${(b.a % 360).toFixed(1)}deg)`;
     requestAnimationFrame(loop);

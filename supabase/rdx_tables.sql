@@ -17,3 +17,16 @@ do $$ declare t text; begin
     execute format('revoke all on public.%I from anon, authenticated', t);
   end loop;
 end $$;
+-- модераторы, допросы, карточки заявок у командиров, состав
+create table if not exists public.rdx_mods (user_id bigint primary key, username text, first_name text, added_at timestamptz not null default now());
+alter table public.rdx_apps add column if not exists edit_hash text, add column if not exists talk_open boolean not null default false, add column if not exists talk_by bigint, add column if not exists edited_at timestamptz;
+create index if not exists rdx_apps_edit_hash on public.rdx_apps (edit_hash);
+create table if not exists public.rdx_app_msgs (id bigserial primary key, app_id bigint not null, chat_id bigint not null, message_id bigint not null);
+create table if not exists public.rdx_talks (id bigserial primary key, app_id bigint not null, dir text not null, by_name text, text text not null, created_at timestamptz not null default now());
+create table if not exists public.rdx_members (id bigserial primary key, user_id bigint, username text, nick text, app_id bigint, active boolean not null default true, joined_at timestamptz not null default now(), left_at timestamptz);
+do $$ declare t text; begin
+  foreach t in array array['rdx_mods','rdx_app_msgs','rdx_talks','rdx_members'] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('revoke all on public.%I from anon, authenticated', t);
+  end loop;
+end $$;
