@@ -251,6 +251,7 @@ form.f::before{content:"";position:absolute;inset:0 0 auto;height:6px;background
 .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .fld{position:relative}
 .fld.full{grid-column:1/-1}
+.fld.wcustom{margin-top:10px}
 .fld>input,.fld>select,.fld>textarea{width:100%;background:#16181b;border:1px solid var(--line);border-radius:14px;padding:24px 16px 10px;outline:none;transition:border-color .25s,box-shadow .25s,background .25s;appearance:none}
 .fld>textarea{padding-top:32px;min-height:120px;resize:vertical}
 .fld>select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px;background-repeat:no-repeat}
@@ -654,9 +655,9 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
         <p class="rv" style="max-width:380px;color:var(--muted);margin:0" data-i18n="dir.p">Каждый в скваде знает свою роль. Листай — отделы проедут мимо.</p>
       </div>
       <div class="pin-track" id="pinTrack">
-        <article class="pcard tilt"><span class="bigN">01</span><span class="n">R-01 · ECONOMY</span><h3 data-i18n="dir.1h">Экономика</h3><p data-i18n="dir.1p">Фармеры и дюперы сквада. Добывают ресурсы и игровую валюту и официально обеспечивают ими бойцов RDX.</p><div class="bar"><i style="--w:86%"></i></div></article>
-        <article class="pcard tilt"><span class="bigN">02</span><span class="n">R-02 · ASSAULT</span><h3 data-i18n="dir.2h">Штурм</h3><p data-i18n="dir.2p">Боевое ядро сквада. Ведут рейды, захватывают позиции и защищают своих в бою.</p><div class="bar"><i style="--w:92%"></i></div></article>
-        <article class="pcard tilt"><span class="bigN">03</span><span class="n">R-03 · SCIENCE</span><h3 data-i18n="dir.3h">Наука</h3><p data-i18n="dir.3p">Инженеры сквада. Возводят постройки, объекты и укрепления базы RDX.</p><div class="bar"><i style="--w:74%"></i></div></article>
+        <article class="pcard tilt"><span class="bigN">01</span><span class="n">R-01 · ECONOMY</span><h3 data-i18n="dir.1h">Экономика</h3><p data-i18n="dir.1p">Фармеры и дюперы. Добывают ресурсы и игровую валюту и официально обеспечивают ими сквад.</p><div class="bar"><i style="--w:86%"></i></div></article>
+        <article class="pcard tilt"><span class="bigN">02</span><span class="n">R-02 · ASSAULT</span><h3 data-i18n="dir.2h">Штурм</h3><p data-i18n="dir.2p">Боевое ядро сквада. Ведут рейды, грифят и захватывают позиции, защищают своих в бою.</p><div class="bar"><i style="--w:92%"></i></div></article>
+        <article class="pcard tilt"><span class="bigN">03</span><span class="n">R-03 · SCIENCE</span><h3 data-i18n="dir.3h">Наука</h3><p data-i18n="dir.3p">Инженеры сквада. Возводят постройки, объекты и укрепления базы RDX, а также ищут баги, секреты и новые механики игры.</p><div class="bar"><i style="--w:74%"></i></div></article>
         <article class="pcard tilt" style="background:var(--or);border-color:var(--or)"><span class="bigN" style="-webkit-text-stroke-color:rgba(0,0,0,.25)">04</span><span class="n" style="color:#141414">R-04 · YOU</span><h3 style="color:#141414" data-i18n="dir.5h">Ты?</h3><p style="color:#2a1a0e" data-i18n="dir.5p">Подай заявку — и выбери свой отдел.</p><a class="btn btn-ghost magnet" href="#apply" style="margin-top:22px;align-self:flex-start;color:#141414;border-color:#141414" data-cursor="GO"><span class="lbl" data-i18n="hero.apply">Подать заявку</span></a></article>
         <div style="flex:none;width:8vw"></div>
       </div>
@@ -717,12 +718,14 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
             </div></div>
           <div class="fld full"><div class="f-legend" data-i18n="f.weapon">Любимое оружие</div>
             <div class="chips">
-              <label class="chip"><input type="radio" name="weapon" value="РПГ (гранатомёт)"><span data-i18n="f.w0">РПГ (гранатомёт)</span></label>
+              <label class="chip"><input type="radio" name="weapon" value="РПГ"><span data-i18n="f.w0">РПГ</span></label>
+              <label class="chip"><input type="radio" name="weapon" value="Гранатомёт"><span data-i18n="f.w5">Гранатомёт</span></label>
               <label class="chip"><input type="radio" name="weapon" value="Медик"><span data-i18n="f.w1">Медик</span></label>
               <label class="chip"><input type="radio" name="weapon" value="Ближний бой"><span data-i18n="f.w2">Ближний бой</span></label>
               <label class="chip"><input type="radio" name="weapon" value="Револьверы"><span data-i18n="f.w3">Револьверы</span></label>
               <label class="chip"><input type="radio" name="weapon" value="Гранаты"><span data-i18n="f.w4">Гранаты</span></label>
-            </div></div>
+            </div>
+            <div class="fld wcustom"><input id="a_wpn" name="weapon_custom" placeholder=" " maxlength="40" autocomplete="off"><label for="a_wpn" data-i18n="f.wother">Нет в списке? Укажите своё оружие</label><i class="bar"></i></div></div>
           <div class="fld full"><div class="f-legend" data-i18n="f.dept">Отдел (обязательно)</div>
             <div class="chips">
               <label class="chip"><input type="radio" name="dept" value="Экономика"><span data-i18n="f.d0">💰 Экономика</span></label>
@@ -849,13 +852,13 @@ const I18N = {
     "about.c2h":"Кодекс","about.c2p":"Своих не бросаем и не подводим. Проиграли — разбираем ошибки, выиграли — разбираем, что сработало.",
     "about.c3h":"Операции","about.c3p":"Совместные заходы, тренировки и ивенты внутри сквада. Расписание и сборы — в Telegram.",
     "about.c4h":"Рост","about.c4p":"Новичков учим. Звания внутри сквада получают за вклад и активность, а не за то, кто громче.",
-    "dir.idx":"Направления","dir.h":"Отделы RDX","dir.p":"Каждый в скваде знает свою роль. Листай — отделы проедут мимо.","dir.5h":"Ты?","dir.5p":"Подай заявку — и выбери свой отдел.","dir.1h":"Экономика","dir.1p":"Фармеры и дюперы сквада. Добывают ресурсы и игровую валюту и официально обеспечивают ими бойцов RDX.","dir.2h":"Штурм","dir.2p":"Боевое ядро сквада. Ведут рейды, захватывают позиции и защищают своих в бою.",
-    "dir.3h":"Наука","dir.3p":"Инженеры сквада. Возводят постройки, объекты и укрепления базы RDX.",
+    "dir.idx":"Направления","dir.h":"Отделы RDX","dir.p":"Каждый в скваде знает свою роль. Листай — отделы проедут мимо.","dir.5h":"Ты?","dir.5p":"Подай заявку — и выбери свой отдел.","dir.1h":"Экономика","dir.1p":"Фармеры и дюперы. Добывают ресурсы и игровую валюту и официально обеспечивают ими сквад.","dir.2h":"Штурм","dir.2p":"Боевое ядро сквада. Ведут рейды, грифят и захватывают позиции, защищают своих в бою.",
+    "dir.3h":"Наука","dir.3p":"Инженеры сквада. Возводят постройки, объекты и укрепления базы RDX, а также ищут баги, секреты и новые механики игры.",
     "gal.idx":"Полевые снимки","gal.h":"Снимки","gal.hint":"Тяни","gal.cap":"Снимок",
     "apply.idx":"Набор","apply.h":"Заявка в сквад","apply.s1b":"Заполни анкету","apply.s1":"Пара минут: ник, Telegram, о себе.",
     "apply.s2b":"Мы смотрим","apply.s2":"Командиры читают каждую заявку.","apply.s3b":"Ответ в Telegram","apply.s3":"Бот RDX напишет решение. Открой его заранее.",
     "f.nick":"Ник в Animal Company","f.tg":"Telegram (@ник)","f.age":"Возраст","f.tz":"Часовой пояс","f.tz0":"—","f.platform":"Где играешь",
-    "f.weapon":"Любимое оружие","f.w0":"РПГ (гранатомёт)","f.w1":"Медик","f.w2":"Ближний бой","f.w3":"Револьверы","f.w4":"Гранаты","f.wreq":"Выбери любимое оружие","f.dept":"Отдел (обязательно)","f.d0":"💰 Экономика","f.d1":"⚔️ Штурм","f.d2":"🔬 Наука","f.dreq":"Выбери отдел, в который хочешь вступить","f.num":"Номер заявки","f.code":"Секретный код — сохрани его. По нему можно изменить заявку, пока её не рассмотрели. Никому не показывай.","f.copy":"Скопировать код","f.editlink":"Ошибся в заявке? Изменить по коду","f.editcode":"Код заявки (RDX-XXXXX-…)","f.load":"Открыть заявку","f.editing":"Изменение заявки №","f.save":"Сохранить изменения","f.saved":"Изменения сохранены — командиры уже видят обновлённую анкету.","f.badcode":"Код не подошёл. Проверь его и попробуй ещё раз.","f.locked":"Эту заявку уже рассмотрели — изменить её нельзя. Напиши командирам в боте.","f.cancel":"Отмена","f.new":"Новая заявка","f.exp":"Сколько играешь","f.e1":"меньше месяца","f.e2":"1–6 месяцев","f.e3":"полгода+","f.e4":"больше года",
+    "f.weapon":"Любимое оружие","f.w0":"РПГ","f.w5":"Гранатомёт","f.wother":"Нет в списке? Укажите своё оружие","f.w1":"Медик","f.w2":"Ближний бой","f.w3":"Револьверы","f.w4":"Гранаты","f.wreq":"Выбери любимое оружие","f.dept":"Отдел (обязательно)","f.d0":"💰 Экономика","f.d1":"⚔️ Штурм","f.d2":"🔬 Наука","f.dreq":"Выбери отдел, в который хочешь вступить","f.num":"Номер заявки","f.code":"Секретный код — сохрани его. По нему можно изменить заявку, пока её не рассмотрели. Никому не показывай.","f.copy":"Скопировать код","f.editlink":"Ошибся в заявке? Изменить по коду","f.editcode":"Код заявки (RDX-XXXXX-…)","f.load":"Открыть заявку","f.editing":"Изменение заявки №","f.save":"Сохранить изменения","f.saved":"Изменения сохранены — командиры уже видят обновлённую анкету.","f.badcode":"Код не подошёл. Проверь его и попробуй ещё раз.","f.locked":"Эту заявку уже рассмотрели — изменить её нельзя. Напиши командирам в боте.","f.cancel":"Отмена","f.new":"Новая заявка","f.exp":"Сколько играешь","f.e1":"меньше месяца","f.e2":"1–6 месяцев","f.e3":"полгода+","f.e4":"больше года",
     "f.why":"О себе: почему RDX","f.note":"Ответ придёт от бота RDX в Telegram — открой его и нажми «Старт», иначе бот не сможет тебе написать.",
     "f.send":"Отправить заявку","f.doneh":"Заявка у нас","f.donep":"Ответ придёт от бота RDX. Если ещё не открыл его — сделай это сейчас.",
     "f.req":"Заполни ник, Telegram и пару слов о себе","f.tgbad":"Telegram-ник: латиница, цифры и _, от 5 символов","f.fail":"Не получилось отправить. Попробуй ещё раз или подай заявку через бота.","f.rate":"Слишком много заявок. Попробуй позже.",
@@ -883,12 +886,12 @@ const I18N = {
     "about.c2h":"Code","about.c2p":"We never leave our own behind. Lost — we review the mistakes; won — we review what worked.",
     "about.c3h":"Operations","about.c3p":"Squad runs, training and internal events. Schedules live in Telegram.",
     "about.c4h":"Growth","about.c4p":"We teach newcomers. Ranks are earned by contribution and activity, not by who is loudest.",
-    "dir.idx":"Departments","dir.h":"RDX units","dir.p":"Everyone in the squad knows their role. Keep scrolling — the units roll by.","dir.5h":"You?","dir.5p":"Apply and pick your unit.","dir.1h":"Economy","dir.1p":"The squad's farmers and dupers. They gather resources and in-game currency and officially supply RDX fighters with them.","dir.2h":"Assault","dir.2p":"The squad's combat core. They lead raids, capture positions and protect our own in battle.","dir.3h":"Science","dir.3p":"The squad's engineers. They raise structures, objects and RDX base defences.",
+    "dir.idx":"Departments","dir.h":"RDX units","dir.p":"Everyone in the squad knows their role. Keep scrolling — the units roll by.","dir.5h":"You?","dir.5p":"Apply and pick your unit.","dir.1h":"Economy","dir.1p":"Farmers and dupers. They gather resources and in-game currency and officially supply the squad.","dir.2h":"Assault","dir.2p":"The squad's combat core. They lead raids, grief and capture positions, and protect our own in battle.","dir.3h":"Science","dir.3p":"The squad's engineers. They raise structures, objects and RDX base defences, and hunt for bugs, secrets and new game mechanics.",
     "gal.idx":"Field shots","gal.h":"Shots","gal.hint":"Drag","gal.cap":"Shot",
     "apply.idx":"Recruiting","apply.h":"Join the squad","apply.s1b":"Fill the form","apply.s1":"Two minutes: nick, Telegram, about you.",
     "apply.s2b":"We review","apply.s2":"Commanders read every application.","apply.s3b":"Reply in Telegram","apply.s3":"The RDX bot will send the decision. Open it first.",
     "f.nick":"Animal Company nickname","f.tg":"Telegram (@username)","f.age":"Age","f.tz":"Time zone","f.tz0":"—","f.platform":"Platform",
-    "f.weapon":"Favourite weapon","f.w0":"RPG (launcher)","f.w1":"Medic","f.w2":"Melee","f.w3":"Revolvers","f.w4":"Grenades","f.wreq":"Pick your favourite weapon","f.dept":"Department (required)","f.d0":"💰 Economy","f.d1":"⚔️ Assault","f.d2":"🔬 Science","f.dreq":"Pick the department you want to join","f.num":"Application number","f.code":"Secret code — save it. You can edit the application with it until it is reviewed. Never share it.","f.copy":"Copy code","f.editlink":"Made a mistake? Edit with your code","f.editcode":"Application code (RDX-XXXXX-…)","f.load":"Open application","f.editing":"Editing application #","f.save":"Save changes","f.saved":"Saved — the commanders already see the updated form.","f.badcode":"That code didn't work. Check it and try again.","f.locked":"This application has already been reviewed and can no longer be edited. Message the commanders in the bot.","f.cancel":"Cancel","f.new":"New application","f.exp":"Playing for","f.e1":"under a month","f.e2":"1–6 months","f.e3":"6 months+","f.e4":"over a year",
+    "f.weapon":"Favourite weapon","f.w0":"RPG","f.w5":"Grenade launcher","f.wother":"Not listed? Enter your weapon","f.w1":"Medic","f.w2":"Melee","f.w3":"Revolvers","f.w4":"Grenades","f.wreq":"Pick your favourite weapon","f.dept":"Department (required)","f.d0":"💰 Economy","f.d1":"⚔️ Assault","f.d2":"🔬 Science","f.dreq":"Pick the department you want to join","f.num":"Application number","f.code":"Secret code — save it. You can edit the application with it until it is reviewed. Never share it.","f.copy":"Copy code","f.editlink":"Made a mistake? Edit with your code","f.editcode":"Application code (RDX-XXXXX-…)","f.load":"Open application","f.editing":"Editing application #","f.save":"Save changes","f.saved":"Saved — the commanders already see the updated form.","f.badcode":"That code didn't work. Check it and try again.","f.locked":"This application has already been reviewed and can no longer be edited. Message the commanders in the bot.","f.cancel":"Cancel","f.new":"New application","f.exp":"Playing for","f.e1":"under a month","f.e2":"1–6 months","f.e3":"6 months+","f.e4":"over a year",
     "f.why":"About you: why RDX","f.note":"The reply comes from the RDX bot in Telegram — open it and press Start, otherwise it can't message you.",
     "f.send":"Send application","f.doneh":"Got it","f.donep":"The RDX bot will reply. If you haven't opened it yet, do it now.",
     "f.req":"Fill in nickname, Telegram and a few words about you","f.tgbad":"Telegram username: latin letters, digits and _, 5+ characters","f.fail":"Couldn't send. Try again or apply through the bot.","f.rate":"Too many applications. Try later.",
@@ -916,12 +919,12 @@ const I18N = {
     "about.c2h":"Кодекс","about.c2p":"Своїх не кидаємо й не підводимо. Програли — розбираємо помилки, виграли — розбираємо, що спрацювало.",
     "about.c3h":"Операції","about.c3p":"Спільні заходи, тренування та івенти. Розклад — у Telegram.",
     "about.c4h":"Ріст","about.c4p":"Новачків навчаємо. Звання — за внесок і активність.",
-    "dir.idx":"Напрями","dir.h":"Відділи RDX","dir.p":"Кожен у скваді знає свою роль. Гортай — відділи проїдуть повз.","dir.5h":"Ти?","dir.5p":"Подай заявку й обери свій відділ.","dir.1h":"Економіка","dir.1p":"Фармери й дюпери скваду. Добувають ресурси та ігрову валюту й офіційно забезпечують ними бійців RDX.","dir.2h":"Штурм","dir.2p":"Бойове ядро скваду. Ведуть рейди, захоплюють позиції й захищають своїх у бою.","dir.3h":"Наука","dir.3p":"Інженери скваду. Зводять споруди, об'єкти й укріплення бази RDX.",
+    "dir.idx":"Напрями","dir.h":"Відділи RDX","dir.p":"Кожен у скваді знає свою роль. Гортай — відділи проїдуть повз.","dir.5h":"Ти?","dir.5p":"Подай заявку й обери свій відділ.","dir.1h":"Економіка","dir.1p":"Фармери й дюпери. Добувають ресурси та ігрову валюту й офіційно забезпечують ними сквад.","dir.2h":"Штурм","dir.2p":"Бойове ядро скваду. Ведуть рейди, грифлять і захоплюють позиції, захищають своїх у бою.","dir.3h":"Наука","dir.3p":"Інженери скваду. Зводять споруди, об'єкти й укріплення бази RDX, а також шукають баги, секрети й нові механіки гри.",
     "gal.idx":"Польові знімки","gal.h":"Знімки","gal.hint":"Тягни","gal.cap":"Знімок",
     "apply.idx":"Набір","apply.h":"Заявка у сквад","apply.s1b":"Заповни анкету","apply.s1":"Пара хвилин: нік, Telegram, про себе.",
     "apply.s2b":"Ми переглядаємо","apply.s2":"Командири читають кожну заявку.","apply.s3b":"Відповідь у Telegram","apply.s3":"Бот RDX напише рішення. Відкрий його заздалегідь.",
     "f.nick":"Нік в Animal Company","f.tg":"Telegram (@нік)","f.age":"Вік","f.tz":"Часовий пояс","f.tz0":"—","f.platform":"Де граєш",
-    "f.weapon":"Улюблена зброя","f.w0":"РПГ (гранатомет)","f.w1":"Медик","f.w2":"Ближній бій","f.w3":"Револьвери","f.w4":"Гранати","f.wreq":"Обери улюблену зброю","f.dept":"Відділ (обов'язково)","f.d0":"💰 Економіка","f.d1":"⚔️ Штурм","f.d2":"🔬 Наука","f.dreq":"Обери відділ, до якого хочеш вступити","f.num":"Номер заявки","f.code":"Секретний код — збережи його. За ним можна змінити заявку, поки її не розглянули. Нікому не показуй.","f.copy":"Скопіювати код","f.editlink":"Помилився в заявці? Змінити за кодом","f.editcode":"Код заявки (RDX-XXXXX-…)","f.load":"Відкрити заявку","f.editing":"Зміна заявки №","f.save":"Зберегти зміни","f.saved":"Зміни збережено — командири вже бачать оновлену анкету.","f.badcode":"Код не підійшов. Перевір і спробуй ще раз.","f.locked":"Цю заявку вже розглянули — змінити її не можна. Напиши командирам у боті.","f.cancel":"Скасувати","f.new":"Нова заявка","f.exp":"Скільки граєш","f.e1":"менше місяця","f.e2":"1–6 місяців","f.e3":"пів року+","f.e4":"понад рік",
+    "f.weapon":"Улюблена зброя","f.w0":"РПГ","f.w5":"Гранатомет","f.wother":"Немає в списку? Вкажіть свою зброю","f.w1":"Медик","f.w2":"Ближній бій","f.w3":"Револьвери","f.w4":"Гранати","f.wreq":"Обери улюблену зброю","f.dept":"Відділ (обов'язково)","f.d0":"💰 Економіка","f.d1":"⚔️ Штурм","f.d2":"🔬 Наука","f.dreq":"Обери відділ, до якого хочеш вступити","f.num":"Номер заявки","f.code":"Секретний код — збережи його. За ним можна змінити заявку, поки її не розглянули. Нікому не показуй.","f.copy":"Скопіювати код","f.editlink":"Помилився в заявці? Змінити за кодом","f.editcode":"Код заявки (RDX-XXXXX-…)","f.load":"Відкрити заявку","f.editing":"Зміна заявки №","f.save":"Зберегти зміни","f.saved":"Зміни збережено — командири вже бачать оновлену анкету.","f.badcode":"Код не підійшов. Перевір і спробуй ще раз.","f.locked":"Цю заявку вже розглянули — змінити її не можна. Напиши командирам у боті.","f.cancel":"Скасувати","f.new":"Нова заявка","f.exp":"Скільки граєш","f.e1":"менше місяця","f.e2":"1–6 місяців","f.e3":"пів року+","f.e4":"понад рік",
     "f.why":"Про себе: чому RDX","f.note":"Відповідь прийде від бота RDX у Telegram — відкрий його й натисни «Старт».",
     "f.send":"Надіслати заявку","f.doneh":"Заявка в нас","f.donep":"Відповідь прийде від бота RDX.",
     "f.req":"Заповни нік, Telegram і пару слів про себе","f.tgbad":"Telegram-нік: латиниця, цифри та _, від 5 символів","f.fail":"Не вдалося надіслати. Спробуй ще раз або через бота.","f.rate":"Забагато заявок. Спробуй пізніше.",
@@ -1503,11 +1506,16 @@ function form(){
     $("#a_tg").disabled = !!code;
   };
   $("#eCancel").addEventListener("click", () => { setMode(null); f.reset(); });
+  const wCustom = $("#a_wpn"), wRadios = () => [...f.querySelectorAll('input[name="weapon"]')];
+  wCustom.addEventListener("input", () => { if (wCustom.value.trim()) wRadios().forEach(r => r.checked = false); });
+  wRadios().forEach(r => r.addEventListener("change", () => { if (r.checked) wCustom.value = ""; }));
   f.addEventListener("submit", async e => {
     e.preventDefault(); err.textContent = "";
     const d = Object.fromEntries(new FormData(f).entries()), t = I18N[lang];
     d.tg = String(d.tg || $("#a_tg").value || "").trim().replace(/^@/, "").replace(/^https?:\/\/t\.me\//, "");
     if (!d.nick?.trim() || !d.tg || !d.why?.trim()) { err.textContent = t["f.req"]; shake(); return; }
+    if (String(d.weapon_custom || "").trim()) d.weapon = String(d.weapon_custom).trim().slice(0, 40);
+    delete d.weapon_custom;
     if (!d.weapon) { err.textContent = t["f.wreq"]; shake(); return; }
     if (!["Экономика", "Штурм", "Наука"].includes(d.dept)) { err.textContent = t["f.dreq"]; shake(); return; }
     if (!editCode && !/^[A-Za-z0-9_]{5,32}$/.test(d.tg)) { err.textContent = t["f.tgbad"]; return; }
@@ -1546,6 +1554,8 @@ function form(){
         const el = f.elements[k]; if (!el || v == null) continue;
         if (el instanceof RadioNodeList) { for (const o of el) o.checked = o.value === v; } else el.value = v;
       }
+      const wv = String(j.data?.weapon || "");
+      if (wv && !wRadios().some(r => r.value === wv)) wCustom.value = wv;
       setMode(code, j.id);
       (lenis ? lenis.scrollTo(f, { offset: -90 }) : f.scrollIntoView({ behavior: "smooth", block: "start" }));
     } catch (x) { ee.textContent = x.message === "locked" ? t["f.locked"] : x.message === "rate" ? t["f.rate"] : t["f.badcode"]; }
@@ -1683,6 +1693,8 @@ function scrollFx(){
   const root = document.documentElement;
   let ly = scrollY, vy = 0, mx = 0, my = 0, last = 0, pinDone = new Set(), hpS = 0, ppS = 0, curScreen = -1, sweepT = 0;
   const label = $("#scr-label");
+  const cardIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); cardIO.unobserve(e.target); } }), { threshold: .35 });
+  cards.forEach(c => cardIO.observe(c));
   const t3 = $$(".sec-head h2, .pin-head h2, .fullname"); t3.forEach(e => e.classList.add("t3d"));
   const t3s = t3.map(() => ({ x: 0, y: 0 }));
   const screens = ["#top", "#about", "#dirs", "#gallery", "#apply", "#help", "#finale"].map(q => $(q)).filter(Boolean);
