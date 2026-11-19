@@ -30,3 +30,7 @@ do $$ declare t text; begin
     execute format('revoke all on public.%I from anon, authenticated', t);
   end loop;
 end $$;
+-- журнал модераторов (лимиты: 300 токенов в сутки, VIP и VIP-промо по 5 в неделю) и промокоды RDX_AI
+create table if not exists public.mod_ledger (id bigserial primary key, system text not null, mod_id bigint not null, kind text not null, amount int not null default 1, target text, at timestamptz not null default now());
+create table if not exists public.rdx_promo (code text primary key, tier text not null, days numeric not null, created_by bigint, created_at timestamptz not null default now(), used_by bigint, used_at timestamptz);
+alter table public.mod_ledger enable row level security; alter table public.rdx_promo enable row level security;
