@@ -402,6 +402,24 @@ a:hover>.roll span{transform:translateY(-100%)}
 .curtain>.wrap{transform:translateY(calc((1 - var(--e,1)) * 90px)) scale(calc((.93 + var(--e,1) * .07) * (1 - var(--x,0) * .07)));opacity:calc((.15 + var(--e,1) * .85) * (1 - var(--x,0) * .55))}
 #scr-label{position:fixed;right:max(18px,2vw);top:96px;z-index:56;font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--or);opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .4s,transform .6s var(--ease)}
 #scr-label.show{opacity:.9;transform:none}
+/* финал-петля: эмблема крутится в 3D, позади — надписи о скваде и об игре */
+.outro{position:relative;height:340vh;padding:0}
+.outro-in{position:sticky;top:0;height:calc(100svh / var(--fit));overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:1.2vh;background:radial-gradient(circle at 50% 50%,rgba(255,122,26,.12),transparent 55%)}
+.orow{white-space:nowrap;font:900 clamp(48px,9vw,150px)/.92 var(--display);letter-spacing:-.03em;text-transform:uppercase;transform:translateX(var(--ox,0px));will-change:transform;opacity:var(--oo,.0);transition:opacity .6s}
+.orow.solid{color:rgba(236,235,231,.08)}
+.orow.out{color:transparent;-webkit-text-stroke:2px rgba(255,122,26,.22)}
+.outro-tag{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);opacity:var(--oo,0)}
+#veil{position:fixed;inset:0;z-index:58;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .45s}
+#veil.on{opacity:1;transition:opacity .16s}
+#mini{position:fixed;left:0;top:0;z-index:62;width:40px;pointer-events:none;opacity:0;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+#mini svg{display:block;width:100%}
+.brand svg.drop{animation:brandDrop .7s cubic-bezier(.5,0,.75,0) forwards}
+@keyframes brandDrop{to{transform:translateY(120px) rotate(70deg);opacity:0}}
+.brand svg.pop{animation:brandPop .55s var(--spring)}
+@keyframes brandPop{0%{transform:scale(.3) rotate(-90deg)}100%{transform:none}}
+.title.hit{animation:titleHit .6s var(--ease)}
+@keyframes titleHit{0%{transform:none}20%{transform:translateY(12px) scale(.985)}45%{transform:translateY(-6px)}70%{transform:translateY(3px)}100%{transform:none}}
+#faller .spinbox{transform:rotateY(var(--spy,0deg)) rotateX(var(--spx,0deg))}
 /* участок свободного падения: листается как обычно, по пути пролетают отметки высоты */
 .drop{position:relative;height:230vh;padding:0;overflow:hidden;pointer-events:none}
 .drop-lines{position:absolute;inset:0;opacity:var(--fall,.35);transition:opacity .4s}
@@ -710,7 +728,19 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
       <a class="btn btn-ghost magnet tg-link" href="#" target="_blank" rel="noopener" data-cursor="TG"><span class="lbl" data-i18n="hero.bot">Открыть бота</span></a>
     </div>
   </section>
+  <section class="outro" id="outro" aria-hidden="true">
+    <div class="outro-in">
+      <div class="orow solid" data-dir="-1"><span>RESEARCH DEPARTMENT EXPLOSIVE &nbsp;·&nbsp; RESEARCH DEPARTMENT EXPLOSIVE &nbsp;·&nbsp; RESEARCH DEPARTMENT EXPLOSIVE</span></div>
+      <div class="orow out" data-dir="1"><span>ANIMAL COMPANY · VR · ANIMAL COMPANY · VR &nbsp;·&nbsp; ANIMAL COMPANY · VR · ANIMAL COMPANY · VR &nbsp;·&nbsp; ANIMAL COMPANY · VR · ANIMAL COMPANY · VR</span></div>
+      <div class="orow solid" data-dir="-1"><span>РЕЙДЫ · ЗАХВАТ · РАЗВЕДКА · ТАКТИКА &nbsp;·&nbsp; РЕЙДЫ · ЗАХВАТ · РАЗВЕДКА · ТАКТИКА &nbsp;·&nbsp; РЕЙДЫ · ЗАХВАТ · РАЗВЕДКА · ТАКТИКА</span></div>
+      <div class="orow out" data-dir="1"><span>RDX SQUAD · EST. 2026 · RDX SQUAD &nbsp;·&nbsp; RDX SQUAD · EST. 2026 · RDX SQUAD &nbsp;·&nbsp; RDX SQUAD · EST. 2026 · RDX SQUAD</span></div>
+      <div class="orow solid" data-dir="-1"><span>ЦЕПНАЯ РЕАКЦИЯ · ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ &nbsp;·&nbsp; ЦЕПНАЯ РЕАКЦИЯ · ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ &nbsp;·&nbsp; ЦЕПНАЯ РЕАКЦИЯ · ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ</span></div>
+      <div class="outro-tag mono">RDX · LOOP · <span id="loopN">01</span></div>
+    </div>
+  </section>
 </main>
+<div id="veil"></div>
+<div id="mini" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#emb"/></svg></div>
 
 <footer><div class="wrap foot">
   <span>© <span id="year"></span> RDX Squad — Research Department Explosive</span>
@@ -1134,6 +1164,8 @@ function faller(){
   function placeMain(x, y, sc, rot = 0){ main.style.transform = `translate(${(x - main.offsetWidth / 2).toFixed(1)}px,${(y - main.offsetWidth / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sc})`; }
   const drop = $("#drop"), band = $("#impactBand"), dropIn = drop, alt = $("#dropAlt"), flash = $("#flash");
   let midDone = false, fallX = 0, fallY = 0, fallR = 0, fallStart = 0;
+  const outro = $("#outro"), orows = $$("#outro .orow"), veil = $("#veil"), mini = $("#mini"), title = $("#title"), loopN = $("#loopN");
+  let outroX = 0, outroY = 0, spinY = 0, teleporting = false, loopStart = 0;
   const MIN_FALL = 3200;   // падение длится не меньше 3,2 секунды
   // разбить эмблему на части в точке (x, y)
   function shatter(x, y, up){
@@ -1271,8 +1303,65 @@ function faller(){
       if (!near && pr.top > vh * 1.1) state = "fall";
     }
     if (state === "landed") placeMain(px, py, 1.45);
+    // ---- конец страницы: эмблема взлетает с площадки и крутится в 3D на фоне надписей ----
+    const orc = outro.getBoundingClientRect();
+    const op = clamp(-orc.top / Math.max(1, orc.height - vh), 0, 1);   // 0…1 — сколько пролистано финального экрана
+    outro.style.setProperty("--oo", clamp((vh - orc.top) / (vh * .6), 0, 1).toFixed(2));
+    orows.forEach((r, i) => r.style.setProperty("--ox", (Number(r.dataset.dir) * (op * vw * .9 + i * 40) - vw * .2).toFixed(1) + "px"));
+    // минимум 4,5 с на этом экране: скорость = путь / 4,5 с
+    FX.outro = orc.top < vh * .3 && orc.bottom > 0 ? Math.max(.12, (orc.height - vh) / vh / 5) : 0;
+    if (state === "landed" && orc.top < vh * .55) { state = "outro"; outroX = px; outroY = py; spinY = 0; main.classList.remove("landed"); }
+    if (state === "outro") {
+      const tx = vw / 2, ty = vh * .5;
+      outroX = lerp(outroX, tx, 1 - Math.pow(.92, k)); outroY = lerp(outroY, ty, 1 - Math.pow(.92, k));
+      spinY += (1.6 + Math.abs(dScroll) * .9) * k;                 // плавное вращение вокруг вертикали, как монета
+      main.style.setProperty("--spy", spinY.toFixed(1) + "deg"); main.style.setProperty("--spx", (Math.sin(now / 900) * 14).toFixed(1) + "deg");
+      placeMain(outroX, outroY + Math.sin(now / 700) * 10, lerp(1.45, phone ? 2.4 : 3, clamp(op * 1.6, 0, 1)), Math.sin(now / 1300) * 6);
+      if (orc.top > vh * .7) {   // вернулись наверх — эмблема снова на площадке
+        state = "landed"; main.style.setProperty("--spy", "0deg"); main.style.setProperty("--spx", "0deg"); main.classList.add("landed");
+      }
+      // долистали до конца — незаметно переносим в начало
+      if (orc.bottom <= vh + 4 && !teleporting) {
+        teleporting = true; veil.classList.add("on");
+        setTimeout(() => {
+          window.RDX_TELEPORT && window.RDX_TELEPORT(0);
+          fin.classList.remove("hit", "named"); midDone = false; state = "loop"; loopStart = performance.now();
+          loopN.textContent = String((Number(loopN.textContent) || 1) + 1).padStart(2, "0");
+          requestAnimationFrame(() => { veil.classList.remove("on"); teleporting = false; });
+        }, 180);
+      }
+    }
+    // ---- начало страницы: эмблема падает на заголовок и разбивается ----
+    if (state === "loop") {
+      const tr = title.getBoundingClientRect(), hitX = tr.left + tr.width * .32, hitY = tr.top + tr.height * .28;
+      const t = clamp((now - loopStart) / 1100, 0, 1), e = t * t;
+      spinY += (2 + t * 10) * k; main.style.setProperty("--spy", spinY.toFixed(1) + "deg");
+      placeMain(lerp(vw / 2, hitX, e), lerp(vh * .5, hitY, e), lerp(phone ? 2.4 : 3, 1.2, e), t * 40);
+      if (t >= 1) {
+        state = "fall"; main.classList.remove("show", "falling");
+        main.style.setProperty("--spy", "0deg"); main.style.setProperty("--spx", "0deg");
+        title.classList.remove("hit"); void title.offsetWidth; title.classList.add("hit");
+        burstAt(hitX, hitY, 80);
+        flash.style.setProperty("--fx", hitX + "px"); flash.style.setProperty("--fy", hitY + "px");
+        flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
+        shatter(hitX, hitY, true);
+        // из обломков вылезает маленькая эмблема и летит на место эмблемы в шапке; старая падает
+        const brand = $(".brand svg"), br2 = brand.getBoundingClientRect(), mw = 40;
+        brand.classList.remove("pop"); brand.classList.add("drop");
+        mini.style.width = mw + "px"; mini.style.opacity = "1";
+        mini.animate([
+          { transform: `translate(${hitX - mw / 2}px,${hitY - mw / 2}px) scale(.2) rotate(0deg)`, opacity: 0 },
+          { transform: `translate(${hitX - mw / 2}px,${hitY - mw / 2 - 30}px) scale(1.4) rotate(-40deg)`, opacity: 1, offset: .25 },
+          { transform: `translate(${(hitX + br2.left) / 2 - mw / 2}px,${Math.min(hitY, br2.top) - 120}px) scale(1.15) rotate(-300deg)`, offset: .65 },
+          { transform: `translate(${br2.left + br2.width / 2 - mw / 2}px,${br2.top + br2.height / 2 - mw / 2}px) scale(${(br2.width / mw).toFixed(3)}) rotate(-720deg)` },
+        ], { duration: 1500, easing: "cubic-bezier(.45,.05,.25,1)", fill: "forwards" }).onfinish = () => {
+          mini.style.opacity = "0"; mini.getAnimations().forEach((a) => a.cancel());
+          brand.classList.remove("drop"); brand.classList.add("pop");
+        };
+      }
+    }
     // ушли от финала — эмблема разлетается обратно на части
-    if ((state === "landed" || state === "merged") && pr.top > vh * .95) {
+    if ((state === "landed" || state === "merged") && pr.top > vh * .95 && !teleporting) {
       state = "fall"; main.getAnimations().forEach((a) => a.cancel());
       main.classList.remove("show", "landed"); fin.classList.remove("hit");
       B.forEach((b) => { b.x = px; b.y = Math.min(py, vh - 40); b.vx = (Math.random() - .5) * 5; b.vy = -2 - Math.random() * 3; b.va = (Math.random() - .5) * 5; b.alive = true; b.el.classList.add("on"); });
@@ -1384,7 +1473,7 @@ async function liveStats(){
 }
 
 /* ===== своя плавная прокрутка с ограничением скорости (колесо, тачпад, палец, клавиши, полоса прокрутки) ===== */
-const FX = { slow: false, holdMax: null };   // эмблема в середине страницы просит медленнее и «не дальше этой точки»
+const FX = { slow: false, holdMax: null, outro: 0 };   // эмблема в середине страницы просит медленнее и «не дальше этой точки»
 let lenis = null;
 function smooth(){
   const S = { cur: scrollY, target: scrollY, jump: false, last: 0, touch: false, ty: 0, tt: 0, tv: 0 };
@@ -1429,12 +1518,14 @@ function smooth(){
     e.preventDefault(); jumpTo(el, id === "#top" ? -scrollY - 9999 : -70);
   });
   lenis = { scrollTo: (el, o = {}) => jumpTo(el, o.offset ?? -70) };
+  // мгновенный перенос (петля: из конца — в начало)
+  window.RDX_TELEPORT = (y) => { S.cur = S.target = y; S.jump = false; window.scrollTo(0, y); };
   (function raf(now){
     const dt = S.last ? Math.min(50, now - S.last) : 16; S.last = now;
     // внешние прокрутки (клавиши, полоса прокрутки, браузер) тоже идут через ограничитель
     if (Math.abs(scrollY - S.cur) > 3) { S.cur = scrollY; S.target = scrollY; }
     const vh = innerHeight;
-    S.vf = lerp(S.vf ?? 1.7, S.jump ? 3.6 : FX.slow ? .6 : S.touch ? 3.1 : 2.3, 1 - Math.pow(.94, dt / 16.667));   // палец ведёт страницу почти 1:1
+    S.vf = lerp(S.vf ?? 1.7, S.jump ? 3.6 : FX.outro ? FX.outro : FX.slow ? .6 : S.touch ? 3.1 : 2.3, 1 - Math.pow(.94, dt / 16.667));   // палец ведёт страницу почти 1:1
     const vmax = S.vf * vh / 1000;   // экранов в секунду → пикселей в мс
     // вниз — ограниченная скорость и «долг» не больше трети экрана (иначе после колеса страница долго доезжает);
     // вверх — без ограничений
