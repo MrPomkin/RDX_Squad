@@ -94,7 +94,7 @@ const T: Record<string, Record<string, string>> = {
     hello: "<b>RDX Squad</b> — Revolvers and Explosives\n\nЗдесь можно подать заявку в сквад, обжаловать бан, написать командирам или спросить RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Обжаловать бан", ai: "🤖 RDX_AI", help: "🆘 Написать командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Отмена", send: "✅ Отправить",
     a_nick: "Шаг 1/7. Твой ник в Animal Company?", a_age: "Шаг 2/7. Сколько тебе лет?", a_plat: "Шаг 3/7. Где играешь?", a_exp: "Шаг 4/7. Сколько играешь в Animal Company?",
-    a_wpn: "Шаг 5/7. Любимое оружие?", a_why: "Шаг 7/7. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
+    a_wpn: "Шаг 5/7. Любимое оружие? Выбери кнопкой или напиши своё.", a_why: "Шаг 7/7. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
     a_dep: "Шаг 6/7. В какой отдел RDX хочешь вступить?\n\n💰 <b>Экономика</b> — фармеры и дюперы: добывают ресурсы и валюту и официально обеспечивают ими сквад.\n⚔️ <b>Штурм</b> — бойцы: рейды, захват позиций и защита своих.\n🔬 <b>Наука</b> — строители: возводят постройки, объекты и укрепления базы.",
     a_depreq: "Выбери отдел кнопкой ниже — свой вариант вписать нельзя.",
     leave: "🚪 Выйти из сквада", l_ask: "Почему хочешь выйти из RDX? Напиши коротко.", l_done: "✅ Запрос на выход отправлен командирам.", l_not: "Ты не в составе RDX — выходить неоткуда.",
@@ -112,7 +112,7 @@ const T: Record<string, Record<string, string>> = {
     hello: "<b>RDX Squad</b> — Revolvers and Explosives\n\nApply to the squad, appeal a ban, message the commanders or ask RDX_AI.",
     apply: "📝 Apply", appeal: "⚖️ Appeal a ban", ai: "🤖 RDX_AI", help: "🆘 Message commanders", site: "🌐 Website", menu: "↩️ Menu", cancel: "✖️ Cancel", send: "✅ Send",
     a_nick: "Step 1/7. Your Animal Company nickname?", a_age: "Step 2/7. How old are you?", a_plat: "Step 3/7. Where do you play?", a_exp: "Step 4/7. How long have you played Animal Company?",
-    a_wpn: "Step 5/7. Favourite weapon?", a_why: "Step 7/7. Why RDX and how will you help the squad? A couple of sentences.",
+    a_wpn: "Step 5/7. Favourite weapon? Pick a button or type your own.", a_why: "Step 7/7. Why RDX and how will you help the squad? A couple of sentences.",
     a_dep: "Step 6/7. Which RDX department do you want to join?\n\n💰 <b>Economy</b> — farmers and dupers: they gather resources and currency and officially supply the squad.\n⚔️ <b>Assault</b> — the fighters: raids, capturing positions and protecting our own.\n🔬 <b>Science</b> — the builders: they raise structures, objects and base defences.",
     a_depreq: "Pick a department with the buttons below — you can't type your own.",
     leave: "🚪 Leave the squad", l_ask: "Why do you want to leave RDX? Keep it short.", l_done: "✅ Leave request sent to the commanders.", l_not: "You're not in the RDX roster.",
@@ -130,7 +130,7 @@ const T: Record<string, Record<string, string>> = {
     hello: "<b>RDX Squad</b> — Revolvers and Explosives\n\nТут можна подати заявку в сквад, оскаржити бан, написати командирам або запитати RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Оскаржити бан", ai: "🤖 RDX_AI", help: "🆘 Написати командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Скасувати", send: "✅ Надіслати",
     a_nick: "Крок 1/7. Твій нік в Animal Company?", a_age: "Крок 2/7. Скільки тобі років?", a_plat: "Крок 3/7. Де граєш?", a_exp: "Крок 4/7. Скільки граєш в Animal Company?",
-    a_wpn: "Крок 5/7. Улюблена зброя?", a_why: "Крок 7/7. Чому RDX і чим будеш корисний скваду?",
+    a_wpn: "Крок 5/7. Улюблена зброя? Обери кнопкою або напиши свою.", a_why: "Крок 7/7. Чому RDX і чим будеш корисний скваду?",
     a_dep: "Крок 6/7. До якого відділу RDX хочеш вступити?\n\n💰 <b>Економіка</b> — фармери й дюпери: добувають ресурси й валюту та офіційно забезпечують ними сквад.\n⚔️ <b>Штурм</b> — бійці: рейди, захоплення позицій і захист своїх.\n🔬 <b>Наука</b> — будівельники: зводять споруди, об'єкти й укріплення бази.",
     a_depreq: "Обери відділ кнопкою нижче — свій варіант вписати не можна.",
     leave: "🚪 Вийти зі скваду", l_ask: "Чому хочеш вийти з RDX? Коротко.", l_done: "✅ Запит на вихід надіслано командирам.", l_not: "Ти не у складі RDX.",
@@ -309,7 +309,7 @@ const setState = (bot: Bot, uid: number, flow: string | null, step = 0, data: un
 
 // ---------- заявки ----------
 const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД", appeal: "⚖️ ОБЖАЛОВАНИЕ БАНА", help: "🆘 СООБЩЕНИЕ КОМАНДИРАМ", leave: "🚪 ЗАПРОС НА ВЫХОД" };
-const WEAPONS = ["РПГ (гранатомёт)", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
+const WEAPONS = ["РПГ", "Гранатомёт", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
 const DEPTS = ["Экономика", "Штурм", "Наука"];   // отдел — только из этого списка
 const DEPT_ICO: Record<string, string> = { "Экономика": "💰", "Штурм": "⚔️", "Наука": "🔬" };
 const BASE_MEMBERS = 0;   // бойцов на сайте: 3 + принятые (закрытые) заявки − ушедшие
@@ -476,7 +476,7 @@ async function flowStep(u: any, chat: number, st: any, text: string) {
     if (st.step === 0) { d.nick = text.slice(0, 40); await setState("main", u.id, "apply", 1, d); await send("main", chat, t(u, "a_age"), cancel); return; }
     if (st.step === 1) { d.age = text.slice(0, 3); await setState("main", u.id, "apply", 2, d); await send("main", chat, t(u, "a_plat"), kb([PLAT.slice(0, 2).map((p) => [p, "pl:" + p]) as any, PLAT.slice(2).map((p) => [p, "pl:" + p]) as any, [[t(u, "cancel"), "go:menu"]]])); return; }
     if (st.step === 2) { d.platform = text.slice(0, 30); await setState("main", u.id, "apply", 3, d); await askExp(u, chat); return; }
-    if (st.step === 3) { d.exp = text.slice(0, 30); await setState("main", u.id, "apply", 4, d); await send("main", chat, t(u, "a_wpn"), kb([[[WEAPONS[0], "wp:0"], [WEAPONS[1], "wp:1"]], [[WEAPONS[2], "wp:2"], [WEAPONS[3], "wp:3"]], [[WEAPONS[4], "wp:4"]], [[t(u, "cancel"), "go:menu"]]])); return; }
+    if (st.step === 3) { d.exp = text.slice(0, 30); await setState("main", u.id, "apply", 4, d); await send("main", chat, t(u, "a_wpn"), kb([[[WEAPONS[0], "wp:0"], [WEAPONS[1], "wp:1"]], [[WEAPONS[2], "wp:2"], [WEAPONS[3], "wp:3"]], [[WEAPONS[4], "wp:4"], [WEAPONS[5], "wp:5"]], [[t(u, "cancel"), "go:menu"]]])); return; }
     if (st.step === 4) { d.weapon = text.slice(0, 40); await setState("main", u.id, "apply", 5, d); await askDept(u, chat); return; }
     if (st.step === 5) {
       if (!DEPTS.includes(text)) { await send("main", chat, t(u, "a_depreq")); await askDept(u, chat); return; }
@@ -857,7 +857,7 @@ const normCode = (c: unknown) => String(c || "").toUpperCase().replace(/[^A-Z0-9
 async function ipHashOf(req: Request) { return (await sha("rdx:" + (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?"))).slice(0, 24); }
 function appFields(b: any) {
   return { nick: String(b.nick || "").trim().slice(0, 40), age: String(b.age || "").slice(0, 3), tz: String(b.tz || "").slice(0, 40), platform: String(b.platform || "").slice(0, 30),
-    exp: String(b.exp || "").slice(0, 20), weapon: WEAPONS.includes(String(b.weapon)) ? String(b.weapon) : "", dept: DEPTS.includes(String(b.dept)) ? String(b.dept) : "", why: String(b.why || "").trim().slice(0, 1200) };
+    exp: String(b.exp || "").slice(0, 20), weapon: String(b.weapon || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 40), dept: DEPTS.includes(String(b.dept)) ? String(b.dept) : "", why: String(b.why || "").trim().slice(0, 1200) };
 }
 async function siteFind(req: Request, b: any) {
   const ip = await ipHashOf(req);
