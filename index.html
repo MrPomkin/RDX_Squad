@@ -371,6 +371,35 @@ html.lenis{scroll-behavior:auto}
 /* глитч заголовка */
 .title.glitch .row:first-child{animation:glitch .42s steps(2) 1}
 @keyframes glitch{0%{text-shadow:4px 0 var(--or),-4px 0 #4af;transform:translate(2px,-1px)}25%{text-shadow:-6px 0 var(--or),5px 0 #4af;transform:translate(-3px,2px)}50%{text-shadow:3px 2px var(--or),-3px -2px #4af;clip-path:inset(20% 0 45% 0)}75%{text-shadow:none;clip-path:inset(60% 0 5% 0);transform:translate(4px,0)}100%{text-shadow:none;clip-path:none;transform:none}}
+/* 3D-фигуры на заднем фоне: каркасные кубы, шестигранные призмы, гироскопы, объёмные «RDX» */
+#bg3d{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;perspective:1100px}
+.o3{position:absolute;left:0;top:0;width:var(--s);height:var(--s);transform-style:preserve-3d;will-change:transform}
+.o3>.rot{position:absolute;inset:0;transform-style:preserve-3d;animation:o3spin var(--t,30s) linear infinite;animation-delay:var(--dl,0s)}
+@keyframes o3spin{from{transform:rotateX(var(--ax,20deg)) rotateY(0deg) rotateZ(var(--az,0deg))}to{transform:rotateX(calc(var(--ax,20deg) + 360deg)) rotateY(360deg) rotateZ(var(--az,0deg))}}
+.o3 .f{position:absolute;inset:0;border:1.5px solid rgba(255,122,26,var(--al,.32));background:linear-gradient(135deg,rgba(255,122,26,.05),rgba(255,255,255,.012));backface-visibility:visible}
+.o3.cube .f:nth-child(1){transform:translateZ(calc(var(--s)/2))}
+.o3.cube .f:nth-child(2){transform:rotateY(180deg) translateZ(calc(var(--s)/2))}
+.o3.cube .f:nth-child(3){transform:rotateY(90deg) translateZ(calc(var(--s)/2))}
+.o3.cube .f:nth-child(4){transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}
+.o3.cube .f:nth-child(5){transform:rotateX(90deg) translateZ(calc(var(--s)/2))}
+.o3.cube .f:nth-child(6){transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
+.o3.hex .f{left:calc(50% - var(--s)*.2887);width:calc(var(--s)*.5774);transform:rotateY(calc(var(--i)*60deg)) translateZ(calc(var(--s)*.5))}
+.o3.gyro .f{border-radius:50%;background:none;border-width:2px;transform:rotateY(calc(var(--i)*60deg))}
+.o3.gyro .f.eq{transform:rotateX(90deg);border-color:rgba(236,235,231,.16)}
+.o3.gyro .core{position:absolute;left:38%;top:38%;width:24%;height:24%;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffb347,#ff7a1a 55%,#7a3208);box-shadow:0 0 30px rgba(255,122,26,.5);opacity:.55}
+.o3.word .f{border:0;background:none;display:flex;align-items:center;justify-content:center;font:900 calc(var(--s)*.42)/1 var(--display);letter-spacing:-.03em;color:rgba(255,122,26,.035);transform:translateZ(calc((var(--i) - 4) * var(--s) * .012))}
+.o3.word .f:last-child{color:rgba(236,235,231,.1)}
+.o3.word .f:first-child{color:rgba(0,0,0,.35)}
+footer{position:relative}
+/* объёмные заголовки: «выдавленные» буквы и наклон в 3D при прокрутке */
+.t3d{--d:#ff7a1a;text-shadow:0 .012em 0 #d9620f,0 .024em 0 #b8520c,0 .036em 0 #96430a,0 .048em 0 #743408,0 .06em 0 #522506,0 .072em 0 #3a1a05,0 .1em .14em rgba(0,0,0,.55);transform:perspective(800px) rotateX(var(--trx,0deg)) rotateY(var(--try,0deg));transform-origin:50% 70%;will-change:transform}
+.sec-head h2.t3d,.pin-head h2.t3d{transform:perspective(800px) rotateX(var(--trx,0deg)) rotateY(var(--try,0deg))}
+.fullname.t3d{text-shadow:0 .01em 0 #d9620f,0 .02em 0 #b8520c,0 .03em 0 #96430a,0 .04em 0 #743408,0 .05em 0 #522506,0 .08em .12em rgba(0,0,0,.55)}
+/* часть надписей в конце тоже стоит в 3D */
+.orow.r3a{transform:perspective(900px) translateX(var(--ox,0px)) rotateX(38deg)}
+.orow.r3b{transform:perspective(900px) translateX(var(--ox,0px)) rotateY(-24deg) rotateX(-14deg)}
+@media (prefers-reduced-motion:reduce){#bg3d{display:none}}
+@media (max-width:699px){.drop{height:720vh}.outro{height:1000vh}}
 /* секции «наезжают» при прокрутке */
 .curtain>.wrap{transform-origin:50% 30%;will-change:transform,opacity}
 .sec-head h2{transform:none}
@@ -471,6 +500,7 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
   </div>
 </div>
 
+<div id="bg3d" aria-hidden="true"></div>
 <div class="cur" id="cur"></div>
 <div class="cur-ring" id="ring"><span id="ringTxt"></span></div>
 <canvas id="trail"></canvas>
@@ -746,17 +776,17 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
     </div>
   </section>
   <section class="outro" id="outro" aria-hidden="true">
-    <div class="orow back solid" data-dir="-1" style="top:3%"><span>RESEARCH DEPARTMENT EXPLOSIVE &nbsp;·&nbsp; RESEARCH DEPARTMENT EXPLOSIVE &nbsp;·&nbsp; RESEARCH DEPARTMENT EXPLOSIVE</span></div>
-    <div class="orow front out" data-dir="1" style="top:11%"><span>ANIMAL COMPANY · VR &nbsp;·&nbsp; ANIMAL COMPANY · VR &nbsp;·&nbsp; ANIMAL COMPANY · VR</span></div>
+    <div class="orow back solid r3a" data-dir="-1" style="top:3%"><span>RESEARCH DEPARTMENT EXPLOSIVE &nbsp;·&nbsp; RESEARCH DEPARTMENT EXPLOSIVE &nbsp;·&nbsp; RESEARCH DEPARTMENT EXPLOSIVE</span></div>
+    <div class="orow front out r3b" data-dir="1" style="top:11%"><span>ANIMAL COMPANY · VR &nbsp;·&nbsp; ANIMAL COMPANY · VR &nbsp;·&nbsp; ANIMAL COMPANY · VR</span></div>
     <div class="orow back out" data-dir="-1" style="top:19%"><span>РЕЙДЫ · ЗАХВАТ &nbsp;·&nbsp; РЕЙДЫ · ЗАХВАТ &nbsp;·&nbsp; РЕЙДЫ · ЗАХВАТ</span></div>
-    <div class="orow back solid" data-dir="1" style="top:27%"><span>RDX SQUAD · EST. 2026 &nbsp;·&nbsp; RDX SQUAD · EST. 2026 &nbsp;·&nbsp; RDX SQUAD · EST. 2026</span></div>
-    <div class="orow front solid" data-dir="-1" style="top:35%"><span>РАЗВЕДКА · ТАКТИКА &nbsp;·&nbsp; РАЗВЕДКА · ТАКТИКА &nbsp;·&nbsp; РАЗВЕДКА · ТАКТИКА</span></div>
+    <div class="orow back solid r3a" data-dir="1" style="top:27%"><span>RDX SQUAD · EST. 2026 &nbsp;·&nbsp; RDX SQUAD · EST. 2026 &nbsp;·&nbsp; RDX SQUAD · EST. 2026</span></div>
+    <div class="orow front solid r3b" data-dir="-1" style="top:35%"><span>РАЗВЕДКА · ТАКТИКА &nbsp;·&nbsp; РАЗВЕДКА · ТАКТИКА &nbsp;·&nbsp; РАЗВЕДКА · ТАКТИКА</span></div>
     <div class="orow back out" data-dir="1" style="top:43%"><span>ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ &nbsp;·&nbsp; ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ &nbsp;·&nbsp; ИССЛЕДОВАТЕЛЬСКИЙ ОТДЕЛ</span></div>
-    <div class="orow back solid" data-dir="-1" style="top:51%"><span>ЦЕПНАЯ РЕАКЦИЯ &nbsp;·&nbsp; ЦЕПНАЯ РЕАКЦИЯ &nbsp;·&nbsp; ЦЕПНАЯ РЕАКЦИЯ</span></div>
-    <div class="orow front out" data-dir="1" style="top:59%"><span>ANIMAL COMPANY &nbsp;·&nbsp; ANIMAL COMPANY &nbsp;·&nbsp; ANIMAL COMPANY</span></div>
+    <div class="orow back solid r3a" data-dir="-1" style="top:51%"><span>ЦЕПНАЯ РЕАКЦИЯ &nbsp;·&nbsp; ЦЕПНАЯ РЕАКЦИЯ &nbsp;·&nbsp; ЦЕПНАЯ РЕАКЦИЯ</span></div>
+    <div class="orow front out r3b" data-dir="1" style="top:59%"><span>ANIMAL COMPANY &nbsp;·&nbsp; ANIMAL COMPANY &nbsp;·&nbsp; ANIMAL COMPANY</span></div>
     <div class="orow back out" data-dir="-1" style="top:67%"><span>ИСПЫТАНИЯ · ПОДРЫВ &nbsp;·&nbsp; ИСПЫТАНИЯ · ПОДРЫВ &nbsp;·&nbsp; ИСПЫТАНИЯ · ПОДРЫВ</span></div>
-    <div class="orow back solid" data-dir="1" style="top:75%"><span>RESEARCH · EXPLOSIVE &nbsp;·&nbsp; RESEARCH · EXPLOSIVE &nbsp;·&nbsp; RESEARCH · EXPLOSIVE</span></div>
-    <div class="orow front solid" data-dir="-1" style="top:83%"><span>НАБОР ОТКРЫТ &nbsp;·&nbsp; НАБОР ОТКРЫТ &nbsp;·&nbsp; НАБОР ОТКРЫТ</span></div>
+    <div class="orow back solid r3a" data-dir="1" style="top:75%"><span>RESEARCH · EXPLOSIVE &nbsp;·&nbsp; RESEARCH · EXPLOSIVE &nbsp;·&nbsp; RESEARCH · EXPLOSIVE</span></div>
+    <div class="orow front solid r3b" data-dir="-1" style="top:83%"><span>НАБОР ОТКРЫТ &nbsp;·&nbsp; НАБОР ОТКРЫТ &nbsp;·&nbsp; НАБОР ОТКРЫТ</span></div>
     <div class="orow back out" data-dir="1" style="top:91%"><span>RDX SQUAD &nbsp;·&nbsp; RDX SQUAD &nbsp;·&nbsp; RDX SQUAD</span></div>
     <div class="outro-tag mono">RDX · LOOP · <span id="loopN">01</span></div>
   </section>
@@ -1515,6 +1545,7 @@ const FX = { slow: false, holdMax: null, outro: 0 };   // эмблема в се
 let lenis = null;
 function smooth(){
   const S = { cur: scrollY, target: scrollY, jump: false, last: 0, touch: false, ty: 0, tt: 0, tv: 0 };
+  const PH = () => innerWidth < 700;   // телефон: почти без ограничений, палец ведёт страницу 1:1
   const maxY = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
   const native = (t) => !!(t && t.closest && t.closest("textarea, select, #mmenu, input[type=range]"));
   const inGal = (t) => !!(t && t.closest && t.closest(".gal"));
@@ -1546,7 +1577,7 @@ function smooth(){
     S.ty = y; S.tt = now; S.tv = lerp(S.tv, dy / dt, .4);
     S.target = clamp(S.target + dy, 0, maxY());
   }, { passive: false });
-  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 420, 0, maxY()); });   // инерция: сильно смахнул — страница едет дальше (остановить — коснуться экрана)
+  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * (PH() ? 900 : 420), 0, maxY()); });   // инерция: сильно смахнул — страница едет дальше (остановить — коснуться экрана)
   // переход по ссылкам меню — быстрее, но тоже плавно
   const jumpTo = (el, offset = -70) => { S.jump = true; S.target = clamp(el.getBoundingClientRect().top + scrollY + offset, 0, maxY()); };
   document.addEventListener("click", e => {
@@ -1563,21 +1594,61 @@ function smooth(){
     // внешние прокрутки (клавиши, полоса прокрутки, браузер) тоже идут через ограничитель
     if (Math.abs(scrollY - S.cur) > 3) { S.cur = scrollY; S.target = scrollY; }
     const vh = innerHeight;
-    S.vf = lerp(S.vf ?? 1.7, S.jump ? 6 : FX.outro ? FX.outro : FX.slow ? 2.2 : S.touch ? 7 : 5.5, 1 - Math.pow(.94, dt / 16.667));   // палец ведёт страницу почти 1:1
+    S.vf = PH() ? (S.jump ? 8 : 40) : lerp(S.vf ?? 1.7, S.jump ? 6 : FX.outro ? FX.outro : FX.slow ? 2.2 : S.touch ? 7 : 5.5, 1 - Math.pow(.94, dt / 16.667));   // палец ведёт страницу почти 1:1
     const vmax = S.vf * vh / 1000;   // экранов в секунду → пикселей в мс
     // вниз — ограниченная скорость и «долг» не больше трети экрана (иначе после колеса страница долго доезжает);
     // вверх — без ограничений
-    if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * (FX.slow || FX.outro ? 2 : 3.5));   // сильный взмах доезжает дальше
-    let step = (S.target - S.cur) * (1 - Math.pow(S.target < S.cur ? .7 : .86, dt / 16.667));
+    if (S.target > S.cur && !S.jump && !PH()) S.target = Math.min(S.target, S.cur + vh * (FX.slow || FX.outro ? 2 : 3.5));   // сильный взмах доезжает дальше
+    let step = (S.target - S.cur) * (1 - Math.pow(S.touch && PH() ? .35 : S.target < S.cur ? .7 : PH() ? .9 : .86, dt / 16.667));
     if (step > 0) step = Math.min(step, vmax * dt);
     let next = S.cur + step;
-    if (FX.holdMax != null && !S.jump && next > FX.holdMax) { next = Math.max(S.cur, FX.holdMax); S.target = Math.min(S.target, FX.holdMax + vh * .3); }
+    if (FX.holdMax != null && !S.jump && !PH() && next > FX.holdMax) { next = Math.max(S.cur, FX.holdMax); S.target = Math.min(S.target, FX.holdMax + vh * .3); }
     if (Math.abs(S.target - next) < .3 && !step) next = S.target;
     if (Math.abs(next - S.cur) > .01) { S.cur = next; window.scrollTo(0, S.cur); }
     if (S.jump && Math.abs(S.target - S.cur) < 2) S.jump = false;
     requestAnimationFrame(raf);
   })(performance.now());
   addEventListener("resize", () => { S.target = clamp(S.target, 0, maxY()); });
+}
+
+/* ===== 3D-фигуры на заднем фоне ===== */
+function bg3d(){
+  const box = $("#bg3d"); if (!box || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const phone = innerWidth < 700;
+  const kinds = ["cube", "hex", "gyro", "word", "cube", "hex", "gyro", "cube", "word", "hex", "gyro", "cube"];
+  const n = phone ? 7 : 12, items = [];
+  for (let i = 0; i < n; i++) {
+    const kind = kinds[i], el = document.createElement("div");
+    const sz = (kind === "word" ? (phone ? 150 : 260) : (phone ? 46 : 70) + Math.random() * (phone ? 50 : 110)) | 0;
+    el.className = "o3 " + kind;
+    el.style.setProperty("--s", sz + "px");
+    el.style.setProperty("--t", (18 + Math.random() * 26).toFixed(1) + "s");
+    el.style.setProperty("--dl", (-Math.random() * 30).toFixed(1) + "s");
+    el.style.setProperty("--ax", (Math.random() * 60 - 30).toFixed(0) + "deg");
+    el.style.setProperty("--az", (Math.random() * 40 - 20).toFixed(0) + "deg");
+    if (kind === "word") { el.style.setProperty("--t", (40 + Math.random() * 20).toFixed(1) + "s"); }
+    let inner = "";
+    if (kind === "cube") inner = "<i class=f></i>".repeat(6);
+    if (kind === "hex") for (let j = 0; j < 6; j++) inner += `<i class=f style="--i:${j}"></i>`;
+    if (kind === "gyro") { for (let j = 0; j < 3; j++) inner += `<i class=f style="--i:${j}"></i>`; inner += `<i class="f eq"></i><i class=core></i>`; }
+    if (kind === "word") for (let j = 0; j < 9; j++) inner += `<i class=f style="--i:${j}">RDX</i>`;
+    el.innerHTML = `<div class=rot>${inner}</div>`;
+    box.appendChild(el);
+    items.push({ el, sz, x: (i % 4 + .15 + Math.random() * .7) / 4, y: Math.random(), d: .15 + Math.random() * .55, z: -200 + Math.random() * 260 });
+  }
+  let mx = 0, my = 0, sx = 0, sy = 0;
+  addEventListener("pointermove", e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
+  (function tick(){
+    const vw = innerWidth, vh = innerHeight, span = vh * 1.5, y = scrollY;
+    sx = lerp(sx, mx, .05); sy = lerp(sy, my, .05);
+    for (const it of items) {
+      // каждая фигура уплывает вверх со своей скоростью (глубина) и появляется снизу снова
+      const py = (((it.y * span - y * it.d) % span) + span) % span - vh * .25 - it.sz / 2;
+      const px = it.x * vw - it.sz / 2 + sx * 60 * it.d * 2;
+      it.el.style.transform = `translate3d(${px.toFixed(1)}px,${(py + sy * 40 * it.d).toFixed(1)}px,${it.z.toFixed(0)}px)`;
+    }
+    requestAnimationFrame(tick);
+  })();
 }
 
 /* ===== движок прокрутки: всё, что зависит от положения страницы ===== */
@@ -1587,6 +1658,8 @@ function scrollFx(){
   const root = document.documentElement;
   let ly = scrollY, vy = 0, mx = 0, my = 0, last = 0, pinDone = new Set(), hpS = 0, ppS = 0, curScreen = -1, sweepT = 0;
   const label = $("#scr-label");
+  const t3 = $$(".sec-head h2, .pin-head h2, .fullname"); t3.forEach(e => e.classList.add("t3d"));
+  const t3s = t3.map(() => ({ x: 0, y: 0 }));
   const screens = ["#top", "#about", "#dirs", "#gallery", "#apply", "#help", "#finale"].map(q => $(q)).filter(Boolean);
   const names = { top: "00 · RDX", about: "01 · DOSSIER", dirs: "01.5 · UNITS", gallery: "02 · FIELD", apply: "03 · RECRUIT", help: "04 · SUPPORT", finale: "05 · LANDING" };
   addEventListener("pointermove", e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
@@ -1598,6 +1671,13 @@ function scrollFx(){
     prog.style.transform = `scaleX(${p.toFixed(4)})`;
     depthN.textContent = String(Math.round(p * 999)).padStart(3, "0");
     root.style.setProperty("--skew", clamp(vy * -.035, -2.5, 2.5).toFixed(2) + "deg");
+    // объёмные заголовки наклоняются: ниже середины экрана — «лежат», у середины — встают ровно
+    t3.forEach((el, i) => {
+      const r = el.getBoundingClientRect(); if (r.bottom < -50 || r.top > vh + 50) return;
+      const c = clamp(((r.top + r.height / 2) - vh * .45) / vh, -1, 1);
+      t3s[i].x = lerp(t3s[i].x, c * 34, .12 * k); t3s[i].y = lerp(t3s[i].y, mx * 14, .08 * k);
+      el.style.setProperty("--trx", t3s[i].x.toFixed(2) + "deg"); el.style.setProperty("--try", t3s[i].y.toFixed(2) + "deg");
+    });
     // герой разлетается
     hpS = window.RDX_SNAP ? clamp(y / (vh * .85), 0, 1) : lerp(hpS, clamp(y / (vh * .85), 0, 1), 1 - Math.pow(.8, k)); const hp = hpS;
     if (window.RDX_SNAP) { window.RDX_SNAP = false; vy = 0; ly = y; }
@@ -1688,7 +1768,7 @@ function clickBoom(){
 $("#year").textContent = new Date().getFullYear();
 splitTitle(); applyLang(); tgLinks();
 boot(() => { reveals(); titleFx(); scrambleWatch(); });
-smooth(); cursor(); embers(); bands(); navFx(); form(); faller(); scrollFx(); clickBoom(); liveStats();
+smooth(); bg3d(); cursor(); embers(); bands(); navFx(); form(); faller(); scrollFx(); clickBoom(); liveStats();
 </script>
 </body>
 </html>
