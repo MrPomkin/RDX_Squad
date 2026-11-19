@@ -90,7 +90,7 @@ async function botName(bot: Bot) {
 const L = (u: any) => { const c = String(u?.language_code || "").slice(0, 2); return c === "uk" ? "uk" : c === "ru" || c === "be" || c === "kk" ? "ru" : c ? "en" : "ru"; };
 const T: Record<string, Record<string, string>> = {
   ru: {
-    hello: "<b>RDX Squad</b> — Research Department Explosive\n\nЗдесь можно подать заявку в сквад, обжаловать бан, написать командирам или спросить RDX_AI.",
+    hello: "<b>RDX Squad</b> — Revolvers and Explosives\n\nЗдесь можно подать заявку в сквад, обжаловать бан, написать командирам или спросить RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Обжаловать бан", ai: "🤖 RDX_AI", help: "🆘 Написать командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Отмена", send: "✅ Отправить",
     a_nick: "Шаг 1/7. Твой ник в Animal Company?", a_age: "Шаг 2/7. Сколько тебе лет?", a_plat: "Шаг 3/7. Где играешь?", a_exp: "Шаг 4/7. Сколько играешь в Animal Company?",
     a_wpn: "Шаг 5/7. Любимое оружие?", a_why: "Шаг 7/7. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
@@ -108,7 +108,7 @@ const T: Record<string, Record<string, string>> = {
     nope: "Это может только командир.", e1: "меньше месяца", e2: "1–6 месяцев", e3: "полгода+", e4: "больше года",
   },
   en: {
-    hello: "<b>RDX Squad</b> — Research Department Explosive\n\nApply to the squad, appeal a ban, message the commanders or ask RDX_AI.",
+    hello: "<b>RDX Squad</b> — Revolvers and Explosives\n\nApply to the squad, appeal a ban, message the commanders or ask RDX_AI.",
     apply: "📝 Apply", appeal: "⚖️ Appeal a ban", ai: "🤖 RDX_AI", help: "🆘 Message commanders", site: "🌐 Website", menu: "↩️ Menu", cancel: "✖️ Cancel", send: "✅ Send",
     a_nick: "Step 1/7. Your Animal Company nickname?", a_age: "Step 2/7. How old are you?", a_plat: "Step 3/7. Where do you play?", a_exp: "Step 4/7. How long have you played Animal Company?",
     a_wpn: "Step 5/7. Favourite weapon?", a_why: "Step 7/7. Why RDX and how will you help the squad? A couple of sentences.",
@@ -126,7 +126,7 @@ const T: Record<string, Record<string, string>> = {
     nope: "Commanders only.", e1: "under a month", e2: "1–6 months", e3: "6 months+", e4: "over a year",
   },
   uk: {
-    hello: "<b>RDX Squad</b> — Research Department Explosive\n\nТут можна подати заявку в сквад, оскаржити бан, написати командирам або запитати RDX_AI.",
+    hello: "<b>RDX Squad</b> — Revolvers and Explosives\n\nТут можна подати заявку в сквад, оскаржити бан, написати командирам або запитати RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Оскаржити бан", ai: "🤖 RDX_AI", help: "🆘 Написати командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Скасувати", send: "✅ Надіслати",
     a_nick: "Крок 1/7. Твій нік в Animal Company?", a_age: "Крок 2/7. Скільки тобі років?", a_plat: "Крок 3/7. Де граєш?", a_exp: "Крок 4/7. Скільки граєш в Animal Company?",
     a_wpn: "Крок 5/7. Улюблена зброя?", a_why: "Крок 7/7. Чому RDX і чим будеш корисний скваду?",
@@ -201,11 +201,11 @@ async function tokensText(uid: number) {
 }
 
 // ---------- RDX_AI: дешёвая модель, короткие ответы ----------
-const PERSONA = "Ты RDX_AI — ИИ-помощник сквада RDX Squad (Research Department Explosive) в VR-игре Animal Company. "
+const PERSONA = "Ты RDX_AI — ИИ-помощник сквада RDX Squad (Revolvers and Explosives) в VR-игре Animal Company. "
   + "Тон серьёзный, спокойный и дружелюбный, как у толкового старшего по скваду. Отвечай коротко и по делу: обычно 1–4 предложения, списки только когда реально нужны. Без смайликов, без воды. "
   + "Пиши на языке собеседника. Если не знаешь точного ответа про игру — честно скажи и предложи спросить у командиров (кнопка «Написать командирам» в боте RDX). "
   + "Про сквад: подать заявку можно на сайте " + SITE + " или в боте RDX (кнопка «Заявка в сквад»); обжаловать бан — в боте RDX (кнопка «Обжаловать бан»); ответ приходит в Telegram от бота RDX. "
-  + "Что такое RDX: сквад (команда) игроков Animal Company; RDX = Research Department Explosive — «исследовательский отдел»: изучаем карты и механики, играем командой, проводим ивенты и тренировки. В RDX три отдела: Экономика (фармеры и дюперы — добывают ресурсы и валюту и официально обеспечивают ими сквад), Штурм (бойцы: рейды, захват позиций, защита своих), Наука (строят постройки, объекты и укрепления базы). В заявке отдел обязательно выбирается из этих трёх. Ничего сверх этого про сквад не придумывай. "
+  + "Что такое RDX: сквад (команда) игроков Animal Company; RDX = Revolvers and Explosives (Revolvers anD eXplosives — «револьверы и взрывчатка»): изучаем карты и механики, играем командой, проводим ивенты и тренировки. В RDX три отдела: Экономика (фармеры и дюперы — добывают ресурсы и валюту и официально обеспечивают ими сквад), Штурм (бойцы: рейды, захват позиций, защита своих), Наука (строят постройки, объекты и укрепления базы). В заявке отдел обязательно выбирается из этих трёх. Ничего сверх этого про сквад не придумывай. "
   + "Не выдумывай правила сквада, составы и решения командиров. Не помогай с читами, взломом, обманом и токсичностью.";
 const MODELS = (Deno.env.get("RDX_AI_MODELS") || "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-2.5-flash-lite,gemini-2.5-flash").split(",").map((x) => x.trim()).filter(Boolean);
 const SPENT = new Map<string, number>();
@@ -802,11 +802,11 @@ async function setup(url: string) {
   }
   await tg("main", "setChatMenuButton", { menu_button: { type: "web_app", text: "Сайт RDX", web_app: { url: SITE } } });
   await tg("main", "setMyName", { name: "RDX Squad" });
-  await tg("main", "setMyShortDescription", { short_description: "RDX Squad — Research Department Explosive. Заявка в сквад, обжалование бана, RDX_AI." });
-  await tg("main", "setMyDescription", { description: "Бот сквада RDX (Research Department Explosive) в Animal Company.\n\n📝 Заявка в сквад\n⚖️ Обжалование бана\n🆘 Связь с командирами\n🤖 RDX_AI\n\nНажми «Старт»." });
+  await tg("main", "setMyShortDescription", { short_description: "RDX Squad — Revolvers and Explosives. Заявка в сквад, обжалование бана, RDX_AI." });
+  await tg("main", "setMyDescription", { description: "Бот сквада RDX (Revolvers and Explosives) в Animal Company.\n\n📝 Заявка в сквад\n⚖️ Обжалование бана\n🆘 Связь с командирами\n🤖 RDX_AI\n\nНажми «Старт»." });
   await tg("ai", "setMyName", { name: "RDX_AI" });
   await tg("ai", "setMyShortDescription", { short_description: "ИИ-помощник RDX Squad. На обычном тарифе — 5 вопросов." });
-  await tg("ai", "setMyDescription", { description: "RDX_AI — ИИ-помощник сквада RDX Squad (Research Department Explosive).\nОтвечает коротко и по делу. На обычном тарифе — 5 вопросов за 5 часов." });
+  await tg("ai", "setMyDescription", { description: "RDX_AI — ИИ-помощник сквада RDX Squad (Revolvers and Explosives).\nОтвечает коротко и по делу. На обычном тарифе — 5 вопросов за 5 часов." });
   return out;
 }
 

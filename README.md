@@ -1,4 +1,4 @@
-# RDX Squad — Research Department Explosive
+# RDX Squad — Revolvers and Explosives
 
 Сайт сквада, бот **@RDX_Squad_OfficialBot** (заявки, обжалование бана, связь с командирами, RDX_AI) и бот **@RDX_AI_OfficialBot** (ИИ-помощник).
 
