@@ -39,7 +39,7 @@ async function tryModKey(bot: Bot, m: any): Promise<boolean> {
   await upsert("rdx_mods", [{ user_id: u.id, username: u.username || null, first_name: u.first_name || null, added_at: new Date().toISOString() }], "user_id");
   MODS = null;
   await modMenu(u.id, true);
-  await send(bot, chat, "🛡 <b>Ключ принят — ты модератор RDX.</b> Сообщение с ключом я удалил.\n\nЗаявки, обжалования и сообщения командирам будут приходить в бот RDX" + (BOTNAMES.main ? " @" + BOTNAMES.main : "") + " с кнопками — открой его и нажми «Старт».");
+  await send(bot, chat, "🛡 <b>Ключ принят — ты модератор RDX и SealsAI.</b> Сообщение с ключом я удалил.\nТвой уровень — «Модератор» (выше Premium Ultra). Твои команды: /mod\n\nЗаявки, обжалования и сообщения командирам будут приходить в бот RDX" + (BOTNAMES.main ? " @" + BOTNAMES.main : "") + " с кнопками — открой его и нажми «Старт».");
   for (const id of ADMINS) await send("main", id, "🛡 Новый модератор RDX: " + who(u));
   return true;
 }
@@ -143,12 +143,17 @@ const t = (u: any, k: string) => T[L(u)][k] ?? T.ru[k] ?? k;
 // ---------- токены RDX_AI (как у SealsAI: лимит за 5 часов и за неделю) ----------
 const TIERS: Record<string, { name: string; q5: number }> = {
   base: { name: "Обычный", q5: 5 }, vip: { name: "VIP", q5: 12 }, premium: { name: "Premium", q5: 20 },
-  plus: { name: "Premium Plus", q5: 30 }, ultra: { name: "Premium Ultra", q5: 45 }, max: { name: "Premium Max", q5: 60 },
+  plus: { name: "Premium Plus", q5: 30 }, ultra: { name: "Premium Ultra", q5: 45 }, mod: { name: "Модератор", q5: 52 }, max: { name: "Premium Max", q5: 60 },
 };
+const RANK = ["base", "vip", "premium", "plus", "ultra", "mod", "max"];
+const higher = (a: string, b: string) => (RANK.indexOf(a) >= RANK.indexOf(b) ? a : b);
 const WEEK_X = 3;
-async function tierOf(uid: number) {
+async function tierOf(uid: number, withMod = true) {
   const r = await db("rdx_premium?select=tier,until&user_id=eq." + uid + "&until=gt." + enc(new Date().toISOString()));
-  return r?.[0] ? { tier: String(r[0].tier), until: String(r[0].until) } : { tier: "base", until: null as string | null };
+  const own = r?.[0] ? { tier: String(r[0].tier), until: String(r[0].until) as string | null } : { tier: "base", until: null as string | null };
+  // модератор получает уровень «Модератор», если его собственный уровень ниже
+  if (withMod && (await modIds()).includes(uid) && higher("mod", own.tier) === "mod") return { tier: "mod", until: null };
+  return own;
 }
 async function bonusOf(uid: number) {
   const r: any[] = await db("rdx_bonus?select=amount,unlimited,until&user_id=eq." + uid + "&until=gt." + enc(new Date().toISOString())) || [];
@@ -161,7 +166,7 @@ async function quota(uid: number, take: boolean) {
   const rows: any[] = await db("rdx_quota?select=at&subject=eq.tg:" + uid + "&at=gt." + enc(since) + "&order=at.asc") || [];
   const t5 = Date.now() - 5 * 3600e3;
   const in5 = rows.filter((r) => Date.parse(r.at) > t5);
-  const res = { ...tr, unlimited: bn.unlimited || ADMINS.includes(uid) || (await modIds()).includes(uid), l5, lw, used5: in5.length, usedw: rows.length,
+  const res = { ...tr, unlimited: bn.unlimited || ADMINS.includes(uid), l5, lw, used5: in5.length, usedw: rows.length,
     reset5: in5[0] ? Date.parse(in5[0].at) + 5 * 3600e3 : 0, resetw: rows[0] ? Date.parse(rows[0].at) + 7 * 86400e3 : 0, ok: true };
   if (!res.unlimited && (res.used5 >= l5 || res.usedw >= lw)) res.ok = false;
   if (take && res.ok && !res.unlimited) { await ins("rdx_quota", [{ subject: "tg:" + uid }], "return=minimal"); res.used5++; res.usedw++; }
@@ -172,7 +177,7 @@ async function tokensText(uid: number) {
   const q = await quota(uid, false);
   if (q.unlimited) return "♾ <b>Безлимит</b>";
   const name = (TIERS[q.tier] || TIERS.base).name;
-  return "🪙 <b>RDX_AI · " + name + "</b>" + (q.until ? " до " + new Date(Date.parse(q.until) + 3 * 3600e3).toISOString().slice(0, 16).replace("T", " ") + " МСК" : "")
+  return (q.tier === "mod" ? "🛡 " : "🪙 ") + "<b>RDX_AI · " + name + "</b>" + (q.until ? " до " + new Date(Date.parse(q.until) + 3 * 3600e3).toISOString().slice(0, 16).replace("T", " ") + " МСК" : "")
     + "\n\nВопросов за 5 часов: <b>" + Math.max(0, q.l5 - q.used5) + "</b> из " + q.l5 + (q.used5 >= q.l5 && q.reset5 ? " · обновятся через " + left(q.reset5) : "")
     + "\nВопросов за неделю: <b>" + Math.max(0, q.lw - q.usedw) + "</b> из " + q.lw + (q.usedw >= q.lw && q.resetw ? " · обновятся через " + left(q.resetw) : "")
     + (q.tier === "base" ? "\n\nБольше вопросов — с привилегиями от командиров." : "");
@@ -243,6 +248,36 @@ async function askAI(bot: Bot, chat: number, from: any, text: string, replyTo?: 
   const r = await send(bot, chat, esc(out), replyTo ? { reply_parameters: { message_id: replyTo, allow_sending_without_reply: true } } : {});
   if (!r.ok) await tg(bot, "sendMessage", { chat_id: chat, text: out });
 }
+
+// ---------- модератор: 300 токенов в сутки, VIP и VIP-промокоды до 4 дней по 5 раз в неделю ----------
+const MOD_TOKENS_DAY = 300, MOD_VIP_WEEK = 5, MOD_PROMO_WEEK = 5, MOD_MAX_DAYS = 4;
+async function modUsed(mod: number, kind: string, ms: number) {
+  const r: any[] = await db("mod_ledger?select=amount&system=eq.rdx&mod_id=eq." + mod + "&kind=eq." + kind + "&at=gt." + enc(new Date(Date.now() - ms).toISOString())) || [];
+  return r.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+}
+const modLog = (mod: number, kind: string, amount: number, target: string) => ins("mod_ledger", [{ system: "rdx", mod_id: mod, kind, amount, target }], "return=minimal");
+const PROMO_ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const newPromo = () => "RDX-" + [...crypto.getRandomValues(new Uint8Array(8))].map((x) => PROMO_ABC[x % 32]).join("").replace(/^(.{4})/, "$1-");
+async function makePromos(tier: string, days: number, count: number, by: number) {
+  const codes = Array.from({ length: count }, newPromo);
+  await ins("rdx_promo", codes.map((code) => ({ code, tier, days, created_by: by })), "return=minimal");
+  return codes;
+}
+async function redeemRdxPromo(uid: number, raw: string) {
+  const code = raw.toUpperCase().replace(/\s+/g, "");
+  const pr = (await db("rdx_promo?select=*&code=eq." + enc(code)))?.[0];
+  if (!pr) return "❌ Такого промокода RDX нет.";
+  if (pr.used_by) return "❌ Этот промокод уже активирован.";
+  const cur = await tierOf(uid, false);
+  if (cur.tier !== "base" && higher(cur.tier, pr.tier) === cur.tier && cur.tier !== pr.tier) return "У тебя уже есть уровень выше (" + TIERS[cur.tier].name + "). Код не потрачен — можно отдать другу.";
+  const from = cur.tier === pr.tier && cur.until ? Math.max(Date.now(), Date.parse(cur.until)) : Date.now();
+  const until = new Date(from + Number(pr.days) * 86400e3).toISOString();
+  const used = await db("rdx_promo?code=eq." + enc(code) + "&used_by=is.null", { method: "PATCH", body: JSON.stringify({ used_by: uid, used_at: new Date().toISOString() }), headers: { Prefer: "return=representation" } });
+  if (!used?.length) return "❌ Этот промокод уже активирован.";
+  await upsert("rdx_premium", [{ user_id: uid, tier: pr.tier, until, updated_at: new Date().toISOString() }], "user_id");
+  return "🎉 Промокод активирован: <b>RDX_AI " + TIERS[pr.tier].name + "</b> до " + new Date(Date.parse(until) + 3 * 3600e3).toISOString().slice(0, 16).replace("T", " ") + " МСК.\nПроверить: /tokens";
+}
+const PROMO_RE = /\bRDX-[A-Z0-9]{4}-[A-Z0-9]{4}\b/i;
 
 // ---------- состояние диалога ----------
 async function getState(bot: Bot, uid: number) {
@@ -467,6 +502,10 @@ async function onMain(up: any) {
   }
   if (text === "/menu" || text === "/cancel") return startFlow(u, chat, "menu");
   if (text === "/tokens") return send("main", chat, await tokensText(u.id));
+  if (/^\/promo(@\S+)?\b/i.test(text) || PROMO_RE.test(text)) {
+    const c = text.match(PROMO_RE);
+    return send("main", chat, c ? await redeemRdxPromo(u.id, c[0]) : "Напиши так: /promo RDX-XXXX-XXXX");
+  }
   if (await tryModKey("main", m)) return;
   if (text.startsWith("/") && await isMod(u) && await adminCmd("main", u, chat, text)) return;
   const st = await getState("main", u.id);
@@ -494,6 +533,11 @@ async function onAI(up: any) {
   const me = await botName("ai");
   if (text.startsWith("/start")) return send("ai", chat, "🤖 <b>RDX_AI</b> — помощник RDX Squad.\nПиши вопрос. Токены: /tokens\nЗаявка, обжалование бана и связь с командирами — в боте RDX" + (await botName("main") ? " @" + BOTNAMES.main : "") + ".");
   if (text.startsWith("/tokens")) return send("ai", chat, await tokensText(u.id), group ? { reply_parameters: { message_id: m.message_id } } : {});
+  if (/^\/promo(@\S+)?\b/i.test(text) || (!group && PROMO_RE.test(text))) {
+    const c = text.match(PROMO_RE);
+    if (group && c) await tg("ai", "deleteMessage", { chat_id: chat, message_id: m.message_id });
+    return send("ai", chat, c ? await redeemRdxPromo(u.id, c[0]) : "Напиши так: /promo RDX-XXXX-XXXX");
+  }
   if (await tryModKey("ai", m)) return;
   if (text.startsWith("/") && await isMod(u) && await adminCmd("ai", u, chat, text)) return;
   if (group) {
@@ -518,6 +562,55 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
   if (cmd === "/logout" && !owner) {
     await del("rdx_mods?user_id=eq." + u.id); MODS = null; await modMenu(u.id, false);
     await say("Ты больше не модератор RDX."); return true;
+  }
+  if (cmd === "/mod" || (!owner && (cmd === "/admin" || cmd === "/help"))) {
+    const [tk, vp, pm] = await Promise.all([modUsed(u.id, "tokens", 86400e3), modUsed(u.id, "vip", 7 * 86400e3), modUsed(u.id, "promo", 7 * 86400e3)]);
+    await say("<b>🛡 Команды модератора RDX</b>\n"
+      + "Заявки приходят сюда с кнопками «Принять», «Отклонить», «Допрос», «Закрыть заявку».\n\n"
+      + "/give @ник 150 — дать вопросов RDX_AI (всего " + MOD_TOKENS_DAY + " в сутки, осталось " + Math.max(0, MOD_TOKENS_DAY - tk) + ")\n"
+      + "/vip @ник 3 — выдать VIP на 1–" + MOD_MAX_DAYS + " дня (осталось " + Math.max(0, MOD_VIP_WEEK - vp) + " из " + MOD_VIP_WEEK + " на неделю)\n"
+      + "/vippromo 3 — промокод RDX на VIP на 1–" + MOD_MAX_DAYS + " дня (осталось " + Math.max(0, MOD_PROMO_WEEK - pm) + " из " + MOD_PROMO_WEEK + " на неделю)\n"
+      + "/apps — новые заявки\n/logout — выйти из модераторов"); return true;
+  }
+  if (cmd === "/give" || cmd === "/vip" || cmd === "/vippromo") {
+    const lim = !owner;   // у создателя лимитов нет
+    if (cmd === "/vippromo") {
+      const days = Number(args[0]);
+      if (!(days >= 1 && days <= MOD_MAX_DAYS) && lim) { await say("Срок — от 1 до " + MOD_MAX_DAYS + " дней. Пример: /vippromo 3"); return true; }
+      if (lim && await modUsed(u.id, "promo", 7 * 86400e3) >= MOD_PROMO_WEEK) { await say("На этой неделе лимит промокодов исчерпан (" + MOD_PROMO_WEEK + ")."); return true; }
+      const [code] = await makePromos("vip", days || 1, 1, u.id);
+      await modLog(u.id, "promo", 1, code);
+      await say("🎟 Промокод RDX_AI <b>VIP</b> на " + (days || 1) + " дн.:\n<code>" + code + "</code>\nАктивировать: /promo " + code); return true;
+    }
+    const uid = args[0] ? await findUser(args[0]) : null;
+    if (!uid) { await say(cmd === "/give" ? "Пример: /give @ник 150 (человек должен хоть раз открыть бота RDX)" : "Пример: /vip @ник 3 (человек должен хоть раз открыть бота RDX)"); return true; }
+    if (cmd === "/give") {
+      const n = Math.floor(Number(args[1]) || 0);
+      if (n < 1) { await say("Сколько? Пример: /give @ник 150"); return true; }
+      const left = MOD_TOKENS_DAY - await modUsed(u.id, "tokens", 86400e3);
+      if (lim && n > left) { await say("Можно раздать ещё " + Math.max(0, left) + " из " + MOD_TOKENS_DAY + " на сегодня."); return true; }
+      await ins("rdx_bonus", [{ user_id: uid, amount: n, until: new Date(Date.now() + 7 * 86400e3).toISOString() }], "return=minimal");
+      await modLog(u.id, "tokens", n, String(uid));
+      await say("✅ " + esc(args[0]) + ": +" + n + " вопросов RDX_AI на 7 дней." + (lim ? " Осталось на сегодня: " + (left - n) : ""));
+      await send("main", uid, "🎁 Тебе добавили " + n + " вопросов RDX_AI. Проверить: /tokens"); return true;
+    }
+    // /vip
+    const days = Number(args[1]);
+    if (!(days >= 1 && days <= MOD_MAX_DAYS) && lim) { await say("Срок — от 1 до " + MOD_MAX_DAYS + " дней. Пример: /vip @ник 3"); return true; }
+    if (lim && await modUsed(u.id, "vip", 7 * 86400e3) >= MOD_VIP_WEEK) { await say("На этой неделе лимит выдачи VIP исчерпан (" + MOD_VIP_WEEK + ")."); return true; }
+    const cur = await tierOf(uid, false);
+    if (cur.tier !== "base" && cur.tier !== "vip") { await say("У " + esc(args[0]) + " уже уровень выше VIP (" + TIERS[cur.tier].name + ")."); return true; }
+    const from = cur.tier === "vip" && cur.until ? Math.max(Date.now(), Date.parse(cur.until)) : Date.now();
+    await upsert("rdx_premium", [{ user_id: uid, tier: "vip", until: new Date(from + (days || 1) * 86400e3).toISOString(), updated_at: new Date().toISOString() }], "user_id");
+    await modLog(u.id, "vip", 1, String(uid));
+    await say("✅ " + esc(args[0]) + ": RDX_AI VIP на " + (days || 1) + " дн.");
+    await send("main", uid, "⭐ Тебе выдали RDX_AI VIP на " + (days || 1) + " дн. Проверить: /tokens"); return true;
+  }
+  if (owner && cmd === "/promo_new") {   // создатель: /promo_new vip|premium|plus|ultra|max дней [штук]
+    const tier = String(args[0] || "").toLowerCase(), days = Number(args[1]), cnt = Math.max(1, Math.min(50, Number(args[2]) || 1));
+    if (!TIERS[tier] || tier === "base" || tier === "mod" || !(days > 0)) { await say("Пример: /promo_new plus 30 5 — 5 кодов Premium Plus на 30 дней"); return true; }
+    const codes = await makePromos(tier, days, cnt, u.id);
+    await say("🎟 Промокоды RDX_AI <b>" + TIERS[tier].name + "</b> на " + days + " дн.:\n" + codes.map((c) => "<code>" + c + "</code>").join("\n")); return true;
   }
   if (cmd === "/fire" && args[0]) {   // уволить бойца
     const id = await findUser(args[0]);
@@ -576,7 +669,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     }
   }
   if (cmd === "/admin" || cmd === "/help") {
-    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/mods — модераторы · /unmod @ник — снять\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
+    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
     return true;
   }
   return false;
