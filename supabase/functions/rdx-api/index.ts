@@ -98,7 +98,7 @@ const T: Record<string, Record<string, string>> = {
     a_dep: "Шаг 6/7. В какой отдел RDX хочешь вступить?\n\n💰 <b>Экономика</b> — фармеры и дюперы: добывают ресурсы и валюту и официально обеспечивают ими сквад.\n⚔️ <b>Штурм</b> — бойцы: рейды, захват позиций и защита своих.\n🔬 <b>Наука</b> — строители: возводят постройки, объекты и укрепления базы.",
     a_depreq: "Выбери отдел кнопкой ниже — свой вариант вписать нельзя.",
     leave: "🚪 Выйти из сквада", l_ask: "Почему хочешь выйти из RDX? Напиши коротко.", l_done: "✅ Запрос на выход отправлен командирам.", l_not: "Ты не в составе RDX — выходить неоткуда.",
-    l_ok: "🚪 Запрос на выход одобрен. Ты больше не в составе RDX Squad. Спасибо, что был с нами.", l_no: "Командиры отклонили запрос на выход — поговори с ними.",
+    l_ok: "📄 <b>Мы рассмотрели ваше заявление об увольнении.</b>\nВы уволены из состава RDX Squad. Благодарим вас за службу и вклад в развитие сквада. Желаем удачи — двери RDX для вас остаются открытыми.", kicked: "👢 Ты был выгнан из клана RDX Squad.", bannedm: "⛔ Ты заблокирован в RDX Squad. Боты RDX, RDX_AI и SealsAI больше не будут тебе отвечать.", clan: "👥 Состав клана", l_no: "Командиры отклонили запрос на выход — поговори с ними.",
     talk_on: "🕵️ <b>Командир RDX хочет поговорить с тобой перед решением по заявке.</b>\nПросто отвечай сюда — сообщения передаются командиру.", talk_off: "Командир завершил разговор.", cmdr: "💬 <b>Командир RDX:</b>",
     member: "🎖 <b>Ты официально в составе RDX Squad.</b> Добро пожаловать!", a_check: "Проверь заявку:", a_done: "✅ Заявка отправлена командирам. Решение придёт сюда.",
     p_nick: "Ник в игре, где тебя забанили?", p_reason: "За что, по-твоему, дали бан? Когда это было?", p_why: "Почему бан стоит снять? Опиши честно — это читают командиры.", p_done: "✅ Обжалование отправлено. Ответ придёт сюда.",
@@ -116,7 +116,7 @@ const T: Record<string, Record<string, string>> = {
     a_dep: "Step 6/7. Which RDX department do you want to join?\n\n💰 <b>Economy</b> — farmers and dupers: they gather resources and currency and officially supply the squad.\n⚔️ <b>Assault</b> — the fighters: raids, capturing positions and protecting our own.\n🔬 <b>Science</b> — the builders: they raise structures, objects and base defences.",
     a_depreq: "Pick a department with the buttons below — you can't type your own.",
     leave: "🚪 Leave the squad", l_ask: "Why do you want to leave RDX? Keep it short.", l_done: "✅ Leave request sent to the commanders.", l_not: "You're not in the RDX roster.",
-    l_ok: "🚪 Leave request approved. You're no longer in RDX Squad. Thanks for being with us.", l_no: "Commanders declined the leave request — talk to them.",
+    l_ok: "📄 <b>We have reviewed your resignation request.</b>\nYou are hereby discharged from RDX Squad. Thank you for your service and your contribution to the squad. Good luck — RDX's doors remain open to you.", kicked: "👢 You have been kicked from the RDX Squad clan.", bannedm: "⛔ You are banned from RDX Squad. The RDX, RDX_AI and SealsAI bots will no longer reply to you.", clan: "👥 Clan roster", l_no: "Commanders declined the leave request — talk to them.",
     talk_on: "🕵️ <b>An RDX commander wants to talk to you before deciding on your application.</b>\nJust reply here — messages go to the commander.", talk_off: "The commander ended the conversation.", cmdr: "💬 <b>RDX commander:</b>",
     member: "🎖 <b>You're officially in RDX Squad.</b> Welcome!", a_check: "Check your application:", a_done: "✅ Sent to the commanders. The decision will arrive here.",
     p_nick: "Your in-game nickname that was banned?", p_reason: "What do you think the ban was for? When?", p_why: "Why should it be lifted? Be honest — commanders read this.", p_done: "✅ Appeal sent. The answer will arrive here.",
@@ -134,7 +134,7 @@ const T: Record<string, Record<string, string>> = {
     a_dep: "Крок 6/7. До якого відділу RDX хочеш вступити?\n\n💰 <b>Економіка</b> — фармери й дюпери: добувають ресурси й валюту та офіційно забезпечують ними сквад.\n⚔️ <b>Штурм</b> — бійці: рейди, захоплення позицій і захист своїх.\n🔬 <b>Наука</b> — будівельники: зводять споруди, об'єкти й укріплення бази.",
     a_depreq: "Обери відділ кнопкою нижче — свій варіант вписати не можна.",
     leave: "🚪 Вийти зі скваду", l_ask: "Чому хочеш вийти з RDX? Коротко.", l_done: "✅ Запит на вихід надіслано командирам.", l_not: "Ти не у складі RDX.",
-    l_ok: "🚪 Запит на вихід схвалено. Ти більше не у складі RDX Squad. Дякуємо, що був з нами.", l_no: "Командири відхилили запит на вихід — поговори з ними.",
+    l_ok: "📄 <b>Ми розглянули вашу заяву про звільнення.</b>\nВас звільнено зі складу RDX Squad. Дякуємо за службу та внесок у розвиток скваду. Бажаємо удачі — двері RDX для вас залишаються відкритими.", kicked: "👢 Тебе вигнали з клану RDX Squad.", bannedm: "⛔ Тебе заблоковано в RDX Squad. Боти RDX, RDX_AI і SealsAI більше не відповідатимуть тобі.", clan: "👥 Склад клану", l_no: "Командири відхилили запит на вихід — поговори з ними.",
     talk_on: "🕵️ <b>Командир RDX хоче поговорити з тобою перед рішенням щодо заявки.</b>\nПросто відповідай сюди.", talk_off: "Командир завершив розмову.", cmdr: "💬 <b>Командир RDX:</b>",
     member: "🎖 <b>Ти офіційно у складі RDX Squad.</b> Ласкаво просимо!", a_check: "Перевір заявку:", a_done: "✅ Заявку надіслано командирам. Рішення прийде сюди.",
     p_nick: "Нік у грі, де тебе забанили?", p_reason: "За що, на твою думку, дали бан? Коли?", p_why: "Чому бан варто зняти? Опиши чесно.", p_done: "✅ Оскарження надіслано. Відповідь прийде сюди.",
@@ -149,10 +149,10 @@ const t = (u: any, k: string) => T[L(u)][k] ?? T.ru[k] ?? k;
 
 // ---------- токены RDX_AI (как у SealsAI: лимит за 5 часов и за неделю) ----------
 const TIERS: Record<string, { name: string; q5: number }> = {
-  base: { name: "Обычный", q5: 5 }, vip: { name: "VIP", q5: 12 }, premium: { name: "Premium", q5: 20 },
+  base: { name: "Обычный", q5: 5 }, vip: { name: "VIP", q5: 12 }, premium: { name: "Premium", q5: 20 }, clan: { name: "Боец RDX", q5: 24 },
   plus: { name: "Premium Plus", q5: 30 }, ultra: { name: "Premium Ultra", q5: 45 }, mod: { name: "Модератор", q5: 70 }, max: { name: "Premium Max", q5: 60 },
 };
-const RANK = ["base", "vip", "premium", "plus", "ultra", "mod", "max"];
+const RANK = ["base", "vip", "premium", "clan", "plus", "ultra", "mod", "max"];
 const higher = (a: string, b: string) => (RANK.indexOf(a) >= RANK.indexOf(b) ? a : b);
 const WEEK_X = 3;
 async function tierOf(uid: number, withMod = true) {
@@ -160,6 +160,8 @@ async function tierOf(uid: number, withMod = true) {
   const own = r?.[0] ? { tier: String(r[0].tier), until: String(r[0].until) as string | null } : { tier: "base", until: null as string | null };
   // модератор получает уровень «Модератор», если его собственный уровень ниже
   if (withMod && (await modIds()).includes(uid) && higher("mod", own.tier) === "mod") return { tier: "mod", until: null };
+  // боец клана получает уровень «Боец RDX», если его собственный уровень ниже
+  if (withMod && higher("clan", own.tier) === "clan" && own.tier !== "clan" && await isMember(uid)) return { tier: "clan", until: null };
   return own;
 }
 async function bonusOf(uid: number) {
@@ -310,7 +312,7 @@ const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД",
 const WEAPONS = ["РПГ (гранатомёт)", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
 const DEPTS = ["Экономика", "Штурм", "Наука"];   // отдел — только из этого списка
 const DEPT_ICO: Record<string, string> = { "Экономика": "💰", "Штурм": "⚔️", "Наука": "🔬" };
-const BASE_MEMBERS = 3;   // бойцов на сайте: 3 + принятые (закрытые) заявки − ушедшие
+const BASE_MEMBERS = 0;   // бойцов на сайте: 3 + принятые (закрытые) заявки − ушедшие
 async function membersCount() { const r: any[] = await db("rdx_members?select=id&active=eq.true") || []; return BASE_MEMBERS + r.length; }
 async function isMember(uid: number) { return !!(await db("rdx_members?select=id&active=eq.true&user_id=eq." + uid))?.[0]; }
 const STATUS: Record<string, string> = { ok: "✅ <b>Одобрено</b> — проведи допрос при необходимости и нажми «Закрыть заявку»", no: "❌ <b>Отклонено</b>", closed: "🎖 <b>Закрыто — боец в составе</b>", reply: "💬 Отправлен ответ", left: "🚪 <b>Отпущен из сквада</b>", stay: "❌ <b>Выход отклонён</b>" };
@@ -369,9 +371,88 @@ async function deliver(a: any) {
   return !!r.ok;
 }
 
+// ---------- состав клана: список, поиск по нику, бан, кик, увольнение ----------
+const CLAN_BIG = 25, CLAN_PAGE = 20;
+let BANS: { at: number; ids: Set<number>; names: Set<string> } | null = null;
+async function isBanned(uid: number, username?: string | null) {
+  if (!BANS || Date.now() - BANS.at > 30000) {
+    const r: any[] = await db("rdx_bans?select=user_id,username") || [];
+    BANS = { at: Date.now(), ids: new Set(r.filter((x) => x.user_id).map((x) => Number(x.user_id))), names: new Set(r.filter((x) => x.username).map((x) => String(x.username).toLowerCase())) };
+  }
+  return BANS.ids.has(Number(uid)) || (!!username && BANS.names.has(String(username).toLowerCase()));
+}
+const memName = (x: any) => (x.nick || x.username || "Боец") + (x.username ? " (@" + x.username + ")" : "");
+const clanAll = async (): Promise<any[]> => await db("rdx_members?select=id,user_id,username,nick,joined_at,app_id&active=eq.true&order=joined_at") || [];
+const memRows = (list: any[]) => list.map((x) => [["🎖 " + memName(x).slice(0, 48), "cl:m:" + x.id]] as [string, string][]);
+async function clanShow(chat: number, page: number | null) {
+  const all = await clanAll(), big = all.length > CLAN_BIG;
+  let text: string, rows: [string, string][][];
+  if (!all.length) { text = "👥 В клане пока никого нет."; rows = []; }
+  else if (page === null && big) {   // больше 25 — только число, поиск и кнопка «показать всех»
+    text = "👥 <b>Состав клана RDX</b>\nВ строю: <b>" + all.length + "</b> бойцов.\nНайди бойца по нику или открой полный список.";
+    rows = [[["🔎 Поиск по нику", "cl:find"]], [["📋 Показать всех", "cl:all:0"]]];
+  } else {
+    const pg = page || 0, part = big ? all.slice(pg * CLAN_PAGE, pg * CLAN_PAGE + CLAN_PAGE) : all;
+    text = "👥 <b>Состав клана RDX</b> — в строю <b>" + all.length + "</b>" + (big ? " · стр. " + (pg + 1) + "/" + Math.ceil(all.length / CLAN_PAGE) : "") + "\nНажми на бойца, чтобы открыть карточку: бан, кик, увольнение.";
+    rows = memRows(part);
+    if (big) {
+      const nav: [string, string][] = [];
+      if (pg > 0) nav.push(["◀️ Назад", "cl:all:" + (pg - 1)]);
+      if ((pg + 1) * CLAN_PAGE < all.length) nav.push(["Дальше ▶️", "cl:all:" + (pg + 1)]);
+      if (nav.length) rows.push(nav);
+      rows.push([["🔎 Поиск по нику", "cl:find"]]);
+    }
+  }
+  rows.push([["↩️ Меню", "go:menu"]]);
+  await send("main", chat, text, kb(rows));
+}
+async function clanFind(chat: number, q: string) {
+  const s0 = q.replace(/^@/, "").trim().toLowerCase();
+  const f = (await clanAll()).filter((x) => (x.nick || "").toLowerCase().includes(s0) || (x.username || "").toLowerCase().includes(s0)).slice(0, 20);
+  const more: [string, string][][] = [[["🔎 Искать ещё", "cl:find"]], [["👥 Состав", "cl:list"]]];
+  if (!f.length) return send("main", chat, "Никого не нашёл по «" + esc(q) + "».", kb(more));
+  return send("main", chat, "🔎 Нашёл: <b>" + f.length + "</b>", kb([...memRows(f), ...more]));
+}
+async function clanCard(chat: number, id: number) {
+  const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
+  if (!x || !x.active) return send("main", chat, "Этого бойца уже нет в составе.", kb([[["👥 Состав", "cl:list"]]]));
+  const tr = x.user_id ? await tierOf(Number(x.user_id)) : null;
+  const d = String(x.joined_at || "").slice(0, 10).split("-").reverse().join(".");
+  await send("main", chat, "🎖 <b>" + esc(x.nick || "Боец") + "</b>" + (x.username ? " · @" + esc(x.username) : "") + "\nВ составе с " + d + (x.app_id ? " · заявка #" + x.app_id : "")
+    + (tr ? "\nУровень: " + (TIERS[tr.tier] || TIERS.base).name : "\nTelegram не привязан — сообщения от ботов ему не дойдут"),
+    kb([[["🚫 Бан", "cl:ask:ban:" + id], ["👢 Кик", "cl:ask:kick:" + id]], [["📄 Уволить (по заявлению)", "cl:ask:fire:" + id]], [["👥 К списку", "cl:list"]]]));
+}
+const CLAN_ACT: Record<string, [string, string, string]> = {
+  ban: ["🚫 Забанить", "Бан: человек уйдёт из состава, а боты RDX, RDX_AI и SealsAI перестанут ему отвечать.", "🚫 забанен"],
+  kick: ["👢 Кикнуть", "Кик: человек уйдёт из состава, бот напишет ему «Ты был выгнан из клана».", "👢 выгнан из клана"],
+  fire: ["📄 Уволить", "Увольнение по заявлению: бот официально сообщит, что заявление рассмотрено и он уволен.", "📄 уволен"],
+};
+async function clanDo(u: any, chat: number, act: string, id: number) {
+  const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
+  if (!x || !x.active || !CLAN_ACT[act]) return send("main", chat, "Этого бойца уже нет в составе.");
+  const tid = x.user_id ? Number(x.user_id) : null;
+  if ((tid && ADMINS.includes(tid)) || /^mr_wugi4$/i.test(x.username || "")) return send("main", chat, "👑 Создателя убрать нельзя.");
+  if (tid === u.id) return send("main", chat, "Себя убрать нельзя — подай заявление на выход через меню.");
+  if (!isOwner(u) && tid && (await modIds()).includes(tid)) return send("main", chat, "Модератора может убрать только создатель.");
+  await patch("rdx_members?id=eq." + id, { active: false, left_at: new Date().toISOString() });
+  if (act === "ban") { await ins("rdx_bans", [{ user_id: tid, username: x.username || null, nick: x.nick || null, by_id: u.id }], "return=minimal"); BANS = null; }
+  if (act === "fire" && tid) {   // открытое заявление на выход — закрываем
+    const lv: any[] = await db("rdx_apps?select=*&kind=eq.leave&status=eq.new&user_id=eq." + tid) || [];
+    for (const a of lv) { await patch("rdx_apps?id=eq." + a.id, { status: "left", decided_by: String(u.id), decided_at: new Date().toISOString() }); await refreshCards({ ...a, status: "left" }); }
+  }
+  if (tid) {
+    const lu = { language_code: (await db("rdx_users?select=lang&user_id=eq." + tid))?.[0]?.lang || "ru" };
+    await send("main", tid, t(lu, act === "ban" ? "bannedm" : act === "kick" ? "kicked" : "l_ok"));
+  }
+  const line = esc(memName(x)) + " — " + CLAN_ACT[act][2] + ".";
+  await send("main", chat, line + " Бойцов теперь: <b>" + await membersCount() + "</b>", kb([[["👥 Состав", "cl:list"]]]));
+  if (!isOwner(u)) for (const a of ADMINS) await send("main", a, "🛡 Модератор " + who(u) + ": " + line);
+}
+
 // ---------- бот RDX ----------
-function menu(u: any, member = false) {
-  return kb([[member ? [t(u, "leave"), "go:leave"] : [t(u, "apply"), "go:apply"]], [[t(u, "appeal"), "go:appeal"], [t(u, "help"), "go:help"]], [[t(u, "ai"), "go:ai"], [t(u, "site"), "app:" + SITE_APP]]]);
+function menu(u: any, member = false, staffU = false) {
+  return kb([[member ? [t(u, "leave"), "go:leave"] : [t(u, "apply"), "go:apply"]], [[t(u, "appeal"), "go:appeal"], [t(u, "help"), "go:help"]], [[t(u, "ai"), "go:ai"], [t(u, "site"), "app:" + SITE_APP]],
+    ...(staffU ? [[[t(u, "clan"), "cl:list"]]] as [string, string][][] : [])]);
 }
 const PLAT = ["Quest 3/3S", "Quest 2", "Quest Pro", "PC VR"];
 async function startFlow(u: any, chat: number, flow: string) {
@@ -385,7 +466,7 @@ async function startFlow(u: any, chat: number, flow: string) {
     await setState("main", u.id, "leave", 0, {}); await send("main", chat, t(u, "l_ask"), kb([[[t(u, "cancel"), "go:menu"]]])); return;
   }
   await setState("main", u.id, null);
-  await send("main", chat, t(u, "hello"), menu(u, member));
+  await send("main", chat, t(u, "hello"), menu(u, member, await isMod(u)));
 }
 async function flowStep(u: any, chat: number, st: any, text: string) {
   const d = st.data || {};
@@ -446,8 +527,28 @@ async function onMain(up: any) {
   if (up.callback_query) {
     const c = up.callback_query, u = c.from, chat = c.message?.chat?.id, data = String(c.data || "");
     tg("main", "answerCallbackQuery", { callback_query_id: c.id });
+    if (!isOwner(u) && await isBanned(u.id, u.username)) return;
     if (data.startsWith("go:")) return startFlow(u, chat, data.slice(3));
     const st = await getState("main", u.id);
+    if (data.startsWith("cl:")) {
+      if (!(await isMod(u))) return;
+      const [, op, a1, a2] = data.split(":");
+      if (st?.flow === "clfind" && op !== "find") await setState("main", u.id, null);
+      if (op === "list") return clanShow(chat, null);
+      if (op === "all") return clanShow(chat, Number(a1) || 0);
+      if (op === "find") { await setState("main", u.id, "clfind", 0, {}); return send("main", chat, "🔎 Напиши ник бойца или его часть:", kb([[["✖️ Отмена", "cl:list"]]])); }
+      if (op === "m") return clanCard(chat, Number(a1));
+      if (op === "ask" && CLAN_ACT[a1]) {
+        const x = (await db("rdx_members?select=nick,username,active&id=eq." + Number(a2)))?.[0];
+        if (!x?.active) return send("main", chat, "Этого бойца уже нет в составе.");
+        return send("main", chat, CLAN_ACT[a1][0] + " <b>" + esc(memName(x)) + "</b>?\n" + CLAN_ACT[a1][1], kb([[["✅ Да", "cl:do:" + a1 + ":" + Number(a2)], ["✖️ Нет", "cl:m:" + Number(a2)]]]));
+      }
+      if (op === "do") {
+        await tg("main", "editMessageReplyMarkup", { chat_id: chat, message_id: c.message.message_id, reply_markup: { inline_keyboard: [] } });
+        return clanDo(u, chat, a1, Number(a2));
+      }
+      return;
+    }
     if (data.startsWith("pl:") && st?.flow === "apply" && st.step === 2) return flowStep(u, chat, st, data.slice(3));
     if (data.startsWith("ex:") && st?.flow === "apply" && st.step === 3) return flowStep(u, chat, st, data.slice(3));
     if (data.startsWith("wp:") && st?.flow === "apply" && st.step === 4) return flowStep(u, chat, st, WEAPONS[Number(data.slice(3))] || "");
@@ -457,7 +558,7 @@ async function onMain(up: any) {
       const kind = st.flow;
       await newApp({ kind, source: "bot", user_id: u.id, username: u.username || null, data: { ...st.data, from: (u.first_name || "") + (u.username ? " @" + u.username : "") + " · id " + u.id } });
       await tg("main", "editMessageReplyMarkup", { chat_id: chat, message_id: c.message.message_id, reply_markup: { inline_keyboard: [] } });
-      await send("main", chat, t(u, kind === "apply" ? "a_done" : kind === "appeal" ? "p_done" : kind === "leave" ? "l_done" : "h_done"), menu(u, await isMember(u.id)));
+      await send("main", chat, t(u, kind === "apply" ? "a_done" : kind === "appeal" ? "p_done" : kind === "leave" ? "l_done" : "h_done"), menu(u, await isMember(u.id), await isMod(u)));
       return;
     }
     if (data.startsWith("dec:")) {
@@ -517,6 +618,7 @@ async function onMain(up: any) {
   const m = up.message;
   if (!m?.from || m.from.is_bot || m.chat?.type !== "private") return;
   const u = m.from, chat = m.chat.id, text = String(m.text ?? m.caption ?? "").trim();
+  if (!isOwner(u) && await isBanned(u.id, u.username)) return;   // забанен в клане — боты не отвечают
   await upsert("rdx_users", [{ user_id: u.id, username: u.username || null, first_name: u.first_name || null, lang: u.language_code || null, started: true, seen_at: new Date().toISOString() }], "user_id");
   if (text.startsWith("/start")) {
     // решения по заявкам с сайта, которые ждали, пока человек откроет бота
@@ -539,6 +641,7 @@ async function onMain(up: any) {
   if ((text.startsWith("/") && await isMod(u) || isOwner(u) && modIntent(text)) && await adminCmd("main", u, chat, text)) return;
   const st = await getState("main", u.id);
   if (!text) return;
+  if (st?.flow === "clfind" && await isMod(u)) { await setState("main", u.id, null); return clanFind(chat, text); }
   if (!st || st.flow === "ai") {
     const talk = (await db("rdx_apps?select=id,talk_by,data&talk_open=eq.true&user_id=eq." + u.id + "&order=created_at.desc&limit=1"))?.[0];
     if (talk?.talk_by) {
@@ -558,6 +661,7 @@ async function onAI(up: any) {
   if (!m?.from || m.from.is_bot) return;
   const u = m.from, chat = m.chat.id, text = String(m.text ?? m.caption ?? "").trim();
   if (!text) return;
+  if (!isOwner(u) && await isBanned(u.id, u.username)) return;   // забанен в клане — RDX_AI не отвечает
   const group = m.chat.type !== "private";
   const me = await botName("ai");
   if (text.startsWith("/start")) return send("ai", chat, "🤖 <b>RDX_AI</b> — помощник RDX Squad.\nПиши вопрос. Токены: /tokens\nЗаявка, обжалование бана и связь с командирами — в боте RDX" + (await botName("main") ? " @" + BOTNAMES.main : "") + ".");
@@ -648,7 +752,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
   }
   if (owner && cmd === "/promo_new") {   // создатель: /promo_new vip|premium|plus|ultra|max дней [штук]
     const tier = String(args[0] || "").toLowerCase(), days = Number(args[1]), cnt = Math.max(1, Math.min(50, Number(args[2]) || 1));
-    if (!TIERS[tier] || tier === "base" || tier === "mod" || !(days > 0)) { await say("Пример: /promo_new plus 30 5 — 5 кодов Premium Plus на 30 дней"); return true; }
+    if (!TIERS[tier] || tier === "base" || tier === "mod" || tier === "clan" || !(days > 0)) { await say("Пример: /promo_new plus 30 5 — 5 кодов Premium Plus на 30 дней"); return true; }
     const codes = await makePromos(tier, days, cnt, u.id);
     await say("🎟 Промокоды RDX_AI <b>" + TIERS[tier].name + "</b> на " + days + " дн.:\n" + codes.map((c) => "<code>" + c + "</code>").join("\n")); return true;
   }
@@ -663,7 +767,26 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
   }
   if (cmd === "/roster") {
     const r: any[] = await db("rdx_members?select=nick,username,joined_at&active=eq.true&order=joined_at") || [];
-    await say("<b>Состав RDX</b> — бойцов на сайте: " + await membersCount() + " (" + BASE_MEMBERS + " основателей + " + r.length + " принятых)" + (r.length ? "\n\n" + r.map((x, i) => (i + 1) + ". " + esc(x.nick || "") + (x.username ? " @" + esc(x.username) : "")).join("\n") : "")); return true;
+    await say("<b>Состав RDX</b> — в строю: " + await membersCount() + (r.length ? "\n\n" + r.map((x, i) => (i + 1) + ". " + esc(x.nick || "") + (x.username ? " @" + esc(x.username) : "")).join("\n") : "")); return true;
+  }
+  if (owner && cmd === "/unban" && args[0]) {
+    const nick = args[0].replace(/^@/, ""), id = await findUser(args[0]);
+    await del("rdx_bans?" + (id ? "or=(user_id.eq." + id + ",username.ilike." + enc(nick) + ")" : "username=ilike." + enc(nick))); BANS = null;
+    await say("✅ " + esc(args[0]) + " разбанен. В состав он не возвращается — для этого нужна новая заявка или /addmember."); return true;
+  }
+  if (owner && cmd === "/bans") {
+    const r: any[] = await db("rdx_bans?select=user_id,username,nick,created_at&order=created_at") || [];
+    await say(r.length ? "<b>🚫 Забаненные</b>\n" + r.map((x, i) => (i + 1) + ". " + esc(x.nick || "") + (x.username ? " @" + esc(x.username) : "") + (x.user_id ? " · id " + x.user_id : "")).join("\n") + "\n\nРазбанить: /unban @ник" : "Забаненных нет."); return true;
+  }
+  if (owner && cmd === "/addmember" && args.length) {   // /addmember @ник Имя  ·  /addmember Имя (без Telegram)
+    const tgArg = args[0].startsWith("@") ? args[0] : null;
+    const nick = (tgArg ? args.slice(1) : args).join(" ").trim() || (tgArg ? tgArg.slice(1) : "");
+    const id = tgArg ? await findUser(tgArg) : null;
+    const same = (await db("rdx_members?select=id&active=eq.true&user_id=is.null&nick=ilike." + enc(nick)))?.[0];
+    const row = { user_id: id, username: tgArg ? tgArg.slice(1) : null, nick, active: true };
+    if (same) await patch("rdx_members?id=eq." + same.id, row); else await ins("rdx_members", [row], "return=minimal");
+    await say("🎖 " + esc(nick) + (tgArg ? " (" + esc(tgArg) + (id ? "" : ", ещё не писал ботам — привяжется, когда напишет") + ")" : "") + (same ? " — Telegram привязан." : " добавлен в состав.") + " Бойцов: <b>" + await membersCount() + "</b>");
+    return true;
   }
   if (owner && cmd === "/mods") {
     const r: any[] = await db("rdx_mods?select=user_id,username,first_name,added_at&order=added_at") || [];
@@ -709,14 +832,14 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     if (cmd === "/grant") {
       const tier = String(args[1] || "").toLowerCase();
       if (tier === "none" || tier === "off") { await del("rdx_premium?user_id=eq." + uid); await say("✅ Привилегия " + esc(args[0]) + " снята."); return true; }
-      if (!TIERS[tier] || tier === "base") { await say("Уровни: vip, premium, plus, ultra, max (или none). Пример: /grant @nick plus 30"); return true; }
+      if (!TIERS[tier] || tier === "base" || tier === "mod" || tier === "clan") { await say("Уровни: vip, premium, plus, ultra, max (или none). Пример: /grant @nick plus 30"); return true; }
       const days = /^(forever|навсегда)$/i.test(args[2] || "") ? 36500 : Number(args[2]) > 0 ? Number(args[2]) : 30;
       await upsert("rdx_premium", [{ user_id: uid, tier, until: new Date(Date.now() + days * 86400e3).toISOString(), updated_at: new Date().toISOString() }], "user_id");
       await say("✅ " + esc(args[0]) + ": " + TIERS[tier].name + " " + (days >= 36500 ? "навсегда" : "на " + days + " дн.")); return true;
     }
   }
   if (cmd === "/admin" || cmd === "/help") {
-    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/makemod @ник — назначить модератора (или просто напиши «дай модера @ник»)\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
+    await say("<b>Команды создателя</b>\nКнопка «👥 Состав клана» в меню — список, поиск, бан, кик, увольнение\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/addmember @ник Имя — добавить в состав (или привязать Telegram)\n/bans — забаненные · /unban @ник — разбанить\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/makemod @ник — назначить модератора (или просто напиши «дай модера @ник»)\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
     return true;
   }
   return false;
@@ -774,6 +897,7 @@ async function siteApply(req: Request, b: any) {
   const recent: any[] = await db("rdx_apps?select=id&ip_hash=eq." + ipHash + "&created_at=gt." + enc(new Date(Date.now() - 3600e3).toISOString())) || [];
   if (recent.length >= 3) return { ok: false, error: "rate", status: 429 };
   const known = (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + enc(tgName)))?.[0]?.user_id || null;
+  if (await isBanned(Number(known) || 0, tgName)) return { ok: false, error: "banned" };
   const code = newCode();
   const a = await newApp({ kind: "apply", source: "site", user_id: known, username: tgName, ip_hash: ipHash, edit_hash: await sha(normCode(code)),
     data: { ...appFields(b), nick, why, tg: tgName, lang: String(b.lang || "").slice(0, 5), from: "сайт · @" + tgName } });
