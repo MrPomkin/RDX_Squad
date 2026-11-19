@@ -1525,7 +1525,7 @@ function smooth(){
     const d = e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? innerHeight : 1);
     S.jump = false;
     if (Math.sign(d) !== Math.sign(S.target - S.cur)) S.target = S.cur;   // сменил направление — сразу без «доезда»
-    S.target = clamp(S.target + clamp(d, -260, 260), 0, maxY());
+    S.target = clamp(S.target + clamp(d, -420, 420), 0, maxY());
   }, { passive: false });
   // мгновенная остановка: коснулся экрана, нажал мышь или клавишу — прокрутка встаёт на месте
   const stop = () => { if (!S.jump) S.target = S.cur; };
@@ -1546,7 +1546,7 @@ function smooth(){
     S.ty = y; S.tt = now; S.tv = lerp(S.tv, dy / dt, .4);
     S.target = clamp(S.target + dy, 0, maxY());
   }, { passive: false });
-  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 70, 0, maxY()); });   // почти без инерции — отпустил палец, и страница встаёт
+  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 240, 0, maxY()); });   // инерция: сильно смахнул — страница едет дальше (остановить — коснуться экрана)
   // переход по ссылкам меню — быстрее, но тоже плавно
   const jumpTo = (el, offset = -70) => { S.jump = true; S.target = clamp(el.getBoundingClientRect().top + scrollY + offset, 0, maxY()); };
   document.addEventListener("click", e => {
@@ -1567,8 +1567,8 @@ function smooth(){
     const vmax = S.vf * vh / 1000;   // экранов в секунду → пикселей в мс
     // вниз — ограниченная скорость и «долг» не больше трети экрана (иначе после колеса страница долго доезжает);
     // вверх — без ограничений
-    if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * .33);
-    let step = (S.target - S.cur) * (1 - Math.pow(S.target < S.cur ? .7 : .78, dt / 16.667));
+    if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * (FX.slow || FX.outro ? .7 : 1.5));   // сильный взмах доезжает дальше
+    let step = (S.target - S.cur) * (1 - Math.pow(S.target < S.cur ? .7 : .86, dt / 16.667));
     if (step > 0) step = Math.min(step, vmax * dt);
     let next = S.cur + step;
     if (FX.holdMax != null && !S.jump && next > FX.holdMax) { next = Math.max(S.cur, FX.holdMax); S.target = Math.min(S.target, FX.holdMax + vh * .3); }
