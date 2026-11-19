@@ -156,20 +156,26 @@ const RANK = ["base", "vip", "premium", "clan", "plus", "ultra", "mod", "max"];
 const higher = (a: string, b: string) => (RANK.indexOf(a) >= RANK.indexOf(b) ? a : b);
 const WEEK_X = 3;
 // звания в клане (меняет только создатель). Лимиты: RDX_AI — вопросов за 5 ч; SealsAI — сообщений, картинок, Deep Search за 5 ч
-const RANKS = ["Рядовой", "Ефрейтор", "Младший сержант", "Сержант", "Старшина", "Прапорщик", "Лейтенант", "Старший лейтенант", "Капитан", "Майор", "Полковник", "Генерал", "Маршал"];
-const RANK_Q5 = [24, 29, 33, 38, 43, 47, 52, 57, 61, 66, 71, 75, 80];
-const RANK_SEALS = [[37, 12, 1], [41, 13, 2], [46, 14, 2], [51, 16, 2], [56, 17, 3], [60, 19, 3], [65, 20, 4], [70, 21, 4], [74, 23, 4], [79, 24, 5], [84, 26, 5], [89, 27, 6], [93, 28, 6]];
+const RANKS = ["Рядовой", "Ефрейтор", "Младший сержант", "Сержант", "Старшина", "Прапорщик", "Лейтенант", "Старший лейтенант", "Капитан", "Майор", "Полковник", "Генерал", "Маршал", "Модератор", "Админ"];
+const RANK_Q5 = [24, 29, 33, 38, 43, 47, 52, 57, 61, 66, 71, 75, 80, 85, 90];
+const RANK_SEALS = [[37, 12, 1], [41, 13, 2], [46, 14, 2], [51, 16, 2], [56, 17, 3], [60, 19, 3], [65, 20, 4], [70, 21, 4], [74, 23, 4], [79, 24, 5], [84, 26, 5], [89, 27, 6], [93, 28, 6], [100, 30, 6], [107, 32, 7]];
+// 13 Модератор — права модератора; 14 Админ — права модератора + может менять звания бойцам до Маршала
+const TOP_RANK = 14, MOD_RANK = 13, ADMIN_RANK = 14;
 const MARSHAL = 12, MARSHAL_TOKENS = 1500, MARSHAL_PROMO_WEEK = 10, MARSHAL_PROMO_DAYS = 30;
-RANKS.forEach((n, k) => { TIERS["r" + k] = { name: "Боец RDX · " + n + " (" + k + "/12)", q5: RANK_Q5[k] }; });
-const rankName = (k: number) => RANKS[k] + " (" + k + "/12)";
+RANKS.forEach((n, k) => { TIERS["r" + k] = { name: "Боец RDX · " + n + " (" + k + "/" + TOP_RANK + ")", q5: RANK_Q5[k] }; });
+const rankName = (k: number) => RANKS[k] + " (" + k + "/" + TOP_RANK + ")";
 async function rankOf(uid: number): Promise<number | null> {
   const r = (await db("rdx_members?select=rank&active=eq.true&user_id=eq." + uid))?.[0];
   return r ? Number(r.rank) || 0 : null;
 }
-const isMarshal = async (u: any) => (await rankOf(Number(u?.id))) === MARSHAL;
+const isMarshal = async (u: any) => ((await rankOf(Number(u?.id))) ?? -1) >= MARSHAL;   // маршал и выше
+const isRankAdmin = async (u: any) => (await rankOf(Number(u?.id))) === ADMIN_RANK;
 function rankPerks(k: number) {
   return "• RDX_AI: " + RANK_Q5[k] + " вопросов за 5 часов\n• SealsAI: " + RANK_SEALS[k][0] + " сообщений, " + RANK_SEALS[k][1] + " картинок и " + RANK_SEALS[k][2] + " Deep Search за 5 часов"
-    + (k === MARSHAL ? "\n• Промокоды на Premium и Premium Plus — в RDX_AI и SealsAI (до " + MARSHAL_PROMO_WEEK + " в неделю, до " + MARSHAL_PROMO_DAYS + " дней)\n• Раздача до " + MARSHAL_TOKENS + " токенов в день в каждом боте\nВсе команды маршала: /mod" : "");
+    + (k >= MARSHAL ? "\n• Промокоды на Premium и Premium Plus — в RDX_AI и SealsAI (до " + MARSHAL_PROMO_WEEK + " в неделю, до " + MARSHAL_PROMO_DAYS + " дней)\n• Раздача до " + MARSHAL_TOKENS + " токенов в день в каждом боте" : "")
+    + (k >= MOD_RANK ? "\n• Права модератора RDX и SealsAI: заявки с кнопками, допросы, бан, кик и увольнение из клана" : "")
+    + (k === ADMIN_RANK ? "\n• Может повышать и понижать звания бойцов до Маршала" : "")
+    + (k >= MARSHAL ? "\nВсе команды: /mod" : "");
 }
 async function tierOf(uid: number, withMod = true) {
   const r = await db("rdx_premium?select=tier,until&user_id=eq." + uid + "&until=gt." + enc(new Date().toISOString()));
@@ -468,22 +474,29 @@ async function notifyAny(uid: number, html: string) {
 }
 // присвоить звание (только создатель); человеку — поздравление и новые возможности
 async function setRank(actor: any, id: number, k: number): Promise<{ ok: boolean; text: string }> {
-  if (!isOwner(actor)) return { ok: false, text: "Звания меняет только создатель." };
+  const ownerA = isOwner(actor), adminA = !ownerA && await isRankAdmin(actor);
+  if (!ownerA && !adminA) return { ok: false, text: "Звания меняют только создатель и Админы." };
   k = Math.round(Number(k));
-  if (!(k >= 0 && k <= MARSHAL)) return { ok: false, text: "Звания — от 0 (Рядовой) до 12 (Маршал)." };
+  if (!(k >= 0 && k <= TOP_RANK)) return { ok: false, text: "Звания — от 0 (Рядовой) до 14 (Админ)." };
   const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
   if (!x || !x.active) return { ok: false, text: "Этого бойца нет в составе." };
   const old = Number(x.rank) || 0;
+  if (x.user_id && ADMINS.includes(Number(x.user_id))) return { ok: false, text: "👑 Создателю звание не нужно." };
+  if (adminA && (k > MARSHAL || old > MARSHAL)) return { ok: false, text: "Админ меняет звания только до Маршала. Модератора и Админа назначает создатель." };
+  if (adminA && Number(x.user_id) === Number(actor.id)) return { ok: false, text: "Себе звание менять нельзя." };
   if (old === k) return { ok: true, text: esc(memName(x)) + " уже " + rankName(k) + "." };
   await patch("rdx_members?id=eq." + id, { rank: k });
+  // Модератор (13) и Админ (14) — сразу модераторы RDX и SealsAI; ниже — права модератора снимаются
+  if (x.user_id && k >= MOD_RANK) { await upsert("rdx_mods", [{ user_id: Number(x.user_id), username: x.username || null, first_name: x.nick || null, added_at: new Date().toISOString() }], "user_id"); MODS = null; }
+  if (x.user_id && k < MOD_RANK && old >= MOD_RANK) { await del("rdx_mods?user_id=eq." + Number(x.user_id)); MODS = null; }
   let sent = false;
   if (x.user_id) sent = await notifyAny(Number(x.user_id), (k > old
-    ? "🎖 <b>Поздравляем!</b>\nКомандование RDX Squad присвоило вам звание <b>«" + RANKS[k] + "»</b> (" + k + " из 12). Благодарим за службу — так держать!"
-    : "🎖 Ваше звание в RDX Squad изменено на <b>«" + RANKS[k] + "»</b> (" + k + " из 12).")
+    ? "🎖 <b>Поздравляем!</b>\nКомандование RDX Squad присвоило вам звание <b>«" + RANKS[k] + "»</b> (" + k + " из " + TOP_RANK + "). Благодарим за службу — так держать!"
+    : "🎖 Ваше звание в RDX Squad изменено на <b>«" + RANKS[k] + "»</b> (" + k + " из " + TOP_RANK + ").")
     + "\n\n<b>Ваши возможности теперь:</b>\n" + rankPerks(k));
   return { ok: true, text: (k > old ? "⬆️ " : "⬇️ ") + esc(memName(x)) + ": " + RANKS[old] + " → <b>" + rankName(k) + "</b>" + (x.user_id ? (sent ? " · поздравление отправлено" : " · сообщение не дошло (не писал ботам)") : " · Telegram не привязан") };
 }
-const RANK_WORDS: [RegExp, number][] = [[/^рядов/, 0], [/^ефрейт/, 1], [/^младш/, 2], [/^сержант/, 3], [/^старшин/, 4], [/^прапор/, 5], [/^лейтенант/, 6], [/^капитан/, 8], [/^майор/, 9], [/^полковн/, 10], [/^генерал/, 11], [/^маршал/, 12]];
+const RANK_WORDS: [RegExp, number][] = [[/^рядов/, 0], [/^ефрейт/, 1], [/^младш/, 2], [/^сержант/, 3], [/^старшин/, 4], [/^прапор/, 5], [/^лейтенант/, 6], [/^капитан/, 8], [/^майор/, 9], [/^полковн/, 10], [/^генерал/, 11], [/^маршал/, 12], [/^модер/, 13], [/^админ/, 14]];
 // действие над бойцом: ban | kick | fire. actor — кто просит (создатель или модератор)
 async function clanAct(actor: any, act: string, id: number): Promise<{ ok: boolean; text: string }> {
   const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
@@ -575,7 +588,7 @@ async function clanIntent(u: any, text: string): Promise<string | null> {
   const q = at ? at[1] : after[0] || "";
   if (!q) return null;   // «как обжаловать бан?» — это вопрос, а не просьба
   if (!at && !(await findMembers(q)).length) return null;
-  if ((act === "promote" || act === "demote") && !isOwner(u)) return "Звания меняет только создатель.";
+  if ((act === "promote" || act === "demote") && !isOwner(u) && !(await isRankAdmin(u))) return "Звания меняют только создатель и Админы.";
   if (act !== "find" && !(await isMod(u))) return "Банить, кикать и увольнять из клана могут только создатель и модераторы RDX.";
   return (await clanApi(u, act, q, rank)).text;
 }
@@ -668,14 +681,17 @@ async function onMain(up: any) {
       if (op === "list") return clanShow(chat, null);
       if (op === "all") return clanShow(chat, Number(a1) || 0);
       if (op === "find") { await setState("main", u.id, "clfind", 0, {}); return send("main", chat, "🔎 Напиши ник бойца или его часть:", kb([[["✖️ Отмена", "cl:list"]]])); }
-      if (op === "m") return clanCard(chat, Number(a1), isOwner(u));
+      if (op === "m") return clanCard(chat, Number(a1), isOwner(u) || await isRankAdmin(u));
       if (op === "rk") {   // выбор нового звания кнопками
-        if (!isOwner(u)) return send("main", chat, "Звания меняет только создатель.");
+        const ownerR = isOwner(u);
+        if (!ownerR && !(await isRankAdmin(u))) return send("main", chat, "Звания меняют только создатель и Админы.");
         const x = (await db("rdx_members?select=nick,username,rank,active&id=eq." + Number(a1)))?.[0];
         if (!x?.active) return send("main", chat, "Этого бойца уже нет в составе.");
         const cur = Number(x.rank) || 0, up = a2 === "up";
-        const ks = RANKS.map((_, k) => k).filter((k) => up ? k > cur : k < cur);
-        if (!ks.length) return send("main", chat, up ? "Выше Маршала званий нет." : "Ниже Рядового званий нет.", kb([[["↩️ Назад", "cl:m:" + Number(a1)]]]));
+        const maxK = ownerR ? TOP_RANK : MARSHAL;
+        if (!ownerR && cur > MARSHAL) return send("main", chat, "Модератора и Админа повышает и понижает только создатель.");
+        const ks = RANKS.map((_, k) => k).filter((k) => k <= maxK && (up ? k > cur : k < cur));
+        if (!ks.length) return send("main", chat, up ? "Выше званий нет." : "Ниже Рядового званий нет.", kb([[["↩️ Назад", "cl:m:" + Number(a1)]]]));
         const grid: [string, string][][] = [];
         for (let i = 0; i < ks.length; i += 2) grid.push(ks.slice(i, i + 2).map((k) => [k + " · " + RANKS[k], "cl:set:" + Number(a1) + ":" + k] as [string, string]));
         grid.push([["↩️ Назад", "cl:m:" + Number(a1)]]);
@@ -936,7 +952,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     const r: any[] = await db("rdx_members?select=nick,username,joined_at&active=eq.true&order=joined_at") || [];
     await say("<b>Состав RDX</b> — в строю: " + await membersCount() + (r.length ? "\n\n" + r.map((x, i) => (i + 1) + ". " + esc(x.nick || "") + (x.username ? " @" + esc(x.username) : "")).join("\n") : "")); return true;
   }
-  if (owner && cmd === "/rank" && args[0]) {   // /rank @ник 5
+  if ((owner || await isRankAdmin(u)) && cmd === "/rank" && args[0]) {   // /rank @ник 5
     const r = await clanApi(u, "rank", args[0], args[1] !== undefined ? Number(args[1]) : null);
     await say(r.text); return true;
   }
@@ -1010,7 +1026,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     }
   }
   if (cmd === "/admin" || cmd === "/help") {
-    await say("<b>Команды создателя</b>\nКнопка «👥 Состав клана» в меню — список, поиск, бан, кик, увольнение\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/addmember @ник Имя — добавить в состав (или привязать Telegram)\n/bans — забаненные · /unban @ник — разбанить\n/rank @ник 0–12 — звание (или кнопки в «Состав клана», или словами: «повысь @ник до маршала»)\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/makemod @ник — назначить модератора (или просто напиши «дай модера @ник»)\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
+    await say("<b>Команды создателя</b>\nКнопка «👥 Состав клана» в меню — список, поиск, бан, кик, увольнение\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/addmember @ник Имя — добавить в состав (или привязать Telegram)\n/bans — забаненные · /unban @ник — разбанить\n/rank @ник 0–14 — звание (или кнопки в «Состав клана», или словами: «повысь @ник до маршала»)\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/makemod @ник — назначить модератора (или просто напиши «дай модера @ник»)\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
     return true;
   }
   return false;
