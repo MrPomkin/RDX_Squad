@@ -507,7 +507,7 @@ async function onMain(up: any) {
     return send("main", chat, c ? await redeemRdxPromo(u.id, c[0]) : "Напиши так: /promo RDX-XXXX-XXXX");
   }
   if (await tryModKey("main", m)) return;
-  if (text.startsWith("/") && await isMod(u) && await adminCmd("main", u, chat, text)) return;
+  if ((text.startsWith("/") && await isMod(u) || isOwner(u) && modIntent(text)) && await adminCmd("main", u, chat, text)) return;
   const st = await getState("main", u.id);
   if (!text) return;
   if (!st || st.flow === "ai") {
@@ -539,7 +539,7 @@ async function onAI(up: any) {
     return send("ai", chat, c ? await redeemRdxPromo(u.id, c[0]) : "Напиши так: /promo RDX-XXXX-XXXX");
   }
   if (await tryModKey("ai", m)) return;
-  if (text.startsWith("/") && await isMod(u) && await adminCmd("ai", u, chat, text)) return;
+  if ((text.startsWith("/") && await isMod(u) || isOwner(u) && modIntent(text)) && await adminCmd("ai", u, chat, text)) return;
   if (group) {
     const called = (me && text.toLowerCase().includes("@" + me.toLowerCase())) || m.reply_to_message?.from?.username === me || /^(rdx[_ ]?ai|рдх)[\s,!]/i.test(text);
     if (!called) return;
@@ -552,9 +552,20 @@ async function findUser(arg: string) {
   const a = arg.replace(/^@/, "");
   if (/^\d{5,15}$/.test(a)) return Number(a);
   const r = await db("rdx_users?select=user_id&username=ilike." + enc(a));
-  return r?.[0]?.user_id ? Number(r[0].user_id) : null;
+  if (r?.[0]?.user_id) return Number(r[0].user_id);
+  const s2 = await db("seals_tgai_members?select=user_id&username=ilike." + enc(a) + "&order=seen_at.desc&limit=1");
+  return s2?.[0]?.user_id ? Number(s2[0].user_id) : null;
+}
+function modIntent(text: string) {
+  const t = text.toLowerCase().replace(/ё/g, "е");
+  const nick = (text.match(/@([A-Za-z0-9_]{3,32})/) || [])[1];
+  if (!nick || !/модер/.test(t)) return null;
+  if (/(сними|убери|забери|сня|удали|лиши)/.test(t)) return "/unmod @" + nick;
+  if (/(дай|выдай|сделай|назнач|поставь|добавь|верни)/.test(t)) return "/makemod @" + nick;
+  return null;
 }
 async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
+  if (!text.startsWith("/") && isOwner(u)) { const c = modIntent(text); if (!c) return false; text = c; }
   const [cmd0, ...args] = text.split(/\s+/);
   const cmd = cmd0.split("@")[0].toLowerCase();
   const say = (s: string) => send(bot, chat, s);
@@ -630,6 +641,13 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     await say(r.length ? "<b>Модераторы RDX</b>\n" + r.map((x, i) => (i + 1) + ". " + esc(x.first_name || "") + (x.username ? " @" + esc(x.username) : "") + " · id " + x.user_id).join("\n") + "\n\nСнять: /unmod @ник" : "Модераторов пока нет. Ключ модератора вводится в любом из ботов RDX.");
     return true;
   }
+  if (owner && cmd === "/makemod" && args[0]) {
+    const id = await findUser(args[0]);
+    if (!id) { await say("Не знаю " + esc(args[0]) + ": человек должен хоть раз написать боту RDX, RDX_AI или SealsAI."); return true; }
+    await upsert("rdx_mods", [{ user_id: id, username: args[0].replace(/^@/, ""), added_at: new Date().toISOString() }], "user_id"); MODS = null;
+    await say("🛡 " + esc(args[0]) + " теперь модератор RDX и SealsAI.");
+    await send("main", id, "🛡 <b>Создатель назначил тебя модератором RDX и SealsAI.</b>\nТвой уровень — «Модератор». Команды: /mod"); return true;
+  }
   if (owner && cmd === "/unmod" && args[0]) {
     const id = await findUser(args[0]) ?? (await db("rdx_mods?select=user_id&username=ilike." + enc(args[0].replace(/^@/, ""))))?.[0]?.user_id;
     if (!id) { await say("Не нашёл такого модератора."); return true; }
@@ -669,7 +687,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     }
   }
   if (cmd === "/admin" || cmd === "/help") {
-    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
+    await say("<b>Команды создателя</b>\n/apps — новые заявки\n/roster — состав · /fire @ник — исключить\n/mods — модераторы · /unmod @ник — снять\n/promo_new уровень дней [штук] — промокоды RDX_AI\n/makemod @ник — назначить модератора (или просто напиши «дай модера @ник»)\n/give @ник N · /vip @ник дней · /vippromo дней — как у модератора, но без лимитов\n/tokens @ник — вопросы у человека\n/reset @ник — восстановить вопросы\n/add @ник 10 [дней] — добавить вопросы\n/unlim @ник [дней|off] — безлимит\n/grant @ник vip|premium|plus|ultra|max [дней|навсегда] — привилегия\n/grant @ник none — снять");
     return true;
   }
   return false;
