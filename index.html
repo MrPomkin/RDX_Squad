@@ -408,7 +408,7 @@ a:hover>.roll span{transform:translateY(-100%)}
 #scr-label{position:fixed;right:max(18px,2vw);top:96px;z-index:56;font:600 11px/1 var(--mono);letter-spacing:.2em;color:var(--or);opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .4s,transform .6s var(--ease)}
 #scr-label.show{opacity:.9;transform:none}
 /* финал-петля: надписи разложены по высоте, монета падает между ними; позади и впереди неё — разные ряды */
-.outro{position:relative;height:380vh;padding:0;overflow:hidden}
+.outro{position:relative;height:640vh;padding:0;overflow:hidden}
 .orow{position:absolute;left:0;white-space:nowrap;font:900 clamp(48px,9vw,150px)/.92 var(--display);letter-spacing:-.03em;text-transform:uppercase;transform:translateX(var(--ox,0px));will-change:transform}
 .orow.solid{color:rgba(236,235,231,.09)}
 .orow.out{color:transparent;-webkit-text-stroke:2px rgba(255,122,26,.26)}
@@ -428,7 +428,7 @@ a:hover>.roll span{transform:translateY(-100%)}
 @keyframes titleHit{0%{transform:none}20%{transform:translateY(12px) scale(.985)}45%{transform:translateY(-6px)}70%{transform:translateY(3px)}100%{transform:none}}
 #faller .spinbox{transform:rotateY(var(--spy,0deg)) rotateX(var(--spx,0deg))}
 /* участок свободного падения: листается как обычно, по пути пролетают отметки высоты */
-.drop{position:relative;height:230vh;padding:0;overflow:hidden;pointer-events:none}
+.drop{position:relative;height:440vh;padding:0;overflow:hidden;pointer-events:none}
 .drop-lines{position:absolute;inset:0;opacity:var(--fall,.35);transition:opacity .4s}
 .drop-lines i{position:absolute;left:var(--l);top:var(--t);width:2px;height:var(--h);border-radius:2px;background:linear-gradient(transparent,rgba(255,160,77,.5),transparent);animation:streak 1.4s linear var(--d) infinite}
 @keyframes streak{0%{transform:translateY(160px);opacity:0}20%{opacity:1}100%{transform:translateY(-260px);opacity:0}}
@@ -1204,7 +1204,7 @@ function faller(){
   const outro = $("#outro"), orows = $$("#outro .orow"), veil = $("#veil"), mini = $("#mini"), title = $("#title"), loopN = $("#loopN");
   const clone = $("#heroClone");
   let outroX = 0, outroY = 0, outroS = 1.45, spinY = 0, teleporting = false, loopStart = 0;
-  const MIN_FALL = 3200;   // падение длится не меньше 3,2 секунды
+  const MIN_FALL = 1600;   // короткая страховка: падение не проскочить мгновенно
   // разбить эмблему на части в точке (x, y)
   function shatter(x, y, up){
     main.classList.remove("show", "falling");
@@ -1347,7 +1347,7 @@ function faller(){
     const op = clamp((vh - orc.top) / Math.max(1, orc.height + vh), 0, 1);
     orows.forEach((r, i) => r.style.setProperty("--ox", (Number(r.dataset.dir) * (op * vw * 1.1 + i * 30) - vw * (.1 + (i % 3) * .1)).toFixed(1) + "px"));
     // минимум 4,5 с на этой части: скорость = путь / 5 с
-    FX.outro = orc.top < vh * .3 && orc.bottom > vh * .3 ? Math.max(.12, orc.height / vh / 5) : 0;
+    FX.outro = orc.top < vh * .3 && orc.bottom > vh * .3 ? Math.max(.12, orc.height / vh / 2.4) : 0;
     if (state === "landed" && orc.top < vh * .75) { state = "outro"; outroX = px; outroY = py; outroS = 1.45; main.classList.remove("landed"); }
     if (state === "outro" || state === "loopfall") {
       spinY += (2.2 + Math.abs(dScroll) * 1.1) * k;   // монета переворачивается: орёл — решка
@@ -1525,7 +1525,7 @@ function smooth(){
     const d = e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? innerHeight : 1);
     S.jump = false;
     if (Math.sign(d) !== Math.sign(S.target - S.cur)) S.target = S.cur;   // сменил направление — сразу без «доезда»
-    S.target = clamp(S.target + clamp(d, -420, 420), 0, maxY());
+    S.target = clamp(S.target + clamp(d, -800, 800), 0, maxY());
   }, { passive: false });
   // мгновенная остановка: коснулся экрана, нажал мышь или клавишу — прокрутка встаёт на месте
   const stop = () => { if (!S.jump) S.target = S.cur; };
@@ -1546,7 +1546,7 @@ function smooth(){
     S.ty = y; S.tt = now; S.tv = lerp(S.tv, dy / dt, .4);
     S.target = clamp(S.target + dy, 0, maxY());
   }, { passive: false });
-  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 240, 0, maxY()); });   // инерция: сильно смахнул — страница едет дальше (остановить — коснуться экрана)
+  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 420, 0, maxY()); });   // инерция: сильно смахнул — страница едет дальше (остановить — коснуться экрана)
   // переход по ссылкам меню — быстрее, но тоже плавно
   const jumpTo = (el, offset = -70) => { S.jump = true; S.target = clamp(el.getBoundingClientRect().top + scrollY + offset, 0, maxY()); };
   document.addEventListener("click", e => {
@@ -1563,11 +1563,11 @@ function smooth(){
     // внешние прокрутки (клавиши, полоса прокрутки, браузер) тоже идут через ограничитель
     if (Math.abs(scrollY - S.cur) > 3) { S.cur = scrollY; S.target = scrollY; }
     const vh = innerHeight;
-    S.vf = lerp(S.vf ?? 1.7, S.jump ? 3.6 : FX.outro ? FX.outro : FX.slow ? .6 : S.touch ? 3.1 : 2.3, 1 - Math.pow(.94, dt / 16.667));   // палец ведёт страницу почти 1:1
+    S.vf = lerp(S.vf ?? 1.7, S.jump ? 6 : FX.outro ? FX.outro : FX.slow ? 2.2 : S.touch ? 7 : 5.5, 1 - Math.pow(.94, dt / 16.667));   // палец ведёт страницу почти 1:1
     const vmax = S.vf * vh / 1000;   // экранов в секунду → пикселей в мс
     // вниз — ограниченная скорость и «долг» не больше трети экрана (иначе после колеса страница долго доезжает);
     // вверх — без ограничений
-    if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * (FX.slow || FX.outro ? .7 : 1.5));   // сильный взмах доезжает дальше
+    if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * (FX.slow || FX.outro ? 2 : 3.5));   // сильный взмах доезжает дальше
     let step = (S.target - S.cur) * (1 - Math.pow(S.target < S.cur ? .7 : .86, dt / 16.667));
     if (step > 0) step = Math.min(step, vmax * dt);
     let next = S.cur + step;
