@@ -1396,10 +1396,15 @@ function smooth(){
     e.preventDefault();
     const d = e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? innerHeight : 1);
     S.jump = false;
-    S.target = clamp(S.target + clamp(d, -220, 220), 0, maxY());
+    if (Math.sign(d) !== Math.sign(S.target - S.cur)) S.target = S.cur;   // сменил направление — сразу без «доезда»
+    S.target = clamp(S.target + clamp(d, -260, 260), 0, maxY());
   }, { passive: false });
+  // мгновенная остановка: коснулся экрана, нажал мышь или клавишу — прокрутка встаёт на месте
+  const stop = () => { if (!S.jump) S.target = S.cur; };
+  addEventListener("mousedown", stop, { passive: true });
+  addEventListener("keydown", e => { if (!/^(Arrow|Page|Home|End| )/.test(e.key)) stop(); }, { passive: true });
   // палец: ведём страницу сами, с инерцией после отпускания
-  addEventListener("touchstart", e => { if (e.touches.length !== 1 || native(e.target)) return; S.touch = true; S.ty = e.touches[0].clientY; S.tt = performance.now(); S.tv = 0; S.jump = false; }, { passive: true });
+  addEventListener("touchstart", e => { if (e.touches.length !== 1 || native(e.target)) return; S.touch = true; S.ty = e.touches[0].clientY; S.tt = performance.now(); S.tv = 0; S.jump = false; S.target = S.cur; }, { passive: true });
   addEventListener("touchmove", e => {
     if (!S.touch || e.touches.length !== 1) return;
     e.preventDefault();
@@ -1407,7 +1412,7 @@ function smooth(){
     S.ty = y; S.tt = now; S.tv = lerp(S.tv, dy / dt, .4);
     S.target = clamp(S.target + dy, 0, maxY());
   }, { passive: false });
-  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 260, 0, maxY()); });
+  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 70, 0, maxY()); });   // почти без инерции — отпустил палец, и страница встаёт
   // переход по ссылкам меню — быстрее, но тоже плавно
   const jumpTo = (el, offset = -70) => { S.jump = true; S.target = clamp(el.getBoundingClientRect().top + scrollY + offset, 0, maxY()); };
   document.addEventListener("click", e => {
@@ -1423,8 +1428,11 @@ function smooth(){
     if (Math.abs(scrollY - S.cur) > 3) { S.target = clamp(scrollY, 0, maxY()); window.scrollTo(0, S.cur); }
     const vh = innerHeight;
     const vmax = (S.jump ? 3.2 : FX.slow ? .6 : 1.15) * vh / 1000;   // экранов в секунду → пикселей в мс
-    let step = (S.target - S.cur) * (1 - Math.pow(.88, dt / 16.667));
-    step = clamp(step, -vmax * dt, vmax * dt);
+    // вниз — ограниченная скорость и «долг» не больше трети экрана (иначе после колеса страница долго доезжает);
+    // вверх — без ограничений
+    if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * .33);
+    let step = (S.target - S.cur) * (1 - Math.pow(S.target < S.cur ? .7 : .78, dt / 16.667));
+    if (step > 0) step = Math.min(step, vmax * dt);
     let next = S.cur + step;
     if (FX.holdMax != null && !S.jump && next > FX.holdMax) { next = Math.max(S.cur, FX.holdMax); S.target = Math.min(S.target, FX.holdMax + vh * .3); }
     if (Math.abs(S.target - next) < .3 && !step) next = S.target;
