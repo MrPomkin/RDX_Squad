@@ -30,7 +30,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth;background:var(--bg)}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:auto;background:var(--bg);overscroll-behavior-y:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);overflow-x:hidden}
 header.nav,main,footer{zoom:var(--fit)}
 a{color:inherit}
@@ -718,7 +718,6 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
 </div></footer>
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
 <script>
 /* ===== настройки ===== */
 const CFG = {
@@ -1134,7 +1133,8 @@ function faller(){
   }
   function placeMain(x, y, sc, rot = 0){ main.style.transform = `translate(${(x - main.offsetWidth / 2).toFixed(1)}px,${(y - main.offsetWidth / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sc})`; }
   const drop = $("#drop"), band = $("#impactBand"), dropIn = drop, alt = $("#dropAlt"), flash = $("#flash");
-  let midDone = false, fallX = 0, fallY = 0, fallR = 0;
+  let midDone = false, fallX = 0, fallY = 0, fallR = 0, fallStart = 0;
+  const MIN_FALL = 3200;   // падение длится не меньше 3,2 секунды
   // разбить эмблему на части в точке (x, y)
   function shatter(x, y, up){
     main.classList.remove("show", "falling");
@@ -1175,8 +1175,13 @@ function faller(){
       if (dr.top > vh) midDone = false;
       if (!midDone && !near && dr.top < vh * .45 && dr.bottom > vh * 1.3 && dScroll >= 0) state = "midgather";
     }
+    // ограничитель прокрутки: на участке падения медленнее
+    { const dr0 = drop.getBoundingClientRect(); FX.slow = dr0.top < vh && dr0.bottom > 0; }
+    FX.holdMax = null;
     if (state === "midgather") {
       const MM = { x: vw / 2, y: vh * .3 };
+      // пока эмблемы сливаются — участок дальше не уезжает
+      { const dr1 = drop.getBoundingClientRect(); FX.holdMax = scrollY + Math.max(0, dr1.top - vh * .05); }
       let done = 0;
       for (const b of B) {
         if (!b.alive) { b.x = MM.x + (Math.random() - .5) * vw * .7; b.y = -60 - Math.random() * 80; b.alive = true; b.el.classList.add("on"); }
@@ -1188,7 +1193,7 @@ function faller(){
       const dr = drop.getBoundingClientRect();
       if (dr.top > vh * .8) state = "fall";
       else if (done >= B.length - 1 && B.every((b) => Math.hypot(b.x - MM.x, b.y - MM.y) < 46)) {
-        state = "midfall"; fallX = MM.x; fallY = MM.y; fallR = 0;
+        state = "midfall"; fallX = MM.x; fallY = MM.y; fallR = 0; fallStart = now;
         B.forEach((b) => { b.el.classList.remove("on"); b.alive = false; });
         main.getAnimations().forEach((a) => a.cancel());
         main.classList.add("show", "merge", "falling"); main.classList.remove("landed");
@@ -1200,6 +1205,9 @@ function faller(){
       // эмблема держится в верхней части экрана, страница листается как обычно — кажется, что она долго летит вниз
       const dr = drop.getBoundingClientRect(), br = band.getBoundingClientRect(), size = main.offsetWidth * 1.3;
       const p = clamp((vh * .5 - dr.top) / Math.max(1, dr.height), 0, 1);
+      // до 3,2 с лента не может подняться к точке удара
+      const early = now - fallStart < MIN_FALL;
+      if (early) FX.holdMax = scrollY + Math.max(0, br.top - vh * .74);
       const hitY = br.top + br.height * .3 - size * .45;          // где она коснётся ленты
       const dive = clamp((vh * .95 - br.top) / (vh * .4), 0, 1);  // лента показалась снизу — эмблема пикирует к ней
       const ty = lerp(vh * .32, hitY, dive * dive), tx = lerp(vw / 2 + Math.sin(p * Math.PI * 3) * vw * (phone ? .14 : .18), vw / 2, dive);
@@ -1209,7 +1217,7 @@ function faller(){
       dropIn.style.setProperty("--fall", clamp(Math.abs(dScroll) / 14 + .4, 0, 1).toFixed(2));
       alt.textContent = String(Math.max(0, Math.round((1 - Math.max(p, dive)) * 999))).padStart(4, "0");
       // удар — раньше: как только лента поднялась к середине экрана
-      if (br.top < vh * .72 || (dive > .6 && Math.abs(fallY - hitY) < 10)) {
+      if (!early && (br.top < vh * .72 || (dive > .6 && Math.abs(fallY - hitY) < 10))) {
         state = "fall"; midDone = true; alt.textContent = "0000";
         const ix = vw / 2, iy = Math.min(Math.max(hitY + size * .45, vh * .2), vh * .8);
         band.classList.remove("hit"); void band.offsetWidth; band.classList.add("hit");
@@ -1375,19 +1383,56 @@ async function liveStats(){
   } catch (e) {}
 }
 
-/* ===== плавная прокрутка (только мышь) ===== */
+/* ===== своя плавная прокрутка с ограничением скорости (колесо, тачпад, палец, клавиши, полоса прокрутки) ===== */
+const FX = { slow: false, holdMax: null };   // эмблема в середине страницы просит медленнее и «не дальше этой точки»
 let lenis = null;
 function smooth(){
-  if (!fine || still || !window.Lenis) return;
-  lenis = new Lenis({ lerp: .085, wheelMultiplier: .95, smoothWheel: true });
-  (function raf(t){ lenis.raf(t); requestAnimationFrame(raf); })(performance.now());
+  const S = { cur: scrollY, target: scrollY, jump: false, last: 0, touch: false, ty: 0, tt: 0, tv: 0 };
+  const maxY = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
+  const native = (t) => !!(t && t.closest && t.closest("textarea, select, .gal, #mmenu, input[type=range]"));
+  // колесо и тачпад
+  addEventListener("wheel", e => {
+    if (e.ctrlKey || native(e.target)) return;
+    e.preventDefault();
+    const d = e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? innerHeight : 1);
+    S.jump = false;
+    S.target = clamp(S.target + clamp(d, -220, 220), 0, maxY());
+  }, { passive: false });
+  // палец: ведём страницу сами, с инерцией после отпускания
+  addEventListener("touchstart", e => { if (e.touches.length !== 1 || native(e.target)) return; S.touch = true; S.ty = e.touches[0].clientY; S.tt = performance.now(); S.tv = 0; S.jump = false; }, { passive: true });
+  addEventListener("touchmove", e => {
+    if (!S.touch || e.touches.length !== 1) return;
+    e.preventDefault();
+    const y = e.touches[0].clientY, now = performance.now(), dy = S.ty - y, dt = Math.max(1, now - S.tt);
+    S.ty = y; S.tt = now; S.tv = lerp(S.tv, dy / dt, .4);
+    S.target = clamp(S.target + dy, 0, maxY());
+  }, { passive: false });
+  addEventListener("touchend", () => { if (!S.touch) return; S.touch = false; S.target = clamp(S.target + S.tv * 260, 0, maxY()); });
+  // переход по ссылкам меню — быстрее, но тоже плавно
+  const jumpTo = (el, offset = -70) => { S.jump = true; S.target = clamp(el.getBoundingClientRect().top + scrollY + offset, 0, maxY()); };
   document.addEventListener("click", e => {
     const a = e.target.closest('a[href^="#"]'); if (!a) return;
     const id = a.getAttribute("href"); if (id.length < 2) return;
     const el = document.querySelector(id); if (!el) return;
-    e.preventDefault(); lenis.scrollTo(el, { offset: id === "#top" ? 0 : -70, duration: 1.6 });
+    e.preventDefault(); jumpTo(el, id === "#top" ? -scrollY - 9999 : -70);
   });
-  $("#gal").setAttribute("data-lenis-prevent", ""); $("#mmenu").setAttribute("data-lenis-prevent", "");
+  lenis = { scrollTo: (el, o = {}) => jumpTo(el, o.offset ?? -70) };
+  (function raf(now){
+    const dt = S.last ? Math.min(50, now - S.last) : 16; S.last = now;
+    // внешние прокрутки (клавиши, полоса прокрутки, браузер) тоже идут через ограничитель
+    if (Math.abs(scrollY - S.cur) > 3) { S.target = clamp(scrollY, 0, maxY()); window.scrollTo(0, S.cur); }
+    const vh = innerHeight;
+    const vmax = (S.jump ? 3.2 : FX.slow ? .6 : 1.15) * vh / 1000;   // экранов в секунду → пикселей в мс
+    let step = (S.target - S.cur) * (1 - Math.pow(.88, dt / 16.667));
+    step = clamp(step, -vmax * dt, vmax * dt);
+    let next = S.cur + step;
+    if (FX.holdMax != null && !S.jump && next > FX.holdMax) { next = Math.max(S.cur, FX.holdMax); S.target = Math.min(S.target, FX.holdMax + vh * .3); }
+    if (Math.abs(S.target - next) < .3 && !step) next = S.target;
+    if (Math.abs(next - S.cur) > .01) { S.cur = next; window.scrollTo(0, S.cur); }
+    if (S.jump && Math.abs(S.target - S.cur) < 2) S.jump = false;
+    requestAnimationFrame(raf);
+  })(performance.now());
+  addEventListener("resize", () => { S.target = clamp(S.target, 0, maxY()); });
 }
 
 /* ===== движок прокрутки: всё, что зависит от положения страницы ===== */
