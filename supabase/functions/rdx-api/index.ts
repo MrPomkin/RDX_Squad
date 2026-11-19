@@ -161,15 +161,25 @@ async function bonusOf(uid: number) {
 }
 async function quota(uid: number, take: boolean) {
   const [tr, bn] = await Promise.all([tierOf(uid), bonusOf(uid)]);
-  const l5 = (TIERS[tr.tier] || TIERS.base).q5 + bn.extra, lw = l5 * WEEK_X;
+  const l5 = (TIERS[tr.tier] || TIERS.base).q5, lw = l5 * WEEK_X;   // бонус — отдельный запас (bn.extra), тратится после лимита
   const since = new Date(Date.now() - 7 * 86400e3).toISOString();
   const rows: any[] = await db("rdx_quota?select=at&subject=eq.tg:" + uid + "&at=gt." + enc(since) + "&order=at.asc") || [];
   const t5 = Date.now() - 5 * 3600e3;
   const in5 = rows.filter((r) => Date.parse(r.at) > t5);
   const res = { ...tr, unlimited: bn.unlimited || ADMINS.includes(uid), l5, lw, used5: in5.length, usedw: rows.length,
     reset5: in5[0] ? Date.parse(in5[0].at) + 5 * 3600e3 : 0, resetw: rows[0] ? Date.parse(rows[0].at) + 7 * 86400e3 : 0, ok: true };
-  if (!res.unlimited && (res.used5 >= l5 || res.usedw >= lw)) res.ok = false;
-  if (take && res.ok && !res.unlimited) { await ins("rdx_quota", [{ subject: "tg:" + uid }], "return=minimal"); res.used5++; res.usedw++; }
+  const baseOk = res.unlimited || (res.used5 < l5 && res.usedw < lw);
+  (res as any).bonus = bn.extra;
+  if (!baseOk) res.ok = bn.extra > 0;
+  if (take && res.ok && !res.unlimited) {
+    if (!baseOk) {   // тратим бонус (из того, что раньше сгорает)
+      const row = (await db("rdx_bonus?select=id,amount&user_id=eq." + uid + "&unlimited=eq.false&amount=gt.0&until=gt." + enc(new Date().toISOString()) + "&order=until.asc&limit=1"))?.[0];
+      if (!row) { res.ok = false; return res; }
+      await patch("rdx_bonus?id=eq." + row.id + "&amount=eq." + row.amount, { amount: row.amount - 1 });
+      (res as any).bonus = bn.extra - 1;
+    }
+    await ins("rdx_quota", [{ subject: "tg:" + uid }], "return=minimal"); res.used5++; res.usedw++;
+  }
   return res;
 }
 const left = (ms: number) => { const m = Math.max(1, Math.round((ms - Date.now()) / 60000)); return m >= 60 ? Math.floor(m / 60) + " ч " + (m % 60) + " мин" : m + " мин"; };
@@ -180,6 +190,7 @@ async function tokensText(uid: number) {
   return (q.tier === "mod" ? "🛡 " : "🪙 ") + "<b>RDX_AI · " + name + "</b>" + (q.until ? " до " + new Date(Date.parse(q.until) + 3 * 3600e3).toISOString().slice(0, 16).replace("T", " ") + " МСК" : "")
     + "\n\nВопросов за 5 часов: <b>" + Math.max(0, q.l5 - q.used5) + "</b> из " + q.l5 + (q.used5 >= q.l5 && q.reset5 ? " · обновятся через " + left(q.reset5) : "")
     + "\nВопросов за неделю: <b>" + Math.max(0, q.lw - q.usedw) + "</b> из " + q.lw + (q.usedw >= q.lw && q.resetw ? " · обновятся через " + left(q.resetw) : "")
+    + ((q as any).bonus > 0 ? "\n🎁 Бонусных вопросов: <b>" + (q as any).bonus + "</b> (тратятся, когда кончится лимит)" : "")
     + (q.tier === "base" ? "\n\nБольше вопросов — с привилегиями от командиров." : "");
 }
 
