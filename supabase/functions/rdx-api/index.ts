@@ -310,7 +310,7 @@ const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД",
 const WEAPONS = ["РПГ (гранатомёт)", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
 const DEPTS = ["Экономика", "Штурм", "Наука"];   // отдел — только из этого списка
 const DEPT_ICO: Record<string, string> = { "Экономика": "💰", "Штурм": "⚔️", "Наука": "🔬" };
-const BASE_MEMBERS = 6;   // бойцов на сайте: 6 + принятые (закрытые) заявки − ушедшие
+const BASE_MEMBERS = 3;   // бойцов на сайте: 3 + принятые (закрытые) заявки − ушедшие
 async function membersCount() { const r: any[] = await db("rdx_members?select=id&active=eq.true") || []; return BASE_MEMBERS + r.length; }
 async function isMember(uid: number) { return !!(await db("rdx_members?select=id&active=eq.true&user_id=eq." + uid))?.[0]; }
 const STATUS: Record<string, string> = { ok: "✅ <b>Одобрено</b> — проведи допрос при необходимости и нажми «Закрыть заявку»", no: "❌ <b>Отклонено</b>", closed: "🎖 <b>Закрыто — боец в составе</b>", reply: "💬 Отправлен ответ", left: "🚪 <b>Отпущен из сквада</b>", stay: "❌ <b>Выход отклонён</b>" };
