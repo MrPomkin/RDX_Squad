@@ -143,7 +143,7 @@ const t = (u: any, k: string) => T[L(u)][k] ?? T.ru[k] ?? k;
 // ---------- токены RDX_AI (как у SealsAI: лимит за 5 часов и за неделю) ----------
 const TIERS: Record<string, { name: string; q5: number }> = {
   base: { name: "Обычный", q5: 5 }, vip: { name: "VIP", q5: 12 }, premium: { name: "Premium", q5: 20 },
-  plus: { name: "Premium Plus", q5: 30 }, ultra: { name: "Premium Ultra", q5: 45 }, mod: { name: "Модератор", q5: 52 }, max: { name: "Premium Max", q5: 60 },
+  plus: { name: "Premium Plus", q5: 30 }, ultra: { name: "Premium Ultra", q5: 45 }, mod: { name: "Модератор", q5: 70 }, max: { name: "Premium Max", q5: 60 },
 };
 const RANK = ["base", "vip", "premium", "plus", "ultra", "mod", "max"];
 const higher = (a: string, b: string) => (RANK.indexOf(a) >= RANK.indexOf(b) ? a : b);
