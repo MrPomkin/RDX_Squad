@@ -92,8 +92,10 @@ const T: Record<string, Record<string, string>> = {
   ru: {
     hello: "<b>RDX Squad</b> — Research Department Explosive\n\nЗдесь можно подать заявку в сквад, обжаловать бан, написать командирам или спросить RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Обжаловать бан", ai: "🤖 RDX_AI", help: "🆘 Написать командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Отмена", send: "✅ Отправить",
-    a_nick: "Шаг 1/6. Твой ник в Animal Company?", a_age: "Шаг 2/6. Сколько тебе лет?", a_plat: "Шаг 3/6. Где играешь?", a_exp: "Шаг 4/6. Сколько играешь в Animal Company?",
-    a_wpn: "Шаг 5/6. Любимое оружие?", a_why: "Шаг 6/6. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
+    a_nick: "Шаг 1/7. Твой ник в Animal Company?", a_age: "Шаг 2/7. Сколько тебе лет?", a_plat: "Шаг 3/7. Где играешь?", a_exp: "Шаг 4/7. Сколько играешь в Animal Company?",
+    a_wpn: "Шаг 5/7. Любимое оружие?", a_why: "Шаг 7/7. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
+    a_dep: "Шаг 6/7. В какой отдел RDX хочешь вступить?\n\n💰 <b>Экономика</b> — фармеры и дюперы: добывают ресурсы и валюту и официально обеспечивают ими сквад.\n⚔️ <b>Штурм</b> — бойцы: рейды, захват позиций и защита своих.\n🔬 <b>Наука</b> — строители: возводят постройки, объекты и укрепления базы.\n🛰 <b>Разведка</b> — следят за обстановкой и приносят сводки и новости о других кланах.",
+    a_depreq: "Выбери отдел кнопкой ниже — свой вариант вписать нельзя.",
     leave: "🚪 Выйти из сквада", l_ask: "Почему хочешь выйти из RDX? Напиши коротко.", l_done: "✅ Запрос на выход отправлен командирам.", l_not: "Ты не в составе RDX — выходить неоткуда.",
     l_ok: "🚪 Запрос на выход одобрен. Ты больше не в составе RDX Squad. Спасибо, что был с нами.", l_no: "Командиры отклонили запрос на выход — поговори с ними.",
     talk_on: "🕵️ <b>Командир RDX хочет поговорить с тобой перед решением по заявке.</b>\nПросто отвечай сюда — сообщения передаются командиру.", talk_off: "Командир завершил разговор.", cmdr: "💬 <b>Командир RDX:</b>",
@@ -108,8 +110,10 @@ const T: Record<string, Record<string, string>> = {
   en: {
     hello: "<b>RDX Squad</b> — Research Department Explosive\n\nApply to the squad, appeal a ban, message the commanders or ask RDX_AI.",
     apply: "📝 Apply", appeal: "⚖️ Appeal a ban", ai: "🤖 RDX_AI", help: "🆘 Message commanders", site: "🌐 Website", menu: "↩️ Menu", cancel: "✖️ Cancel", send: "✅ Send",
-    a_nick: "Step 1/6. Your Animal Company nickname?", a_age: "Step 2/6. How old are you?", a_plat: "Step 3/6. Where do you play?", a_exp: "Step 4/6. How long have you played Animal Company?",
-    a_wpn: "Step 5/6. Favourite weapon?", a_why: "Step 6/6. Why RDX and how will you help the squad? A couple of sentences.",
+    a_nick: "Step 1/7. Your Animal Company nickname?", a_age: "Step 2/7. How old are you?", a_plat: "Step 3/7. Where do you play?", a_exp: "Step 4/7. How long have you played Animal Company?",
+    a_wpn: "Step 5/7. Favourite weapon?", a_why: "Step 7/7. Why RDX and how will you help the squad? A couple of sentences.",
+    a_dep: "Step 6/7. Which RDX department do you want to join?\n\n💰 <b>Economy</b> — farmers and dupers: they gather resources and currency and officially supply the squad.\n⚔️ <b>Assault</b> — the fighters: raids, capturing positions and protecting our own.\n🔬 <b>Science</b> — the builders: they raise structures, objects and base defences.\n🛰 <b>Recon</b> — they watch the situation and bring reports and news about other clans.",
+    a_depreq: "Pick a department with the buttons below — you can't type your own.",
     leave: "🚪 Leave the squad", l_ask: "Why do you want to leave RDX? Keep it short.", l_done: "✅ Leave request sent to the commanders.", l_not: "You're not in the RDX roster.",
     l_ok: "🚪 Leave request approved. You're no longer in RDX Squad. Thanks for being with us.", l_no: "Commanders declined the leave request — talk to them.",
     talk_on: "🕵️ <b>An RDX commander wants to talk to you before deciding on your application.</b>\nJust reply here — messages go to the commander.", talk_off: "The commander ended the conversation.", cmdr: "💬 <b>RDX commander:</b>",
@@ -124,8 +128,10 @@ const T: Record<string, Record<string, string>> = {
   uk: {
     hello: "<b>RDX Squad</b> — Research Department Explosive\n\nТут можна подати заявку в сквад, оскаржити бан, написати командирам або запитати RDX_AI.",
     apply: "📝 Заявка в сквад", appeal: "⚖️ Оскаржити бан", ai: "🤖 RDX_AI", help: "🆘 Написати командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Скасувати", send: "✅ Надіслати",
-    a_nick: "Крок 1/6. Твій нік в Animal Company?", a_age: "Крок 2/6. Скільки тобі років?", a_plat: "Крок 3/6. Де граєш?", a_exp: "Крок 4/6. Скільки граєш в Animal Company?",
-    a_wpn: "Крок 5/6. Улюблена зброя?", a_why: "Крок 6/6. Чому RDX і чим будеш корисний скваду?",
+    a_nick: "Крок 1/7. Твій нік в Animal Company?", a_age: "Крок 2/7. Скільки тобі років?", a_plat: "Крок 3/7. Де граєш?", a_exp: "Крок 4/7. Скільки граєш в Animal Company?",
+    a_wpn: "Крок 5/7. Улюблена зброя?", a_why: "Крок 7/7. Чому RDX і чим будеш корисний скваду?",
+    a_dep: "Крок 6/7. До якого відділу RDX хочеш вступити?\n\n💰 <b>Економіка</b> — фармери й дюпери: добувають ресурси й валюту та офіційно забезпечують ними сквад.\n⚔️ <b>Штурм</b> — бійці: рейди, захоплення позицій і захист своїх.\n🔬 <b>Наука</b> — будівельники: зводять споруди, об'єкти й укріплення бази.\n🛰 <b>Розвідка</b> — стежать за обстановкою й приносять зведення та новини про інші клани.",
+    a_depreq: "Обери відділ кнопкою нижче — свій варіант вписати не можна.",
     leave: "🚪 Вийти зі скваду", l_ask: "Чому хочеш вийти з RDX? Коротко.", l_done: "✅ Запит на вихід надіслано командирам.", l_not: "Ти не у складі RDX.",
     l_ok: "🚪 Запит на вихід схвалено. Ти більше не у складі RDX Squad. Дякуємо, що був з нами.", l_no: "Командири відхилили запит на вихід — поговори з ними.",
     talk_on: "🕵️ <b>Командир RDX хоче поговорити з тобою перед рішенням щодо заявки.</b>\nПросто відповідай сюди.", talk_off: "Командир завершив розмову.", cmdr: "💬 <b>Командир RDX:</b>",
@@ -199,7 +205,7 @@ const PERSONA = "Ты RDX_AI — ИИ-помощник сквада RDX Squad (R
   + "Тон серьёзный, спокойный и дружелюбный, как у толкового старшего по скваду. Отвечай коротко и по делу: обычно 1–4 предложения, списки только когда реально нужны. Без смайликов, без воды. "
   + "Пиши на языке собеседника. Если не знаешь точного ответа про игру — честно скажи и предложи спросить у командиров (кнопка «Написать командирам» в боте RDX). "
   + "Про сквад: подать заявку можно на сайте " + SITE + " или в боте RDX (кнопка «Заявка в сквад»); обжаловать бан — в боте RDX (кнопка «Обжаловать бан»); ответ приходит в Telegram от бота RDX. "
-  + "Что такое RDX: сквад (команда) игроков Animal Company; RDX = Research Department Explosive — «исследовательский отдел»: изучаем карты и механики, играем командой, проводим ивенты и тренировки. Ничего сверх этого про сквад не придумывай. "
+  + "Что такое RDX: сквад (команда) игроков Animal Company; RDX = Research Department Explosive — «исследовательский отдел»: изучаем карты и механики, играем командой, проводим ивенты и тренировки. В RDX четыре отдела: Экономика (фармеры и дюперы — добывают ресурсы и валюту и официально обеспечивают ими сквад), Штурм (бойцы: рейды, захват позиций, защита своих), Наука (строят постройки, объекты и укрепления базы), Разведка (следят за обстановкой и приносят новости о других кланах). В заявке отдел обязательно выбирается из этих четырёх. Ничего сверх этого про сквад не придумывай. "
   + "Не выдумывай правила сквада, составы и решения командиров. Не помогай с читами, взломом, обманом и токсичностью.";
 const MODELS = (Deno.env.get("RDX_AI_MODELS") || "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-2.5-flash-lite,gemini-2.5-flash").split(",").map((x) => x.trim()).filter(Boolean);
 const SPENT = new Map<string, number>();
@@ -301,6 +307,8 @@ const setState = (bot: Bot, uid: number, flow: string | null, step = 0, data: un
 // ---------- заявки ----------
 const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД", appeal: "⚖️ ОБЖАЛОВАНИЕ БАНА", help: "🆘 СООБЩЕНИЕ КОМАНДИРАМ", leave: "🚪 ЗАПРОС НА ВЫХОД" };
 const WEAPONS = ["РПГ (гранатомёт)", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
+const DEPTS = ["Экономика", "Штурм", "Наука", "Разведка"];   // отдел — только из этого списка
+const DEPT_ICO: Record<string, string> = { "Экономика": "💰", "Штурм": "⚔️", "Наука": "🔬", "Разведка": "🛰" };
 const BASE_MEMBERS = 6;   // бойцов на сайте: 6 + принятые (закрытые) заявки − ушедшие
 async function membersCount() { const r: any[] = await db("rdx_members?select=id&active=eq.true") || []; return BASE_MEMBERS + r.length; }
 async function isMember(uid: number) { return !!(await db("rdx_members?select=id&active=eq.true&user_id=eq." + uid))?.[0]; }
@@ -308,7 +316,7 @@ const STATUS: Record<string, string> = { ok: "✅ <b>Одобрено</b> — п
 function appText(a: any) {
   const d = a.data || {};
   const rows: [string, unknown][] = a.kind === "apply"
-    ? [["Ник", d.nick], ["Telegram", d.tg ? "@" + d.tg : a.username ? "@" + a.username : ""], ["Возраст", d.age], ["Пояс", d.tz], ["Платформа", d.platform], ["Опыт", d.exp], ["Любимое оружие", d.weapon], ["Почему RDX", d.why]]
+    ? [["Ник", d.nick], ["Telegram", d.tg ? "@" + d.tg : a.username ? "@" + a.username : ""], ["Возраст", d.age], ["Пояс", d.tz], ["Платформа", d.platform], ["Опыт", d.exp], ["Любимое оружие", d.weapon], ["Отдел", d.dept ? (DEPT_ICO[d.dept] || "") + " " + d.dept : ""], ["Почему RDX", d.why]]
     : a.kind === "appeal" ? [["Ник в игре", d.nick], ["За что бан", d.reason], ["Почему снять", d.why]] : a.kind === "leave" ? [["Причина", d.text]] : [["Сообщение", d.text]];
   return "<b>" + KIND[a.kind] + " #" + a.id + "</b> · " + (a.source === "site" ? "с сайта" : "из бота") + "\n"
     + (a.user_id ? "От: " + esc(d.from || "") + "\n" : "")
@@ -387,8 +395,12 @@ async function flowStep(u: any, chat: number, st: any, text: string) {
     if (st.step === 1) { d.age = text.slice(0, 3); await setState("main", u.id, "apply", 2, d); await send("main", chat, t(u, "a_plat"), kb([PLAT.slice(0, 2).map((p) => [p, "pl:" + p]) as any, PLAT.slice(2).map((p) => [p, "pl:" + p]) as any, [[t(u, "cancel"), "go:menu"]]])); return; }
     if (st.step === 2) { d.platform = text.slice(0, 30); await setState("main", u.id, "apply", 3, d); await askExp(u, chat); return; }
     if (st.step === 3) { d.exp = text.slice(0, 30); await setState("main", u.id, "apply", 4, d); await send("main", chat, t(u, "a_wpn"), kb([[[WEAPONS[0], "wp:0"], [WEAPONS[1], "wp:1"]], [[WEAPONS[2], "wp:2"], [WEAPONS[3], "wp:3"]], [[WEAPONS[4], "wp:4"]], [[t(u, "cancel"), "go:menu"]]])); return; }
-    if (st.step === 4) { d.weapon = text.slice(0, 40); await setState("main", u.id, "apply", 5, d); await send("main", chat, t(u, "a_why"), cancel); return; }
-    if (st.step === 5) { d.why = text.slice(0, 1000); await setState("main", u.id, "apply", 6, d); await confirm(u, chat, "apply", d); return; }
+    if (st.step === 4) { d.weapon = text.slice(0, 40); await setState("main", u.id, "apply", 5, d); await askDept(u, chat); return; }
+    if (st.step === 5) {
+      if (!DEPTS.includes(text)) { await send("main", chat, t(u, "a_depreq")); await askDept(u, chat); return; }
+      d.dept = text; await setState("main", u.id, "apply", 6, d); await send("main", chat, t(u, "a_why"), cancel); return;
+    }
+    if (st.step === 6) { d.why = text.slice(0, 1000); await setState("main", u.id, "apply", 7, d); await confirm(u, chat, "apply", d); return; }
   }
   if (st.flow === "appeal") {
     if (st.step === 0) { d.nick = text.slice(0, 40); await setState("main", u.id, "appeal", 1, d); await send("main", chat, t(u, "p_reason"), cancel); return; }
@@ -419,6 +431,10 @@ async function flowStep(u: any, chat: number, st: any, text: string) {
 async function askExp(u: any, chat: number) {
   await send("main", chat, t(u, "a_exp"), kb([[[t(u, "e1"), "ex:" + t(u, "e1")], [t(u, "e2"), "ex:" + t(u, "e2")]], [[t(u, "e3"), "ex:" + t(u, "e3")], [t(u, "e4"), "ex:" + t(u, "e4")]], [[t(u, "cancel"), "go:menu"]]]));
 }
+async function askDept(u: any, chat: number) {
+  const lab = (i: number) => DEPT_ICO[DEPTS[i]] + " " + (({ en: ["Economy", "Assault", "Science", "Recon"], uk: ["Економіка", "Штурм", "Наука", "Розвідка"] } as any)[L(u)]?.[i] || DEPTS[i]);
+  await send("main", chat, t(u, "a_dep"), kb([[[lab(0), "dp:0"], [lab(1), "dp:1"]], [[lab(2), "dp:2"], [lab(3), "dp:3"]], [[t(u, "cancel"), "go:menu"]]]));
+}
 async function confirm(u: any, chat: number, kind: string, d: any) {
   const preview = appText({ id: "…", kind, source: "bot", data: d }).replace(/^<b>.*?<\/b>.*\n/, "");
   await send("main", chat, t(u, "a_check") + "\n\n" + preview, kb([[[t(u, "send"), "sub:" + kind], [t(u, "cancel"), "go:menu"]]]));
@@ -434,6 +450,7 @@ async function onMain(up: any) {
     if (data.startsWith("pl:") && st?.flow === "apply" && st.step === 2) return flowStep(u, chat, st, data.slice(3));
     if (data.startsWith("ex:") && st?.flow === "apply" && st.step === 3) return flowStep(u, chat, st, data.slice(3));
     if (data.startsWith("wp:") && st?.flow === "apply" && st.step === 4) return flowStep(u, chat, st, WEAPONS[Number(data.slice(3))] || "");
+    if (data.startsWith("dp:") && st?.flow === "apply" && st.step === 5) return flowStep(u, chat, st, DEPTS[Number(data.slice(3))] || "");
     if (data.startsWith("sub:") && st && st.flow === data.slice(4)) {
       await setState("main", u.id, null);
       const kind = st.flow;
@@ -716,7 +733,7 @@ const normCode = (c: unknown) => String(c || "").toUpperCase().replace(/[^A-Z0-9
 async function ipHashOf(req: Request) { return (await sha("rdx:" + (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?"))).slice(0, 24); }
 function appFields(b: any) {
   return { nick: String(b.nick || "").trim().slice(0, 40), age: String(b.age || "").slice(0, 3), tz: String(b.tz || "").slice(0, 40), platform: String(b.platform || "").slice(0, 30),
-    exp: String(b.exp || "").slice(0, 20), weapon: WEAPONS.includes(String(b.weapon)) ? String(b.weapon) : "", why: String(b.why || "").trim().slice(0, 1200) };
+    exp: String(b.exp || "").slice(0, 20), weapon: WEAPONS.includes(String(b.weapon)) ? String(b.weapon) : "", dept: DEPTS.includes(String(b.dept)) ? String(b.dept) : "", why: String(b.why || "").trim().slice(0, 1200) };
 }
 async function siteFind(req: Request, b: any) {
   const ip = await ipHashOf(req);
@@ -732,14 +749,14 @@ async function siteGet(req: Request, b: any) {
   const { a, err } = await siteFind(req, b);
   if (err) return err;
   const d = a.data || {};
-  return { ok: true, id: a.id, state: a.status, editable: a.status === "new" || a.status === "reply", data: { nick: d.nick, tg: d.tg, age: d.age, tz: d.tz, platform: d.platform, exp: d.exp, weapon: d.weapon, why: d.why } };
+  return { ok: true, id: a.id, state: a.status, editable: a.status === "new" || a.status === "reply", data: { nick: d.nick, tg: d.tg, age: d.age, tz: d.tz, platform: d.platform, exp: d.exp, weapon: d.weapon, dept: d.dept, why: d.why } };
 }
 async function siteEdit(req: Request, b: any) {
   const { a, err } = await siteFind(req, b);
   if (err) return err;
   if (!(a.status === "new" || a.status === "reply")) return { ok: false, error: "locked" };
   const f = appFields(b);
-  if (!f.nick || !f.why) return { ok: false, error: "bad" };
+  if (!f.nick || !f.why || !f.dept) return { ok: false, error: "bad" };
   const data = { ...a.data, ...f };
   const now = new Date().toISOString();
   await patch("rdx_apps?id=eq." + a.id, { data, edited_at: now });
@@ -750,7 +767,7 @@ async function siteEdit(req: Request, b: any) {
 async function siteApply(req: Request, b: any) {
   if (b.website) return { ok: true };   // ловушка для ботов
   const nick = String(b.nick || "").trim().slice(0, 40), tgName = String(b.tg || "").trim().replace(/^@/, "").slice(0, 32), why = String(b.why || "").trim().slice(0, 1200);
-  if (!nick || !/^[A-Za-z0-9_]{5,32}$/.test(tgName) || !why) return { ok: false, error: "bad" };
+  if (!nick || !/^[A-Za-z0-9_]{5,32}$/.test(tgName) || !why || !DEPTS.includes(String(b.dept))) return { ok: false, error: "bad" };
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
   void ip; const ipHash = await ipHashOf(req);
   const recent: any[] = await db("rdx_apps?select=id&ip_hash=eq." + ipHash + "&created_at=gt." + enc(new Date(Date.now() - 3600e3).toISOString())) || [];
