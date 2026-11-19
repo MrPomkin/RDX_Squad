@@ -30,7 +30,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:auto;background:var(--bg);overscroll-behavior-y:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:auto;background:var(--bg);overscroll-behavior-y:none;overflow-anchor:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);overflow-x:hidden}
 header.nav,main,footer{zoom:var(--fit)}
 a{color:inherit}
@@ -220,7 +220,7 @@ section{position:relative;padding:120px 0}
 @media (max-width:520px){.dirs{grid-template-columns:1fr}.dir{border-right:0}}
 
 /* галерея */
-.gal{display:flex;gap:18px;overflow-x:auto;padding:10px max(18px,calc((100vw/var(--fit) - 1180px)/2 + 18px)) 30px;scroll-snap-type:x mandatory;scrollbar-width:none;cursor:grab}
+.gal{touch-action:pan-x;display:flex;gap:18px;overflow-x:auto;padding:10px max(18px,calc((100vw/var(--fit) - 1180px)/2 + 18px)) 30px;scroll-snap-type:x mandatory;scrollbar-width:none;cursor:grab}
 .gal::-webkit-scrollbar{display:none}
 .gal.drag{cursor:grabbing;scroll-snap-type:none}
 .shot{position:relative;flex:none;width:clamp(260px,34vw,460px);aspect-ratio:4/5;border-radius:20px;overflow:hidden;scroll-snap-align:center;background:var(--panel);border:1px solid var(--line)}
@@ -1389,7 +1389,8 @@ let lenis = null;
 function smooth(){
   const S = { cur: scrollY, target: scrollY, jump: false, last: 0, touch: false, ty: 0, tt: 0, tv: 0 };
   const maxY = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
-  const native = (t) => !!(t && t.closest && t.closest("textarea, select, .gal, #mmenu, input[type=range]"));
+  const native = (t) => !!(t && t.closest && t.closest("textarea, select, #mmenu, input[type=range]"));
+  const inGal = (t) => !!(t && t.closest && t.closest(".gal"));
   // колесо и тачпад
   addEventListener("wheel", e => {
     if (e.ctrlKey || native(e.target)) return;
@@ -1404,9 +1405,15 @@ function smooth(){
   addEventListener("mousedown", stop, { passive: true });
   addEventListener("keydown", e => { if (!/^(Arrow|Page|Home|End| )/.test(e.key)) stop(); }, { passive: true });
   // палец: ведём страницу сами, с инерцией после отпускания
-  addEventListener("touchstart", e => { if (e.touches.length !== 1 || native(e.target)) return; S.touch = true; S.ty = e.touches[0].clientY; S.tt = performance.now(); S.tv = 0; S.jump = false; S.target = S.cur; }, { passive: true });
+  addEventListener("touchstart", e => { if (e.touches.length !== 1 || native(e.target)) return; S.touch = true; S.ty = e.touches[0].clientY; S.tx = e.touches[0].clientX; S.axis = inGal(e.target) ? "" : "y"; S.tt = performance.now(); S.tv = 0; S.jump = false; S.target = S.cur; }, { passive: true });
   addEventListener("touchmove", e => {
     if (!S.touch || e.touches.length !== 1) return;
+    if (!S.axis) {   // в галерее: решаем по первому движению, вбок это или вверх-вниз
+      const ddx = Math.abs(e.touches[0].clientX - S.tx), ddy = Math.abs(e.touches[0].clientY - S.ty);
+      if (ddx + ddy < 6) return;
+      S.axis = ddx > ddy ? "x" : "y";
+    }
+    if (S.axis === "x") return;   // вбок — листает галерея сама
     e.preventDefault();
     const y = e.touches[0].clientY, now = performance.now(), dy = S.ty - y, dt = Math.max(1, now - S.tt);
     S.ty = y; S.tt = now; S.tv = lerp(S.tv, dy / dt, .4);
@@ -1425,9 +1432,9 @@ function smooth(){
   (function raf(now){
     const dt = S.last ? Math.min(50, now - S.last) : 16; S.last = now;
     // внешние прокрутки (клавиши, полоса прокрутки, браузер) тоже идут через ограничитель
-    if (Math.abs(scrollY - S.cur) > 3) { S.target = clamp(scrollY, 0, maxY()); window.scrollTo(0, S.cur); }
+    if (Math.abs(scrollY - S.cur) > 3) { S.cur = scrollY; S.target = scrollY; }
     const vh = innerHeight;
-    const vmax = (S.jump ? 3.2 : FX.slow ? .6 : 1.15) * vh / 1000;   // экранов в секунду → пикселей в мс
+    const vmax = (S.jump ? 3.2 : FX.slow ? .6 : 1.7) * vh / 1000;   // экранов в секунду → пикселей в мс
     // вниз — ограниченная скорость и «долг» не больше трети экрана (иначе после колеса страница долго доезжает);
     // вверх — без ограничений
     if (S.target > S.cur && !S.jump) S.target = Math.min(S.target, S.cur + vh * .33);
