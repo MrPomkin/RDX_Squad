@@ -94,7 +94,7 @@ const T: Record<string, Record<string, string>> = {
     apply: "📝 Заявка в сквад", appeal: "⚖️ Обжаловать бан", ai: "🤖 RDX_AI", help: "🆘 Написать командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Отмена", send: "✅ Отправить",
     a_nick: "Шаг 1/7. Твой ник в Animal Company?", a_age: "Шаг 2/7. Сколько тебе лет?", a_plat: "Шаг 3/7. Где играешь?", a_exp: "Шаг 4/7. Сколько играешь в Animal Company?",
     a_wpn: "Шаг 5/7. Любимое оружие?", a_why: "Шаг 7/7. Почему RDX и чем будешь полезен скваду? Напиши парой предложений.",
-    a_dep: "Шаг 6/7. В какой отдел RDX хочешь вступить?\n\n💰 <b>Экономика</b> — фармеры и дюперы: добывают ресурсы и валюту и официально обеспечивают ими сквад.\n⚔️ <b>Штурм</b> — бойцы: рейды, захват позиций и защита своих.\n🔬 <b>Наука</b> — строители: возводят постройки, объекты и укрепления базы.\n🛰 <b>Разведка</b> — следят за обстановкой и приносят сводки и новости о других кланах.",
+    a_dep: "Шаг 6/7. В какой отдел RDX хочешь вступить?\n\n💰 <b>Экономика</b> — фармеры и дюперы: добывают ресурсы и валюту и официально обеспечивают ими сквад.\n⚔️ <b>Штурм</b> — бойцы: рейды, захват позиций и защита своих.\n🔬 <b>Наука</b> — строители: возводят постройки, объекты и укрепления базы.",
     a_depreq: "Выбери отдел кнопкой ниже — свой вариант вписать нельзя.",
     leave: "🚪 Выйти из сквада", l_ask: "Почему хочешь выйти из RDX? Напиши коротко.", l_done: "✅ Запрос на выход отправлен командирам.", l_not: "Ты не в составе RDX — выходить неоткуда.",
     l_ok: "🚪 Запрос на выход одобрен. Ты больше не в составе RDX Squad. Спасибо, что был с нами.", l_no: "Командиры отклонили запрос на выход — поговори с ними.",
@@ -112,7 +112,7 @@ const T: Record<string, Record<string, string>> = {
     apply: "📝 Apply", appeal: "⚖️ Appeal a ban", ai: "🤖 RDX_AI", help: "🆘 Message commanders", site: "🌐 Website", menu: "↩️ Menu", cancel: "✖️ Cancel", send: "✅ Send",
     a_nick: "Step 1/7. Your Animal Company nickname?", a_age: "Step 2/7. How old are you?", a_plat: "Step 3/7. Where do you play?", a_exp: "Step 4/7. How long have you played Animal Company?",
     a_wpn: "Step 5/7. Favourite weapon?", a_why: "Step 7/7. Why RDX and how will you help the squad? A couple of sentences.",
-    a_dep: "Step 6/7. Which RDX department do you want to join?\n\n💰 <b>Economy</b> — farmers and dupers: they gather resources and currency and officially supply the squad.\n⚔️ <b>Assault</b> — the fighters: raids, capturing positions and protecting our own.\n🔬 <b>Science</b> — the builders: they raise structures, objects and base defences.\n🛰 <b>Recon</b> — they watch the situation and bring reports and news about other clans.",
+    a_dep: "Step 6/7. Which RDX department do you want to join?\n\n💰 <b>Economy</b> — farmers and dupers: they gather resources and currency and officially supply the squad.\n⚔️ <b>Assault</b> — the fighters: raids, capturing positions and protecting our own.\n🔬 <b>Science</b> — the builders: they raise structures, objects and base defences.",
     a_depreq: "Pick a department with the buttons below — you can't type your own.",
     leave: "🚪 Leave the squad", l_ask: "Why do you want to leave RDX? Keep it short.", l_done: "✅ Leave request sent to the commanders.", l_not: "You're not in the RDX roster.",
     l_ok: "🚪 Leave request approved. You're no longer in RDX Squad. Thanks for being with us.", l_no: "Commanders declined the leave request — talk to them.",
@@ -130,7 +130,7 @@ const T: Record<string, Record<string, string>> = {
     apply: "📝 Заявка в сквад", appeal: "⚖️ Оскаржити бан", ai: "🤖 RDX_AI", help: "🆘 Написати командирам", site: "🌐 Сайт", menu: "↩️ Меню", cancel: "✖️ Скасувати", send: "✅ Надіслати",
     a_nick: "Крок 1/7. Твій нік в Animal Company?", a_age: "Крок 2/7. Скільки тобі років?", a_plat: "Крок 3/7. Де граєш?", a_exp: "Крок 4/7. Скільки граєш в Animal Company?",
     a_wpn: "Крок 5/7. Улюблена зброя?", a_why: "Крок 7/7. Чому RDX і чим будеш корисний скваду?",
-    a_dep: "Крок 6/7. До якого відділу RDX хочеш вступити?\n\n💰 <b>Економіка</b> — фармери й дюпери: добувають ресурси й валюту та офіційно забезпечують ними сквад.\n⚔️ <b>Штурм</b> — бійці: рейди, захоплення позицій і захист своїх.\n🔬 <b>Наука</b> — будівельники: зводять споруди, об'єкти й укріплення бази.\n🛰 <b>Розвідка</b> — стежать за обстановкою й приносять зведення та новини про інші клани.",
+    a_dep: "Крок 6/7. До якого відділу RDX хочеш вступити?\n\n💰 <b>Економіка</b> — фармери й дюпери: добувають ресурси й валюту та офіційно забезпечують ними сквад.\n⚔️ <b>Штурм</b> — бійці: рейди, захоплення позицій і захист своїх.\n🔬 <b>Наука</b> — будівельники: зводять споруди, об'єкти й укріплення бази.",
     a_depreq: "Обери відділ кнопкою нижче — свій варіант вписати не можна.",
     leave: "🚪 Вийти зі скваду", l_ask: "Чому хочеш вийти з RDX? Коротко.", l_done: "✅ Запит на вихід надіслано командирам.", l_not: "Ти не у складі RDX.",
     l_ok: "🚪 Запит на вихід схвалено. Ти більше не у складі RDX Squad. Дякуємо, що був з нами.", l_no: "Командири відхилили запит на вихід — поговори з ними.",
@@ -205,7 +205,7 @@ const PERSONA = "Ты RDX_AI — ИИ-помощник сквада RDX Squad (R
   + "Тон серьёзный, спокойный и дружелюбный, как у толкового старшего по скваду. Отвечай коротко и по делу: обычно 1–4 предложения, списки только когда реально нужны. Без смайликов, без воды. "
   + "Пиши на языке собеседника. Если не знаешь точного ответа про игру — честно скажи и предложи спросить у командиров (кнопка «Написать командирам» в боте RDX). "
   + "Про сквад: подать заявку можно на сайте " + SITE + " или в боте RDX (кнопка «Заявка в сквад»); обжаловать бан — в боте RDX (кнопка «Обжаловать бан»); ответ приходит в Telegram от бота RDX. "
-  + "Что такое RDX: сквад (команда) игроков Animal Company; RDX = Research Department Explosive — «исследовательский отдел»: изучаем карты и механики, играем командой, проводим ивенты и тренировки. В RDX четыре отдела: Экономика (фармеры и дюперы — добывают ресурсы и валюту и официально обеспечивают ими сквад), Штурм (бойцы: рейды, захват позиций, защита своих), Наука (строят постройки, объекты и укрепления базы), Разведка (следят за обстановкой и приносят новости о других кланах). В заявке отдел обязательно выбирается из этих четырёх. Ничего сверх этого про сквад не придумывай. "
+  + "Что такое RDX: сквад (команда) игроков Animal Company; RDX = Research Department Explosive — «исследовательский отдел»: изучаем карты и механики, играем командой, проводим ивенты и тренировки. В RDX три отдела: Экономика (фармеры и дюперы — добывают ресурсы и валюту и официально обеспечивают ими сквад), Штурм (бойцы: рейды, захват позиций, защита своих), Наука (строят постройки, объекты и укрепления базы). В заявке отдел обязательно выбирается из этих трёх. Ничего сверх этого про сквад не придумывай. "
   + "Не выдумывай правила сквада, составы и решения командиров. Не помогай с читами, взломом, обманом и токсичностью.";
 const MODELS = (Deno.env.get("RDX_AI_MODELS") || "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-2.5-flash-lite,gemini-2.5-flash").split(",").map((x) => x.trim()).filter(Boolean);
 const SPENT = new Map<string, number>();
@@ -307,8 +307,8 @@ const setState = (bot: Bot, uid: number, flow: string | null, step = 0, data: un
 // ---------- заявки ----------
 const KIND: Record<string, string> = { apply: "📝 ЗАЯВКА В СКВАД", appeal: "⚖️ ОБЖАЛОВАНИЕ БАНА", help: "🆘 СООБЩЕНИЕ КОМАНДИРАМ", leave: "🚪 ЗАПРОС НА ВЫХОД" };
 const WEAPONS = ["РПГ (гранатомёт)", "Медик", "Ближний бой", "Револьверы", "Гранаты"];
-const DEPTS = ["Экономика", "Штурм", "Наука", "Разведка"];   // отдел — только из этого списка
-const DEPT_ICO: Record<string, string> = { "Экономика": "💰", "Штурм": "⚔️", "Наука": "🔬", "Разведка": "🛰" };
+const DEPTS = ["Экономика", "Штурм", "Наука"];   // отдел — только из этого списка
+const DEPT_ICO: Record<string, string> = { "Экономика": "💰", "Штурм": "⚔️", "Наука": "🔬" };
 const BASE_MEMBERS = 6;   // бойцов на сайте: 6 + принятые (закрытые) заявки − ушедшие
 async function membersCount() { const r: any[] = await db("rdx_members?select=id&active=eq.true") || []; return BASE_MEMBERS + r.length; }
 async function isMember(uid: number) { return !!(await db("rdx_members?select=id&active=eq.true&user_id=eq." + uid))?.[0]; }
@@ -432,8 +432,8 @@ async function askExp(u: any, chat: number) {
   await send("main", chat, t(u, "a_exp"), kb([[[t(u, "e1"), "ex:" + t(u, "e1")], [t(u, "e2"), "ex:" + t(u, "e2")]], [[t(u, "e3"), "ex:" + t(u, "e3")], [t(u, "e4"), "ex:" + t(u, "e4")]], [[t(u, "cancel"), "go:menu"]]]));
 }
 async function askDept(u: any, chat: number) {
-  const lab = (i: number) => DEPT_ICO[DEPTS[i]] + " " + (({ en: ["Economy", "Assault", "Science", "Recon"], uk: ["Економіка", "Штурм", "Наука", "Розвідка"] } as any)[L(u)]?.[i] || DEPTS[i]);
-  await send("main", chat, t(u, "a_dep"), kb([[[lab(0), "dp:0"], [lab(1), "dp:1"]], [[lab(2), "dp:2"], [lab(3), "dp:3"]], [[t(u, "cancel"), "go:menu"]]]));
+  const lab = (i: number) => DEPT_ICO[DEPTS[i]] + " " + (({ en: ["Economy", "Assault", "Science"], uk: ["Економіка", "Штурм", "Наука"] } as any)[L(u)]?.[i] || DEPTS[i]);
+  await send("main", chat, t(u, "a_dep"), kb([[[lab(0), "dp:0"], [lab(1), "dp:1"]], [[lab(2), "dp:2"]], [[t(u, "cancel"), "go:menu"]]]));
 }
 async function confirm(u: any, chat: number, kind: string, d: any) {
   const preview = appText({ id: "…", kind, source: "bot", data: d }).replace(/^<b>.*?<\/b>.*\n/, "");
