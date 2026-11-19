@@ -51,6 +51,7 @@ async function modMenu(uid: number, on: boolean) {
   void base; void on;
 }
 const SITE = Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squad/";
+const SITE_APP = SITE + "?v=" + "20261119c";   // для кнопок «открыть сайт» в Telegram: новая метка = Telegram не покажет старую сохранённую копию
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 type Bot = "main" | "ai";
 
@@ -370,7 +371,7 @@ async function deliver(a: any) {
 
 // ---------- бот RDX ----------
 function menu(u: any, member = false) {
-  return kb([[member ? [t(u, "leave"), "go:leave"] : [t(u, "apply"), "go:apply"]], [[t(u, "appeal"), "go:appeal"], [t(u, "help"), "go:help"]], [[t(u, "ai"), "go:ai"], [t(u, "site"), "app:" + SITE]]]);
+  return kb([[member ? [t(u, "leave"), "go:leave"] : [t(u, "apply"), "go:apply"]], [[t(u, "appeal"), "go:appeal"], [t(u, "help"), "go:help"]], [[t(u, "ai"), "go:ai"], [t(u, "site"), "app:" + SITE_APP]]]);
 }
 const PLAT = ["Quest 3/3S", "Quest 2", "Quest Pro", "PC VR"];
 async function startFlow(u: any, chat: number, flow: string) {
@@ -800,7 +801,7 @@ async function setup(url: string) {
     await tg("main", "setMyCommands", { commands: [...cmdsMain, ...adm], scope: { type: "chat", chat_id: id } });
     await tg("ai", "setMyCommands", { commands: [...cmdsAI, { command: "admin", description: "Команды командира" }], scope: { type: "chat", chat_id: id } });
   }
-  await tg("main", "setChatMenuButton", { menu_button: { type: "web_app", text: "Сайт RDX", web_app: { url: SITE } } });
+  await tg("main", "setChatMenuButton", { menu_button: { type: "web_app", text: "Сайт RDX", web_app: { url: SITE_APP } } });
   await tg("main", "setMyName", { name: "RDX Squad" });
   await tg("main", "setMyShortDescription", { short_description: "RDX Squad — Revolvers and Explosives. Заявка в сквад, обжалование бана, RDX_AI." });
   await tg("main", "setMyDescription", { description: "Бот сквада RDX (Revolvers and Explosives) в Animal Company.\n\n📝 Заявка в сквад\n⚖️ Обжалование бана\n🆘 Связь с командирами\n🤖 RDX_AI\n\nНажми «Старт»." });
