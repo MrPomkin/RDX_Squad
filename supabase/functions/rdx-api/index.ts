@@ -52,7 +52,15 @@ async function modMenu(uid: number, on: boolean) {
 }
 const SITE = Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squad/";
 const SITE_APP = SITE + "?v=" + "20261119c";   // для кнопок «открыть сайт» в Telegram: новая метка = Telegram не покажет старую сохранённую копию
-const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const SITE_ORIGIN = new URL(Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squad/").origin;
+const CORS = { "Access-Control-Allow-Origin": SITE_ORIGIN, "Vary": "Origin", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Max-Age": "600",
+  "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
+// сравнение секретов без утечки по времени ответа
+function safeEq(a: unknown, b: unknown) {
+  const x = new TextEncoder().encode(String(a ?? "")), y = new TextEncoder().encode(String(b ?? ""));
+  let d = x.length ^ y.length; for (let i = 0; i < Math.max(x.length, y.length); i++) d |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return d === 0 && x.length > 0;
+}
 type Bot = "main" | "ai";
 
 // ---------- база ----------
@@ -1291,7 +1299,8 @@ function newCode() {   // 25 символов из 32 = 125 бит: подобр
 }
 const sha = async (x: string) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(x)))].map((v) => v.toString(16).padStart(2, "0")).join("");
 const normCode = (c: unknown) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^RDX/, "");
-async function ipHashOf(req: Request) { return (await sha("rdx:" + (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?"))).slice(0, 24); }
+const clientIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
+async function ipHashOf(req: Request) { return (await sha("rdx:" + clientIp(req))).slice(0, 24); }
 function appFields(b: any) {
   return { nick: String(b.nick || "").trim().slice(0, 40), age: String(b.age || "").slice(0, 3), tz: String(b.tz || "").slice(0, 40), platform: String(b.platform || "").slice(0, 30),
     exp: String(b.exp || "").slice(0, 20), weapon: String(b.weapon || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 40), dept: DEPTS.includes(String(b.dept)) ? String(b.dept) : "", why: String(b.why || "").trim().slice(0, 1200) };
@@ -1329,7 +1338,7 @@ async function siteApply(req: Request, b: any) {
   if (b.website) return { ok: true };   // ловушка для ботов
   const nick = String(b.nick || "").trim().slice(0, 40), tgName = String(b.tg || "").trim().replace(/^@/, "").slice(0, 32), why = String(b.why || "").trim().slice(0, 1200);
   if (!nick || !/^[A-Za-z0-9_]{5,32}$/.test(tgName) || !why || !DEPTS.includes(String(b.dept))) return { ok: false, error: "bad" };
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
+  const ip = clientIp(req);
   void ip; const ipHash = await ipHashOf(req);
   const recent: any[] = await db("rdx_apps?select=id&ip_hash=eq." + ipHash + "&created_at=gt." + enc(new Date(Date.now() - 3600e3).toISOString())) || [];
   if (recent.length >= 3) return { ok: false, error: "rate", status: 429 };
@@ -1384,7 +1393,7 @@ const maskMail = (e: string) => e.replace(/^(.{2}).*(@.*)$/, "$1•••$2");
 const maskPhone = (p0: string) => p0.replace(/^(\+?\d{1,3})\d+(\d{2})$/, "$1 ••• •• $2");
 // ---------- аккаунты на сайте: вход по коду из Telegram, сессии по отпечатку устройства, 2FA для создателя ----------
 const rnd = (n = 32) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-const ipOfReq = (req: Request) => req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
+const ipOfReq = (req: Request) => clientIp(req);
 async function geoOf(ip: string) {
   try {
     const r: any = await fetch("https://ipwho.is/" + encodeURIComponent(ip) + "?fields=success,country,city,flag", { signal: AbortSignal.timeout(3000) }).then((x) => x.json());
@@ -1496,7 +1505,7 @@ async function accApi(req: Request, b: any): Promise<Response> {
   if (t === "acc_email_code") {   // создатель ввёл код из письма RDX
     const s0 = await sessionOf(b, "pending"); if (!s0 || s0.stage !== "email") return accJ({ ok: false, error: "session" });
     const acc = (await db("rdx_accounts?select=*&user_id=eq." + s0.user_id))?.[0];
-    if (!(await mailCodeOk(Number(s0.user_id), acc?.pending_email || "", b.code))) return accJ({ ok: false, error: "code" });
+    if (!(await mailCodeOk(Number(s0.user_id), acc?.pending_email || "", b.code))) return accJ({ ok: false, error: await badTry(s0) });
     await patch("rdx_accounts?user_id=eq." + s0.user_id, { email: acc.pending_email, email_verified: true });
     await hist(Number(s0.user_id), "security", "Почта подтверждена: " + maskMail(acc.pending_email));
     await patch("rdx_sessions?id=eq." + s0.id, { stage: acc.totp_enabled ? "totp" : "totp_setup" });
@@ -1516,7 +1525,7 @@ async function accApi(req: Request, b: any): Promise<Response> {
   if (t === "acc_totp") {   // код из Google Authenticator
     const s0 = await sessionOf(b, "pending"); if (!s0 || !["totp", "totp_setup"].includes(s0.stage)) return accJ({ ok: false, error: "session" });
     const acc = (await db("rdx_accounts?select=*&user_id=eq." + s0.user_id))?.[0];
-    if (!acc?.totp_secret || !(await totpOk(acc.totp_secret, b.code))) return accJ({ ok: false, error: "code" });
+    if (!acc?.totp_secret || !(await totpOk(acc.totp_secret, b.code))) return accJ({ ok: false, error: await badTry(s0) });
     if (s0.stage === "totp_setup") { await patch("rdx_accounts?user_id=eq." + s0.user_id, { totp_enabled: true }); await hist(Number(s0.user_id), "security", "Google Authenticator подключён"); }
     await loginDone(s0, req, b);
     return accJ({ ok: true, step: "done", token: String(b.pending) });
@@ -1559,7 +1568,7 @@ async function accApi(req: Request, b: any): Promise<Response> {
   }
   if (t === "acc_sec_mail_ok") {
     const acc = (await db("rdx_accounts?select=pending_email&user_id=eq." + uid))?.[0];
-    if (!acc?.pending_email || !(await mailCodeOk(uid, acc.pending_email, b.code))) return accJ({ ok: false, error: "code" });
+    if (!acc?.pending_email || !(await mailCodeOk(uid, acc.pending_email, b.code))) return accJ({ ok: false, error: await badTry(s0) });
     await patch("rdx_accounts?user_id=eq." + uid, { email: acc.pending_email, email_verified: true });
     await hist(uid, "security", "Почта привязана: " + maskMail(acc.pending_email));
     return accJ({ ok: true });
@@ -1572,7 +1581,7 @@ async function accApi(req: Request, b: any): Promise<Response> {
   if (t === "acc_sec_2fa") {   // Google Authenticator: setup → on (код) / off (код)
     const acc = (await db("rdx_accounts?select=*&user_id=eq." + uid))?.[0] || {};
     if (b.op === "setup") { if (acc.totp_enabled) return accJ({ ok: false, error: "already" }); if (!acc.totp_secret || !acc.totp_enabled) await patch("rdx_accounts?user_id=eq." + uid, { totp_secret: null }); return accJ({ ok: true, ...(await totpSetup(uid)) }); }
-    if (!acc.totp_secret || !(await totpOk(acc.totp_secret, b.code))) return accJ({ ok: false, error: "code" });
+    if (!acc.totp_secret || !(await totpOk(acc.totp_secret, b.code))) return accJ({ ok: false, error: await badTry(s0) });
     if (b.op === "on") { await patch("rdx_accounts?user_id=eq." + uid, { totp_enabled: true }); await hist(uid, "security", "Google Authenticator включён"); return accJ({ ok: true }); }
     if (b.op === "off") { if (owner) return accJ({ ok: false, error: "owner_2fa" }); await patch("rdx_accounts?user_id=eq." + uid, { totp_enabled: false, totp_secret: null }); await hist(uid, "security", "Google Authenticator выключен"); return accJ({ ok: true }); }
     return accJ({ ok: false, error: "type" });
@@ -1610,6 +1619,13 @@ async function mailCodeOk(uid: number, email: string, code: unknown) {
   if (c0.code_hash !== await sha("mail:" + uid + ":" + email + ":" + String(code || "").replace(/\D/g, ""))) { await patch("rdx_login_codes?id=eq." + c0.id, { tries: c0.tries + 1 }); return false; }
   await patch("rdx_login_codes?id=eq." + c0.id, { used: true });
   return true;
+}
+// неверный код в сессии: после 5 ошибок сессия сбрасывается (подбор кода невозможен)
+async function badTry(s0: any) {
+  const n = (Number(s0.tries) || 0) + 1;
+  await patch("rdx_sessions?id=eq." + s0.id, n >= 5 ? { tries: n, revoked: true } : { tries: n });
+  if (n >= 5) { await hist(Number(s0.user_id), "security", "5 неверных кодов подряд — вход сброшен"); return "session"; }
+  return "code";
 }
 async function totpSetup(uid: number) {
   const acc = (await db("rdx_accounts?select=totp_secret,username&user_id=eq." + uid))?.[0] || {};
@@ -1651,14 +1667,15 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method === "GET" && url.searchParams.get("setup")) {
-    if (url.searchParams.get("setup") !== Deno.env.get("RDX_SETUP_KEY")) return new Response("no", { status: 403 });
+    if (!safeEq(url.searchParams.get("setup"), Deno.env.get("RDX_SETUP_KEY"))) return new Response("no", { status: 403 });
     const base = SB.replace(/\/$/, "") + "/functions/v1/rdx-api";
     return new Response(JSON.stringify(await setup(base)), { headers: { "Content-Type": "application/json" } });
   }
   if (req.method !== "POST") return new Response("RDX", { status: 200 });
+  if (Number(req.headers.get("content-length") || 0) > (url.searchParams.get("bot") ? 1e6 : 65536)) return new Response("too large", { status: 413 });
   const bot = url.searchParams.get("bot");
   if (bot === "main" || bot === "ai") {
-    if (req.headers.get("x-telegram-bot-api-secret-token") !== HOOK) return new Response("forbidden", { status: 403 });
+    if (!safeEq(req.headers.get("x-telegram-bot-api-secret-token"), HOOK)) return new Response("forbidden", { status: 403 });
     const up = await req.json().catch(() => null);
     if (up) await (bot === "main" ? onMain(up) : onAI(up)).catch((e) => console.error("update", bot, String(e).slice(0, 300)));
     return new Response("ok");
@@ -1667,7 +1684,7 @@ Deno.serve(async (req) => {
   const b = await req.json().catch(() => null);
   if (typeof b?.type === "string" && b.type.startsWith("acc_")) return await accApi(req, b).catch((e) => { console.error("acc", e); return accJ({ ok: false, error: "err" }, 500); });
   if (b?.type === "clan") {   // SealsAI просит действие с составом клана (внутренний ключ)
-    if (!HOOK || req.headers.get("x-rdx-int") !== HOOK) return new Response("no", { status: 403 });
+    if (!safeEq(req.headers.get("x-rdx-int"), HOOK)) return new Response("no", { status: 403 });
     const actor = { id: Number(b.actor?.id), username: b.actor?.username || null, first_name: b.actor?.first_name || null };
     const r = await clanApi(actor, String(b.act || ""), String(b.q || ""), b.rank === undefined || b.rank === null ? null : Number(b.rank), b.value ?? null).catch((e) => ({ ok: false, text: "ошибка: " + String(e).slice(0, 100) }));
     return new Response(JSON.stringify(r), { headers: { "Content-Type": "application/json" } });

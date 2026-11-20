@@ -1097,6 +1097,10 @@ function buildClone(){
 
 /* ===== аккаунт на сайте: вход по коду из Telegram, сессия привязана к устройству ===== */
 function account(){
+  // защита от «кликджекинга»: если сайт встроен в чужую страницу (кроме Telegram), вход в аккаунт недоступен
+  const framed = (() => { try { return window.top !== window.self; } catch { return true; } })();
+  const anc = (location.ancestorOrigins && location.ancestorOrigins[0]) || document.referrer || "";
+  if (framed && !/^https:\/\/([a-z0-9-]+\.)*(telegram\.org|t\.me)(\/|$)/i.test(anc)) { $$(".acc-slot").forEach((e) => { e.hidden = true; e.innerHTML = ""; }); return; }
   const AX = {
     ru: { login: "Вход в аккаунт RDX: введи свой @ник — код придёт в Telegram от бота RDX.", signup: "Регистрация: сначала открой бота RDX и нажми «Старт», потом введи свой @ник — придёт код.",
       need_bot: "Сначала открой бота и нажми «Старт», потом вернись сюда и запроси код снова:", exists: "Аккаунт уже есть — переключись на Log_In.", no_account: "Аккаунта нет — сначала зарегистрируйся (Sign_In).",
