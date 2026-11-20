@@ -180,14 +180,18 @@ function classOf(rank: number, dept: string | null, full = false) {
   if (rank <= 10) return "Главный " + one;
   return "Командир " + many;
 }
+// с 12-го звания (и у создателя): все разделы и все классы орудия, основной — в скобках
+const deptText = (rank: number, dept: string | null, full = false) => (full || rank >= 12) ? "Все разделы" + (dept ? " (" + dept + ")" : "") : dept ? (DEPT_ICON[dept] || "") + " " + dept : "не выбран";
+const weaponText = (rank: number, weapon: string | null, full = false) => (full || rank >= 12) ? "Все классы орудия" + (weapon ? " (" + weapon + ")" : "") : weapon || "";
 // строки для /tokens: раздел, класс, класс орудия
 async function classLines(uid: number) {
   const m = (await db("rdx_members?select=rank,dept,weapon&active=eq.true&user_id=eq." + uid))?.[0];
   if (!m) return "";
   const full = ADMINS.includes(uid);
-  return "\n🗂 Раздел: <b>" + (m.dept ? (DEPT_ICON[m.dept] || "") + " " + m.dept : full ? "все разделы" : "не выбран") + "</b>"
-    + "\n🎓 Класс: <b>" + classOf(Number(m.rank) || 0, m.dept, full) + (m.weapon ? ", " + m.weapon : "") + "</b>"
-    + (m.weapon ? "\n🔫 Класс орудия: <b>" + m.weapon + "</b>" : "");
+  const rk = Number(m.rank) || 0, wt = weaponText(rk, m.weapon, full);
+  return "\n🗂 Раздел: <b>" + deptText(rk, m.dept, full) + "</b>"
+    + "\n🎓 Класс: <b>" + classOf(rk, m.dept, full) + (m.weapon ? ", " + m.weapon : "") + "</b>"
+    + (wt ? "\n🔫 Класс орудия: <b>" + wt + "</b>" : "");
 }
 const isMarshal = async (u: any) => ((await rankOf(Number(u?.id))) ?? -1) >= MARSHAL;   // маршал и выше
 const isRankAdmin = async (u: any) => (await rankOf(Number(u?.id))) === ADMIN_RANK;
@@ -500,7 +504,7 @@ async function clanCard(chat: number, id: number, ownerU = false) {
   const rows: [string, string][][] = [[["🚫 Бан", "cl:ask:ban:" + id], ["👢 Кик", "cl:ask:kick:" + id]], [["📄 Уволить (по заявлению)", "cl:ask:fire:" + id]]];
   if (ownerU) rows.unshift([["⬆️ Повысить", "cl:rk:" + id + ":up"], ["⬇️ Понизить", "cl:rk:" + id + ":down"]], [["🗂 Раздел", "cl:dp:" + id], ["🔫 Класс орудия", "cl:wp:" + id]]);
   rows.push([["👥 К списку", "cl:list"]]);
-  await send("main", chat, "🎖 <b>" + esc(x.nick || "Боец") + "</b>" + (x.username ? " · @" + esc(x.username) : "") + "\nЗвание: <b>" + rankName(rk) + "</b>\nРаздел: <b>" + (x.dept || "не выбран") + "</b>\nКласс: <b>" + classOf(rk, x.dept, ADMINS.includes(Number(x.user_id))) + (x.weapon ? ", " + esc(x.weapon) : "") + "</b>\nВ составе с " + d + (x.app_id ? " · заявка #" + x.app_id : "")
+  await send("main", chat, "🎖 <b>" + esc(x.nick || "Боец") + "</b>" + (x.username ? " · @" + esc(x.username) : "") + "\nЗвание: <b>" + rankName(rk) + "</b>\nРаздел: <b>" + deptText(rk, x.dept, ADMINS.includes(Number(x.user_id))) + "</b>" + (weaponText(rk, x.weapon, ADMINS.includes(Number(x.user_id))) ? "\nКласс орудия: <b>" + esc(weaponText(rk, x.weapon, ADMINS.includes(Number(x.user_id)))) + "</b>" : "") + "\nКласс: <b>" + classOf(rk, x.dept, ADMINS.includes(Number(x.user_id))) + (x.weapon ? ", " + esc(x.weapon) : "") + "</b>\nВ составе с " + d + (x.app_id ? " · заявка #" + x.app_id : "")
     + (tr ? "\nУровень в ботах: " + (TIERS[tr.tier] || TIERS.base).name : "\nTelegram не привязан — сообщения от ботов ему не дойдут"), kb(rows));
 }
 const CLAN_ACT: Record<string, [string, string, string]> = {
