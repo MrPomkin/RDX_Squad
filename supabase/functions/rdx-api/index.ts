@@ -54,7 +54,31 @@ const SITE = Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squ
 const SITE_APP = SITE + "?v=" + "20261119c";   // для кнопок «открыть сайт» в Telegram: новая метка = Telegram не покажет старую сохранённую копию
 const SITE_ORIGIN = new URL(Deno.env.get("RDX_SITE_URL") || "https://mrpomkin.github.io/RDX_Squad/").origin;
 const CORS = { "Access-Control-Allow-Origin": SITE_ORIGIN, "Vary": "Origin", "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Max-Age": "600",
-  "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
+  "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "Strict-Transport-Security": "max-age=63072000; includeSubDomains" };
+// ---------- второй слой шифрования сайт ↔ сервер (поверх HTTPS): ECDH P-256 + HKDF-SHA256 + AES-256-GCM ----------
+// закрытый ключ сервера — только в секретах (RDX_E2E_PRIV); открытый вшит в сайт. Даже если HTTPS вскроют, запрос и ответ — шифр.
+const te = (x: string) => new TextEncoder().encode(x);
+const b64e = (u: ArrayBuffer | Uint8Array) => { const a = u instanceof Uint8Array ? u : new Uint8Array(u); let x = ""; for (let i = 0; i < a.length; i += 0x8000) x += String.fromCharCode(...a.subarray(i, i + 0x8000)); return btoa(x); };
+const b64d = (x: unknown) => Uint8Array.from(atob(String(x || "")), (c) => c.charCodeAt(0));
+let E2EK: Promise<CryptoKey | null> | null = null;
+const e2ePriv = () => E2EK || (E2EK = (async () => { const j = Deno.env.get("RDX_E2E_PRIV"); return j ? await crypto.subtle.importKey("jwk", JSON.parse(j), { name: "ECDH", namedCurve: "P-256" }, false, ["deriveBits"]) : null; })());
+async function e2eOpen(b: any): Promise<{ key: CryptoKey; body: any } | null> {
+  const priv = await e2ePriv(); if (!priv) return null;
+  const pub = await crypto.subtle.importKey("raw", b64d(b.k), { name: "ECDH", namedCurve: "P-256" }, false, []);
+  const bits = await crypto.subtle.deriveBits({ name: "ECDH", public: pub }, priv, 256);
+  const hk = await crypto.subtle.importKey("raw", bits, "HKDF", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt: b64d(b.s), info: te("rdx-e2e-v1") }, hk, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  const body = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(b.iv), additionalData: te("rdx-e2e:req") }, key, b64d(b.ct))));
+  if (!(Math.abs(Date.now() - Number(body?.ts)) < 600000)) return null;   // старый перехваченный запрос не пройдёт
+  delete body.ts;
+  return { key, body };
+}
+async function e2eSeal(key: CryptoKey, res: Response) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: te("rdx-e2e:res") }, key, te(await res.text()));
+  return new Response(JSON.stringify({ e2e: 1, iv: b64e(iv), ct: b64e(ct) }), { status: res.status, headers: { ...CORS, "Content-Type": "application/json" } });
+}
+const E2E_ONLY = (t: unknown) => typeof t === "string" && (t.startsWith("acc_") || t === "apply" || t === "get" || t === "edit");
 // сравнение секретов без утечки по времени ответа
 function safeEq(a: unknown, b: unknown) {
   const x = new TextEncoder().encode(String(a ?? "")), y = new TextEncoder().encode(String(b ?? ""));
@@ -1680,8 +1704,18 @@ Deno.serve(async (req) => {
     if (up) await (bot === "main" ? onMain(up) : onAI(up)).catch((e) => console.error("update", bot, String(e).slice(0, 300)));
     return new Response("ok");
   }
-  // сайт
-  const b = await req.json().catch(() => null);
+  // сайт: запросы с данными приходят только зашифрованными (второй слой поверх HTTPS)
+  let b = await req.json().catch(() => null);
+  let ek: CryptoKey | null = null;
+  if (b?.e2e) {
+    const o = await e2eOpen(b).catch(() => null);
+    if (!o) return new Response(JSON.stringify({ ok: false, error: "e2e" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    ek = o.key; b = o.body;
+  } else if (E2E_ONLY(b?.type) && Deno.env.get("RDX_E2E_PRIV")) return new Response(JSON.stringify({ ok: false, error: "e2e_required" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  const res = await siteRoute(req, b);
+  return ek ? await e2eSeal(ek, res) : res;
+});
+async function siteRoute(req: Request, b: any): Promise<Response> {
   if (typeof b?.type === "string" && b.type.startsWith("acc_")) return await accApi(req, b).catch((e) => { console.error("acc", e); return accJ({ ok: false, error: "err" }, 500); });
   if (b?.type === "clan") {   // SealsAI просит действие с составом клана (внутренний ключ)
     if (!safeEq(req.headers.get("x-rdx-int"), HOOK)) return new Response("no", { status: 403 });
@@ -1699,4 +1733,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(r), { status: r.status || (r.ok ? 200 : 400), headers: { ...CORS, "Content-Type": "application/json" } });
   }
   return new Response(JSON.stringify({ ok: false }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
-});
+}
