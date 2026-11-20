@@ -161,26 +161,27 @@ const RANK_Q5 = [24, 29, 33, 38, 43, 47, 52, 57, 61, 66, 71, 75, 80, 85, 90];
 const RANK_SEALS = [[37, 12, 1], [41, 13, 2], [46, 14, 2], [51, 16, 2], [56, 17, 3], [60, 19, 3], [65, 20, 4], [70, 21, 4], [74, 23, 4], [79, 24, 5], [84, 26, 5], [89, 27, 6], [93, 28, 6], [100, 30, 6], [107, 32, 7]];
 // 13 Модератор — права модератора; 14 Админ — права модератора + может менять звания бойцам до Маршала
 const TOP_RANK = 14, MOD_RANK = 13, ADMIN_RANK = 14;
-const MARSHAL = 12, MARSHAL_TOKENS = 1500, MARSHAL_PROMO_WEEK = 10, MARSHAL_PROMO_DAYS = 30;
+const MARSHAL = 13;   // промокоды Premium/Plus и раздача 1500 токенов — с 13-го звания (Модератор, Админ)
+const MARSHAL_RANK = 12, MARSHAL_TOKENS = 1500, MARSHAL_PROMO_WEEK = 10, MARSHAL_PROMO_DAYS = 30;
 RANKS.forEach((n, k) => { TIERS["r" + k] = { name: "Боец RDX · " + n + " (" + k + "/" + TOP_RANK + ")", q5: RANK_Q5[k] }; });
 const rankName = (k: number) => RANKS[k] + " (" + k + "/" + TOP_RANK + ")";
 async function rankOf(uid: number): Promise<number | null> {
   const r = (await db("rdx_members?select=rank&active=eq.true&user_id=eq." + uid))?.[0];
   return r ? Number(r.rank) || 0 : null;
 }
-// класс по званию и разделу: 0 стажёр · 1–4 новичок · 5–8 старший · 9–10 главный · 11–13 командир · 14 и создатель — полный класс
+// класс по званию и разделу: 0 стажёр · 1–4 новичок · 5–8 старший · 9–12 главный · 13–14 командир · создатель — полный класс
 const DEPT_P: Record<string, [string, string]> = { "Наука": ["учёный", "учёных"], "Экономика": ["экономист", "экономистов"], "Штурм": ["штурмовик", "штурмовиков"] };
 const DEPT_ICON: Record<string, string> = { "Наука": "🔬", "Экономика": "💰", "Штурм": "⚔️" };
 function classOf(rank: number, dept: string | null, full = false) {
-  if (full || rank >= 14) return "Полный класс";
+  if (full) return "Полный класс";
   const [one, many] = DEPT_P[dept || ""] || ["боец", "бойцов"];
   if (rank <= 0) return "Стажёр " + one;
   if (rank <= 4) return "Новичок " + one;
   if (rank <= 8) return "Старший " + one;
-  if (rank <= 10) return "Главный " + one;
+  if (rank <= 12) return "Главный " + one;
   return "Командир " + many;
 }
-// тип класса — по оружию, по той же лестнице: стажёр · новичок · старший · главный · командир (с 11-го звания и у создателя)
+// тип класса — по оружию, по той же лестнице: стажёр · новичок · старший · главный · командир (13–14 и создатель)
 function typeNoun(weapon: string | null): [string, string] {
   const w = String(weapon || "").toLowerCase();
   if (/рпг|гранат|взрыв|подрыв|c4|с4|динамит|мин[аы]/.test(w)) return ["подрывник", "подрывников"];
@@ -192,15 +193,15 @@ function typeNoun(weapon: string | null): [string, string] {
 function typeOf(rank: number, weapon: string | null, full = false) {
   if (!weapon) return "";
   const [one, many] = typeNoun(weapon);
-  if (full || rank >= 11) return "Командир " + many;
+  if (full || rank >= 13) return "Командир " + many;
   if (rank <= 0) return "Стажёр " + one;
   if (rank <= 4) return "Новичок " + one;
   if (rank <= 8) return "Старший " + one;
   return "Главный " + one;
 }
-// с 12-го звания (и у создателя): все разделы и все классы орудия, основной — в скобках
-const deptText = (rank: number, dept: string | null, full = false) => (full || rank >= 12) ? "Все разделы" + (dept ? " (" + dept + ")" : "") : dept ? (DEPT_ICON[dept] || "") + " " + dept : "не выбран";
-const weaponText = (rank: number, weapon: string | null, full = false) => (full || rank >= 12) ? "Все классы орудия" + (weapon ? " (" + weapon + ")" : "") : weapon || "";
+// с 13-го звания (и у создателя): все разделы и все классы орудия, основной — в скобках
+const deptText = (rank: number, dept: string | null, full = false) => (full || rank >= 13) ? "Все разделы" + (dept ? " (" + dept + ")" : "") : dept ? (DEPT_ICON[dept] || "") + " " + dept : "не выбран";
+const weaponText = (rank: number, weapon: string | null, full = false) => (full || rank >= 13) ? "Все классы орудия" + (weapon ? " (" + weapon + ")" : "") : weapon || "";
 // строки для /tokens: раздел, класс, класс орудия
 async function classLines(uid: number) {
   const m = (await db("rdx_members?select=rank,dept,weapon&active=eq.true&user_id=eq." + uid))?.[0];
@@ -590,7 +591,7 @@ async function setRank(actor: any, id: number, k: number): Promise<{ ok: boolean
   if (!x || !x.active) return { ok: false, text: "Этого бойца нет в составе." };
   const old = Number(x.rank) || 0;
   if (x.user_id && ADMINS.includes(Number(x.user_id))) return { ok: false, text: "👑 Создателю звание не нужно." };
-  if (adminA && (k > MARSHAL || old > MARSHAL)) return { ok: false, text: "Админ меняет звания только до Маршала. Модератора и Админа назначает создатель." };
+  if (adminA && (k > MARSHAL_RANK || old > MARSHAL_RANK)) return { ok: false, text: "Админ меняет звания только до Маршала. Модератора и Админа назначает создатель." };
   if (adminA && Number(x.user_id) === Number(actor.id)) return { ok: false, text: "Себе звание менять нельзя." };
   if (old === k) return { ok: true, text: esc(memName(x)) + " уже " + rankName(k) + "." };
   await patch("rdx_members?id=eq." + id, k > old ? { rank: k, promo_chance: 0 } : { rank: k });
@@ -838,8 +839,8 @@ async function onMain(up: any) {
         const x = (await db("rdx_members?select=nick,username,rank,active&id=eq." + Number(a1)))?.[0];
         if (!x?.active) return send("main", chat, "Этого бойца уже нет в составе.");
         const cur = Number(x.rank) || 0, up = a2 === "up";
-        const maxK = ownerR ? TOP_RANK : MARSHAL;
-        if (!ownerR && cur > MARSHAL) return send("main", chat, "Модератора и Админа повышает и понижает только создатель.");
+        const maxK = ownerR ? TOP_RANK : MARSHAL_RANK;
+        if (!ownerR && cur > MARSHAL_RANK) return send("main", chat, "Модератора и Админа повышает и понижает только создатель.");
         const ks = RANKS.map((_, k) => k).filter((k) => k <= maxK && (up ? k > cur : k < cur));
         if (!ks.length) return send("main", chat, up ? "Выше званий нет." : "Ниже Рядового званий нет.", kb([[["↩️ Назад", "cl:m:" + Number(a1)]]]));
         const grid: [string, string][][] = [];
