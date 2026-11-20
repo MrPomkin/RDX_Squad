@@ -1,0 +1,6 @@
+# GitHub Pages (публикация из ветки): на сайт попадают только файлы сайта, без серверного кода
+exclude:
+  - supabase
+  - .github
+  - README.md
+  - SECURITY_AUDIT.md
