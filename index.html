@@ -414,6 +414,71 @@ footer{position:relative}
 @property --trx{syntax:"*";inherits:false}
 @property --try{syntax:"*";inherits:false}
 @property --ox{syntax:"*";inherits:false}
+/* ===== аккаунт: переход клиньями, страницы входа и аккаунта ===== */
+#axw{position:fixed;inset:0;z-index:84;pointer-events:none}
+#axw i{position:absolute;left:-12%;right:-12%;height:52vh;background:linear-gradient(180deg,#26292e,#15171a 70%);clip-path:polygon(0 0,100% 0,100% 70%,50% 100%,0 70%);border-bottom:2px solid var(--or);transform-origin:50% 0;transform:perspective(900px) translateY(-140vh) rotateX(70deg);will-change:transform;box-shadow:0 30px 60px rgba(0,0,0,.6)}
+#axw i:nth-child(1){top:-6vh}#axw i:nth-child(2){top:26vh}#axw i:nth-child(3){top:58vh;height:56vh}
+#axw.in i{animation:axIn .8s cubic-bezier(.2,.9,.25,1.08) forwards}
+#axw.in i:nth-child(2){animation-delay:.11s}#axw.in i:nth-child(3){animation-delay:.22s}
+#axw.out i{transform:none;animation:axOut .7s cubic-bezier(.55,0,.75,.2) forwards}
+#axw.out i:nth-child(2){animation-delay:.08s}#axw.out i:nth-child(1){animation-delay:.16s}
+@keyframes axIn{from{transform:perspective(900px) translateY(-140vh) rotateX(70deg)}to{transform:perspective(900px) translateY(0) rotateX(0)}}
+@keyframes axOut{from{transform:perspective(900px) translateY(0) rotateX(0)}to{transform:perspective(900px) translateY(150vh) rotateX(-60deg)}}
+.axp{position:fixed;inset:0;z-index:86;overflow:auto;overscroll-behavior:contain;display:flex;align-items:flex-start;justify-content:center;padding:max(70px,9vh) 16px 60px;background:radial-gradient(circle at 50% 0,rgba(255,122,26,.12),transparent 60%),#121316;opacity:0;transition:opacity .35s}
+.axp.show{opacity:1}
+.axp[hidden]{display:none}
+.ax-box{width:100%;max-width:440px;opacity:0;transform:translateY(30px) scale(.97);transition:opacity .5s .15s,transform .6s .15s var(--ease)}
+.ax-box.wide{max-width:860px}
+.axp.show .ax-box{opacity:1;transform:none}
+.ax-close{position:fixed;top:16px;right:16px;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:#1a1c20;color:var(--ink);font-size:18px;cursor:pointer;z-index:2}
+.ax-tabs{display:flex;gap:6px;padding:5px;border:1px solid var(--line);border-radius:14px;background:#16181b;width:max-content;margin-bottom:22px}
+.ax-tabs button{font:600 13px var(--mono);letter-spacing:.06em;padding:10px 16px;border-radius:10px;border:0;background:none;color:var(--muted);cursor:pointer}
+.ax-tabs button.on{background:var(--or);color:#141414}
+.ax-h{font:900 clamp(38px,7vw,64px)/.95 var(--display);letter-spacing:-.03em;margin:0 0 10px;text-transform:uppercase}
+.ax-sub,.ax-note{color:var(--muted);margin:0 0 18px;line-height:1.5}
+.ax-step{display:grid;gap:14px}
+.ax-rem{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:14px;cursor:pointer}
+.ax-rem input{width:18px;height:18px;accent-color:var(--or)}
+.ax-go{justify-content:center}
+.ax-link{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;justify-self:start;padding:0;font:inherit}
+.ax-err{color:#ff8a7a;min-height:1.4em;margin:14px 0 0}
+.ax-err a{color:var(--or)}
+.ax-safe{color:var(--dim);font-size:11px;letter-spacing:.04em;margin-top:22px;line-height:1.6}
+.ax-qr{background:#fff;padding:12px;border-radius:14px;width:max-content;margin:0 auto}
+.ax-qr img,.ax-qr canvas,.ax-qr svg{display:block;width:200px;height:200px}
+.ax-secret{display:block;text-align:center;font:600 13px var(--mono);letter-spacing:.12em;color:var(--or);word-break:break-all}
+.acc-slot{display:inline-flex;gap:8px}
+.acc-slot.m{display:flex;gap:18px}
+.acc-slot.inline{display:contents}
+@media (max-width:900px){.nav .acc-slot{display:none}}
+.acc-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:18px}
+.acc-card{grid-column:span 6;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,var(--panel2),var(--bg2));padding:22px}
+.acc-card.full{grid-column:1/-1}
+@media (max-width:760px){.acc-card{grid-column:1/-1}}
+.acc-card h3{margin:0 0 14px;font:800 15px var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--or)}
+.acc-row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.acc-row:last-child{border-bottom:0}
+.acc-row span{color:var(--muted)}
+.acc-row b{text-align:right}
+.acc-rank{font:900 clamp(30px,5vw,46px)/1 var(--display);text-transform:uppercase;letter-spacing:-.02em}
+.acc-bar{height:12px;border-radius:8px;background:#0f1012;border:1px solid var(--line);overflow:hidden;margin:14px 0 6px}
+.acc-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--or3,#c2520f),var(--or));transition:width 1.2s var(--ease)}
+.acc-hist{list-style:none;margin:0;padding:0;max-height:320px;overflow:auto}
+.acc-hist li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;display:flex;gap:10px}
+.acc-hist time{color:var(--dim);font:600 11px var(--mono);white-space:nowrap;padding-top:3px}
+.acc-sess{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+.acc-sess small{display:block;color:var(--dim)}
+.acc-sess .tag{color:var(--or);font:600 11px var(--mono)}
+.acc-btn{border:1px solid var(--line);background:#1a1c20;color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;font:600 12px var(--body);white-space:nowrap}
+.acc-btn.or{background:var(--or);border-color:var(--or);color:#141414}
+.acc-btn.red{border-color:#5a2b26;color:#ff8a7a}
+.acc-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.acc-adm{width:100%;border-collapse:collapse;font-size:13px}
+.acc-adm td,.acc-adm th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.acc-adm th{color:var(--dim);font:600 11px var(--mono);letter-spacing:.06em}
+.acc-adm select,.acc-adm input{background:#16181b;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px;font:inherit;max-width:150px}
+.acc-scroll{overflow:auto}
+@media (prefers-reduced-motion:reduce){#axw{display:none}}
 /* секции «наезжают» при прокрутке */
 .curtain>.wrap{transform-origin:50% 30%;will-change:transform,opacity}
 .sec-head h2{transform:none}
@@ -501,6 +566,8 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
 @media (prefers-reduced-motion:reduce){#scr-label{display:none}.wd,.steps-side li{opacity:1!important;transform:none!important;filter:none!important}.rv{-webkit-mask-image:none!important;mask-image:none!important}
 *,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}.finale .sub,.finale .cta{opacity:1;transform:none}}
 </style>
+<!-- QR-код для Google Authenticator: qrcode-generator 1.4.4 (MIT, Kazuhiko Arase) -->
+<script src="assets/qr.js" defer></script>
 </head>
 <body>
 <div class="bgfx"></div>
@@ -515,6 +582,47 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
 </div>
 
 <div id="bg3d" aria-hidden="true"></div>
+<div id="axw" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="axp" id="authx" role="dialog" aria-modal="true" aria-label="Log_In / Sign_In" hidden>
+  <button type="button" class="ax-close" data-close aria-label="Закрыть">✕</button>
+  <div class="ax-box">
+    <div class="ax-tabs"><button type="button" data-tab="login">Log_In</button><button type="button" data-tab="signup">Sign_In</button></div>
+    <h2 class="ax-h" id="axH">Log_In</h2>
+    <p class="ax-sub" id="axSub"></p>
+    <div class="ax-step" data-step="nick">
+      <div class="fld"><input id="axNick" placeholder=" " maxlength="40" autocomplete="username" autocapitalize="off" spellcheck="false"><label for="axNick" data-ax="nick">Ник в Telegram (@username)</label><i class="bar"></i></div>
+      <label class="ax-rem"><input type="checkbox" id="axRem"><span data-ax="rem">Запомнить меня на этом устройстве</span></label>
+      <button type="button" class="btn btn-or ax-go" id="axSend"><span class="lbl" data-ax="send">Получить код в Telegram</span><span class="spin"></span></button>
+    </div>
+    <div class="ax-step" data-step="code" hidden>
+      <div class="fld"><input id="axCode" placeholder=" " maxlength="6" inputmode="numeric" autocomplete="one-time-code"><label for="axCode" data-ax="code">Код из Telegram</label><i class="bar"></i></div>
+      <button type="button" class="btn btn-or ax-go" id="axVerify"><span class="lbl" data-ax="enter">Войти</span><span class="spin"></span></button>
+      <button type="button" class="ax-link" id="axBack" data-ax="back">← Другой ник</button>
+    </div>
+    <div class="ax-step" data-step="email" hidden>
+      <p class="ax-note" data-ax="emailNote">Для аккаунта создателя нужна защита: подтверди почту — придёт письмо со ссылкой.</p>
+      <div class="fld"><input id="axEmail" type="email" placeholder=" " maxlength="120" autocomplete="email"><label for="axEmail">E-mail</label><i class="bar"></i></div>
+      <button type="button" class="btn btn-or ax-go" id="axMail"><span class="lbl" data-ax="mail">Отправить письмо</span><span class="spin"></span></button>
+    </div>
+    <div class="ax-step" data-step="totp_setup" hidden>
+      <p class="ax-note" data-ax="totpNote">Открой Google Authenticator → «+» → «Сканировать QR-код» (или введи ключ вручную), затем введи 6 цифр из приложения.</p>
+      <div class="ax-qr" id="axQr"></div>
+      <code class="ax-secret" id="axSecret"></code>
+      <div class="fld"><input id="axTotp1" placeholder=" " maxlength="6" inputmode="numeric" autocomplete="one-time-code"><label for="axTotp1" data-ax="totp">Код из Google Authenticator</label><i class="bar"></i></div>
+      <button type="button" class="btn btn-or ax-go" id="axTotpSet"><span class="lbl" data-ax="enter">Войти</span><span class="spin"></span></button>
+    </div>
+    <div class="ax-step" data-step="totp" hidden>
+      <div class="fld"><input id="axTotp2" placeholder=" " maxlength="6" inputmode="numeric" autocomplete="one-time-code"><label for="axTotp2" data-ax="totp">Код из Google Authenticator</label><i class="bar"></i></div>
+      <button type="button" class="btn btn-or ax-go" id="axTotpGo"><span class="lbl" data-ax="enter">Войти</span><span class="spin"></span></button>
+    </div>
+    <p class="ax-err" id="axErr" role="alert"></p>
+    <p class="ax-safe mono" data-ax="safe">🔒 Вход привязан к этому устройству. О каждом входе бот RDX пишет тебе в Telegram.</p>
+  </div>
+</div>
+<div class="axp" id="accx" role="dialog" aria-modal="true" aria-label="Аккаунт" hidden>
+  <button type="button" class="ax-close" data-close aria-label="Закрыть">✕</button>
+  <div class="ax-box wide" id="accBody"></div>
+</div>
 <div class="cur" id="cur"></div>
 <div class="cur-ring" id="ring"><span id="ringTxt"></span></div>
 <canvas id="trail"></canvas>
@@ -535,6 +643,7 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
       <a href="#help" data-i18n="nav.help">Нужна помощь</a>
     </nav>
     <div class="lang" id="lang" role="group" aria-label="Language"></div>
+    <span class="acc-slot"><button type="button" class="btn btn-ghost btn-sm acc-open" data-mode="login" data-cursor="IN"><span class="lbl">Log_In</span></button><button type="button" class="btn btn-ghost btn-sm acc-open" data-mode="signup" data-cursor="UP"><span class="lbl">Sign_In</span></button></span>
     <a class="btn btn-or btn-sm magnet tg-link" href="#" target="_blank" rel="noopener" data-cursor="TG"><span class="lbl" data-i18n="nav.bot">Открыть бота</span></a>
     <button class="burger" id="burger" aria-label="Меню"><i></i><i></i><i></i></button>
   </div>
@@ -545,6 +654,7 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
   <a href="#apply" data-i18n="nav.apply">Заявка</a>
   <a href="#help" data-i18n="nav.help">Нужна помощь</a>
   <a href="#" class="tg-link or" target="_blank" rel="noopener" data-i18n="nav.bot">Открыть бота</a>
+  <span class="acc-slot m"><a href="#" class="acc-open" data-mode="login">Log_In</a><a href="#" class="acc-open" data-mode="signup">Sign_In</a></span>
 </div>
 
 <!-- эмблема (используется в нескольких местах) -->
@@ -599,6 +709,7 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
         <p class="lead rv" data-i18n-html="hero.lead"><b>Revolvers and Explosives.</b> Мы исследуем каждый уголок Animal Company, проводим регулярные рейды и захватываем позиции других кланов.</p>
         <div class="cta rv">
           <a class="btn btn-or magnet" href="#apply" data-cursor="GO"><span class="lbl" data-i18n="hero.apply">Подать заявку</span><span class="spin"></span></a>
+          <span class="acc-slot inline"><button type="button" class="btn btn-ghost acc-open" data-mode="login" data-cursor="IN"><span class="lbl">Log_In</span></button><button type="button" class="btn btn-ghost acc-open" data-mode="signup" data-cursor="UP"><span class="lbl">Sign_In</span></button></span>
           <a class="btn btn-ghost magnet tg-link" href="#" target="_blank" rel="noopener" data-cursor="TG"><span class="lbl"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.6 20c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6 13.5l-4.9-1.5c-1.1-.3-1.1-1.1.2-1.6l19.2-7.4c.9-.3 1.7.2 1.4 1.3z"/></svg><span data-i18n="hero.bot">Открыть бота</span></span></a>
         </div>
       </div>
@@ -794,6 +905,7 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
     <div class="cta">
       <a class="btn btn-or magnet" href="#apply" data-cursor="GO"><span class="lbl" data-i18n="hero.apply">Подать заявку</span><span class="spin"></span></a>
       <a class="btn btn-ghost magnet tg-link" href="#" target="_blank" rel="noopener" data-cursor="TG"><span class="lbl" data-i18n="hero.bot">Открыть бота</span></a>
+      <span class="acc-slot inline"><button type="button" class="btn btn-ghost acc-open" data-mode="login" data-cursor="IN"><span class="lbl">Log_In</span></button><button type="button" class="btn btn-ghost acc-open" data-mode="signup" data-cursor="UP"><span class="lbl">Sign_In</span></button></span>
     </div>
   </section>
   <section class="outro" id="outro" aria-hidden="true">
@@ -970,6 +1082,157 @@ function buildClone(){
   dst.querySelectorAll(".row,.ch,.hero-sub,.lead,.wd").forEach(e => { e.removeAttribute("style"); });
   dst.querySelectorAll(".wd").forEach(e => e.classList.add("in"));
   dst.querySelectorAll("a").forEach(e => e.setAttribute("tabindex", "-1"));
+}
+
+/* ===== аккаунт на сайте: вход по коду из Telegram, сессия привязана к устройству ===== */
+function account(){
+  const AX = {
+    ru: { login: "Вход в аккаунт RDX: введи свой @ник — код придёт в Telegram от бота RDX.", signup: "Регистрация: сначала открой бота RDX и нажми «Старт», потом введи свой @ник — придёт код.",
+      need_bot: "Сначала открой бота и нажми «Старт», потом вернись сюда и запроси код снова:", exists: "Аккаунт уже есть — переключись на Log_In.", no_account: "Аккаунта нет — сначала зарегистрируйся (Sign_In).",
+      rate: "Слишком много попыток. Подожди час.", banned: "Доступ закрыт: ты заблокирован в RDX.", code: "Неверный код.", expired: "Код устарел — запроси новый.", session: "Сессия устарела — войди заново.",
+      mail: "Не удалось отправить письмо. Попробуй позже.", email: "Проверь адрес почты.", email_mismatch: "Почта не совпала — отправь письмо ещё раз.", err: "Ошибка сервера. Попробуй ещё раз.", sent: "Код отправлен в Telegram.",
+      mailSent: "Письмо отправлено. Открой его на этом устройстве и нажми ссылку — сайт продолжит вход.", account: "Аккаунт", nick: "Ник в Telegram (@username)", badnick: "Введи свой ник в Telegram, например @Mr_Wugi4." },
+    en: { login: "Log in to RDX: enter your @username — the RDX bot will send a code in Telegram.", signup: "Sign up: first open the RDX bot and press Start, then enter your @username to get a code.",
+      need_bot: "Open the bot and press Start first, then come back and request the code again:", exists: "You already have an account — switch to Log_In.", no_account: "No account yet — sign up first (Sign_In).",
+      rate: "Too many attempts. Wait an hour.", banned: "Access denied: you are banned in RDX.", code: "Wrong code.", expired: "The code expired — request a new one.", session: "Session expired — log in again.",
+      mail: "Couldn't send the email. Try later.", email: "Check the email address.", email_mismatch: "Email didn't match — send it again.", err: "Server error. Try again.", sent: "Code sent to Telegram.",
+      mailSent: "Email sent. Open it on this device and tap the link — the site will continue.", account: "Account", nick: "Telegram @username", badnick: "Enter your Telegram username, e.g. @Mr_Wugi4." },
+  };
+  const ax = (k) => (AX[lang] || AX.ru)[k] || AX.ru[k] || k;
+  const st = { mode: "login", nick: "", pending: localStorage.getItem("rdx_pending") || "", token: "" };
+  try { st.token = localStorage.getItem("rdx_tok") || sessionStorage.getItem("rdx_tok") || ""; } catch {}
+  let fpP = null;
+  const fp = () => fpP || (fpP = (async () => {
+    const c = document.createElement("canvas"); c.width = 240; c.height = 60; const x = c.getContext("2d");
+    x.textBaseline = "top"; x.font = "16px Arial"; x.fillStyle = "#f60"; x.fillRect(10, 10, 100, 30); x.fillStyle = "#069"; x.fillText("RDX fp 2026", 4, 20);
+    const sw = Math.min(screen.width, screen.height), sh = Math.max(screen.width, screen.height);
+    const parts = [navigator.userAgent, navigator.language, sw + "x" + sh + "x" + screen.colorDepth, devicePixelRatio, Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.platform, navigator.hardwareConcurrency, navigator.deviceMemory || 0, navigator.maxTouchPoints || 0, c.toDataURL()];
+    const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(parts.join("|")));
+    return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  })());
+  const dev = () => { const u = navigator.userAgent; const os = /Android/.test(u) ? "Android" : /iPhone|iPad/.test(u) ? "iOS" : /Windows/.test(u) ? "Windows" : /Mac/.test(u) ? "macOS" : /Linux/.test(u) ? "Linux" : "?";
+    const br = /Telegram/.test(u) || window.Telegram?.WebApp?.initData ? "Telegram" : /Edg\//.test(u) ? "Edge" : /OPR\//.test(u) ? "Opera" : /Firefox/.test(u) ? "Firefox" : /Chrome/.test(u) ? "Chrome" : /Safari/.test(u) ? "Safari" : "браузер";
+    return os + " · " + br + " · " + Math.min(screen.width, screen.height) + "×" + Math.max(screen.width, screen.height); };
+  const api = async (body) => { try { const r = await fetch(CFG.api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, fp: await fp(), dev: dev() }) }); return await r.json().catch(() => ({ ok: false, error: "err" })); } catch { return { ok: false, error: "err" }; } };
+  const W = $("#axw"), A = $("#authx"), C = $("#accx");
+  let busy = false;
+  // переход: клинья падают сверху в 3D, закрывают экран — и открывается страница
+  const openPage = (el) => new Promise((res) => {
+    if (busy) return res(); busy = true; window.RDX_LOCK = true;
+    W.classList.remove("out"); void W.offsetWidth; W.classList.add("in");
+    setTimeout(() => { el.hidden = false; requestAnimationFrame(() => el.classList.add("show")); W.classList.remove("in"); busy = false; res(); }, 820);
+  });
+  const closePage = (el) => {
+    if (busy || el.hidden) return; busy = true;
+    el.classList.remove("show");
+    W.classList.remove("out"); W.classList.add("in");
+    setTimeout(() => { el.hidden = true; W.classList.remove("in"); void W.offsetWidth; W.classList.add("out"); setTimeout(() => { W.classList.remove("out"); busy = false; window.RDX_LOCK = false; }, 950); }, 420);
+  };
+  const step = (n) => { A.querySelectorAll(".ax-step").forEach((e) => e.hidden = e.dataset.step !== n); $("#axErr").textContent = ""; const f = A.querySelector('.ax-step[data-step="' + n + '"] input'); if (f) setTimeout(() => f.focus(), 400); };
+  const err = (e, extra) => { const m = $("#axErr"); m.textContent = ax(e) + (extra ? " " : ""); if (extra) m.append(extra); };
+  const tabs = (m) => { st.mode = m; A.querySelectorAll(".ax-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === m)); $("#axH").textContent = m === "signup" ? "Sign_In" : "Log_In"; $("#axSub").textContent = ax(m); };
+  const load = async (btn, fn) => { btn.classList.add("loading"); btn.disabled = true; try { await fn(); } finally { btn.classList.remove("loading"); btn.disabled = false; } };
+  const saveToken = (t) => { st.token = t; try { (($("#axRem").checked) ? localStorage : sessionStorage).setItem("rdx_tok", t); localStorage.removeItem("rdx_pending"); } catch {} };
+  const showTotp = (r) => {
+    step("totp_setup"); $("#axSecret").textContent = r.secret || ""; const q = $("#axQr"); q.innerHTML = "";
+    const qf = window.qrcode || window.__qrmod?.default || window.__qrmod;
+    if (typeof qf === "function" && r.uri) { const qr = qf(0, "M"); qr.addData(r.uri); qr.make(); q.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2 }); q.hidden = false; } else q.hidden = true;
+  };
+  const next = async (r) => {
+    if (!r.ok) return err(r.error === "code" && r.left != null ? "code" : r.error);
+    if (r.pending) { st.pending = r.pending; try { localStorage.setItem("rdx_pending", r.pending); localStorage.setItem("rdx_rem", $("#axRem").checked ? "1" : ""); } catch {} }
+    if (r.step === "email") return step("email");
+    if (r.step === "totp_setup") return showTotp(r);
+    if (r.step === "totp") return step("totp");
+    if (r.step === "done") { saveToken(r.token || st.pending); slots(true); closePage(A); setTimeout(openAccount, 1700); }
+  };
+  async function openAuth(mode){ tabs(mode); step("nick"); await openPage(A); }
+  $("#axSend").addEventListener("click", (e) => load(e.currentTarget, async () => {
+    st.nick = $("#axNick").value.trim().replace(/^@/, "").replace(/^https?:\/\/t\.me\//, "");
+    if (!/^[A-Za-z0-9_]{4,32}$/.test(st.nick)) return err("badnick");
+    const r = await api({ type: "acc_code", nick: st.nick, mode: st.mode });
+    if (r.ok) { step("code"); $("#axErr").textContent = ax("sent"); return; }
+    if (r.error === "need_bot") { const a = document.createElement("a"); a.href = "https://t.me/" + (r.bot || CFG.bot) + "?start=site"; a.target = "_blank"; a.rel = "noopener"; a.textContent = "@" + (r.bot || CFG.bot); return err("need_bot", a); }
+    err(r.error);
+  }));
+  $("#axVerify").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_verify", nick: st.nick, code: $("#axCode").value, remember: $("#axRem").checked }))));
+  $("#axBack").addEventListener("click", () => step("nick"));
+  $("#axMail").addEventListener("click", (e) => load(e.currentTarget, async () => { const r = await api({ type: "acc_email", pending: st.pending, email: $("#axEmail").value }); if (r.ok) $("#axErr").textContent = ax("mailSent"); else err(r.error); }));
+  $("#axTotpSet").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_totp", pending: st.pending, code: $("#axTotp1").value, remember: $("#axRem").checked }))));
+  $("#axTotpGo").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_totp", pending: st.pending, code: $("#axTotp2").value, remember: $("#axRem").checked }))));
+  for (const [inp, btn] of [["#axNick", "#axSend"], ["#axCode", "#axVerify"], ["#axEmail", "#axMail"], ["#axTotp1", "#axTotpSet"], ["#axTotp2", "#axTotpGo"]]) $(inp).addEventListener("keydown", (e) => { if (e.key === "Enter") $(btn).click(); });
+  A.querySelectorAll(".ax-tabs button").forEach((b) => b.addEventListener("click", () => { tabs(b.dataset.tab); step("nick"); }));
+  [A, C].forEach((el) => el.querySelector("[data-close]").addEventListener("click", () => closePage(el)));
+  addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!A.hidden) closePage(A); else if (!C.hidden) closePage(C); } });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest(".acc-open"); if (!b) return;
+    e.preventDefault(); $("#mmenu")?.classList.remove("open"); document.body.classList.remove("menu-open");
+    if (b.dataset.mode === "account") openAccount(); else openAuth(b.dataset.mode);
+  });
+  // кнопки в шапке: до входа — Log_In / Sign_In, после — «Аккаунт»
+  function slots(on){
+    $$(".acc-slot").forEach((sl) => {
+      const big = sl.classList.contains("inline"), mob = sl.classList.contains("m");
+      sl.innerHTML = on
+        ? (mob ? '<a href="#" class="acc-open" data-mode="account">👤 ' + ax("account") + '</a>' : '<button type="button" class="btn ' + (big ? "" : "btn-sm ") + 'btn-ghost acc-open" data-mode="account" data-cursor="ME"><span class="lbl">👤 ' + ax("account") + '</span></button>')
+        : (mob ? '<a href="#" class="acc-open" data-mode="login">Log_In</a><a href="#" class="acc-open" data-mode="signup">Sign_In</a>'
+               : ["login", "signup"].map((m) => '<button type="button" class="btn ' + (big ? "" : "btn-sm ") + 'btn-ghost acc-open" data-mode="' + m + '" data-cursor="' + (m === "login" ? "IN" : "UP") + '"><span class="lbl">' + (m === "login" ? "Log_In" : "Sign_In") + '</span></button>').join(""));
+    });
+  }
+  const tm = (x) => { const d = new Date(x); return d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }); };
+  const H = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  async function openAccount(){
+    const r = await api({ type: "acc_me", token: st.token });
+    if (!r.ok) { try { localStorage.removeItem("rdx_tok"); sessionStorage.removeItem("rdx_tok"); } catch {} st.token = ""; slots(false); return openAuth("login"); }
+    const me = r.me, m = me.member;
+    const ICON = { rank_up: "⬆️", rank_down: "⬇️", warn: "⚠️", login: "🔐", security: "🛡", dept: "🗂", weapon: "🔫", chance: "🎯", kick: "👢", fire: "📄" };
+    $("#accBody").innerHTML = `
+      <div class="acc-top"><div><div class="mono" style="color:var(--or);letter-spacing:.14em;font-size:12px">RDX · ACCOUNT</div><h2 class="ax-h" style="margin:8px 0 0">${H(m?.nick || me.name || me.username)}</h2><div style="color:var(--muted)">@${H(me.username)}${me.owner ? " · 👑 создатель" : me.staff ? " · 🛡 модератор" : ""}</div></div>
+        <button type="button" class="acc-btn red" id="accOut">Выйти</button></div>
+      <div class="acc-grid">
+        ${m ? `<div class="acc-card"><h3>Звание</h3><div class="acc-rank">${H(m.rankName)}</div><div style="color:var(--dim);font:600 12px var(--mono);margin-top:6px">${me.owner ? "выше всех званий" : m.rank + " / " + m.top}</div>
+          ${m.next ? `<div class="acc-bar"><i style="--w:${m.chance}%"></i></div><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"><span>Шанс на повышение до «${H(m.next)}»</span><b style="color:var(--ink)">${m.chance}%</b></div>` : ""}</div>
+        <div class="acc-card"><h3>Служба</h3>
+          <div class="acc-row"><span>Раздел</span><b>${H(m.dept)}</b></div><div class="acc-row"><span>Класс</span><b>${H(m.cls)}</b></div>
+          ${m.type ? `<div class="acc-row"><span>Тип класса</span><b>${H(m.type)}</b></div>` : ""}${m.weapon ? `<div class="acc-row"><span>Класс орудия</span><b>${H(m.weapon)}</b></div>` : ""}
+          <div class="acc-row"><span>Варны</span><b>${me.warns} / 5</b></div><div class="acc-row"><span>В составе с</span><b>${H(new Date(m.joined).toLocaleDateString("ru-RU"))}</b></div></div>`
+        : `<div class="acc-card full"><h3>Статус</h3><p style="margin:0;color:var(--muted)">Ты пока не в составе RDX. Подай заявку на сайте или в боте — после принятия здесь появятся звание, раздел и класс.</p></div>`}
+        <div class="acc-card"><h3>История</h3><ul class="acc-hist">${(me.history || []).map((h) => `<li><time>${tm(h.created_at)}</time><span>${ICON[h.kind] || "•"} ${H(h.text)}</span></li>`).join("") || '<li><span style="color:var(--dim)">Пока пусто</span></li>'}</ul></div>
+        <div class="acc-card"><h3>Входы в аккаунт</h3>${(me.sessions || []).map((x) => `<div class="acc-sess"><div>${H(x.country || "—")} · <code>${H(x.ip)}</code>${x.current ? ' <span class="tag">● это устройство</span>' : ""}<small>${H(x.dev || "")} · ${tm(x.last_seen)}${x.remember ? " · запомнен" : ""}</small></div>${x.current ? "" : `<button type="button" class="acc-btn red" data-kill="${x.id}">Выкинуть</button>`}</div>`).join("")}
+          <button type="button" class="acc-btn red" data-kill="all" style="margin-top:14px">Выкинуть всех, кроме меня</button></div>
+        ${me.owner ? '<div class="acc-card full"><h3>Админ-панель</h3><div id="accAdm" style="color:var(--dim)">Загрузка…</div></div>' : ""}
+      </div>`;
+    if (C.hidden) await openPage(C);
+    requestAnimationFrame(() => C.querySelectorAll(".acc-bar i").forEach((i) => i.style.width = i.style.getPropertyValue("--w")));
+    $("#accOut").onclick = async () => { await api({ type: "acc_logout", token: st.token }); try { localStorage.removeItem("rdx_tok"); sessionStorage.removeItem("rdx_tok"); } catch {} st.token = ""; slots(false); closePage(C); };
+    C.querySelectorAll("[data-kill]").forEach((b) => b.onclick = async () => { b.disabled = true; await api({ type: "acc_kill", token: st.token, id: b.dataset.kill === "all" ? "all" : Number(b.dataset.kill) }); openAccount(); });
+    if (me.owner) admin();
+  }
+  async function admin(){
+    const box = $("#accAdm"); const r = await api({ type: "acc_admin", token: st.token });
+    if (!r.ok) { box.textContent = "Нет доступа"; return; }
+    box.innerHTML = `<div class="acc-scroll"><table class="acc-adm"><tr><th>БОЕЦ</th><th>ЗВАНИЕ</th><th>ШАНС</th><th>РАЗДЕЛ</th><th>ОРУДИЕ</th><th>ВАРНЫ</th><th></th></tr>
+      ${r.members.map((x) => `<tr data-id="${x.id}"><td>${H(x.nick || "")}${x.username ? "<br><small style='color:var(--dim)'>@" + H(x.username) + "</small>" : ""}</td>
+        <td>${x.owner ? "👑" : `<select data-act="rank">${r.ranks.map((n, i) => `<option value="${i}"${i === x.rank ? " selected" : ""}>${i} · ${H(n)}</option>`).join("")}</select>`}</td>
+        <td>${x.owner ? "—" : `<select data-act="chance">${Array.from({ length: 11 }, (_, i) => i * 10).map((v) => `<option value="${v}"${v === x.chance ? " selected" : ""}>${v}%</option>`).join("")}</select>`}</td>
+        <td><select data-act="dept"><option value="">—</option>${r.depts.map((d) => `<option${d === x.dept ? " selected" : ""}>${H(d)}</option>`).join("")}</select></td>
+        <td><input data-act="weapon" value="${H(x.weapon || "")}" placeholder="оружие" list="accW"></td>
+        <td>${x.warns}/5</td><td>${x.owner ? "" : '<button type="button" class="acc-btn" data-do="warn">Варн</button>'}</td></tr>`).join("")}</table>
+      <datalist id="accW">${r.weapons.map((w) => `<option value="${H(w)}">`).join("")}</datalist></div>
+      <p id="accAdmMsg" style="color:var(--or);min-height:1.4em"></p>
+      <h3 style="margin-top:18px">Последние входы</h3>${r.logins.map((x) => `<div class="acc-sess"><div>@${H(x.who)} · ${H(x.country || "—")} · <code>${H(x.ip)}</code><small>${H(x.dev || "")} · ${tm(x.created_at)}</small></div></div>`).join("") || '<p style="color:var(--dim)">Пока нет</p>'}`;
+    const doAct = async (id, act, value) => { const m2 = $("#accAdmMsg"); m2.textContent = "…"; const q = await api({ type: "acc_admin_do", token: st.token, member: id, act, value }); m2.textContent = q.text || (q.ok ? "Готово" : "Ошибка"); if (act === "warn" || act === "rank") setTimeout(admin, 900); };
+    box.querySelectorAll("select[data-act]").forEach((sel) => sel.onchange = () => sel.value !== "" && doAct(Number(sel.closest("tr").dataset.id), sel.dataset.act, sel.value));
+    box.querySelectorAll("input[data-act]").forEach((inp) => inp.onchange = () => inp.value.trim() && doAct(Number(inp.closest("tr").dataset.id), "weapon", inp.value.trim()));
+    box.querySelectorAll("[data-do=warn]").forEach((b) => b.onclick = () => { if (confirm("Выдать варн?")) doAct(Number(b.closest("tr").dataset.id), "warn", ""); });
+  }
+  // создатель открыл ссылку из письма — продолжаем вход
+  const hash = location.hash;
+  if (/access_token=/.test(hash) && st.pending) {
+    const at = new URLSearchParams(hash.slice(1)).get("access_token");
+    history.replaceState(null, "", location.pathname + location.search);
+    (async () => { try { $("#axRem").checked = localStorage.getItem("rdx_rem") === "1"; } catch {} tabs("login"); await openPage(A); const r = await api({ type: "acc_email_link", pending: st.pending, access_token: at }); if (r.ok) next(r); else { step("nick"); err(r.error); } })();
+  } else if (st.token) api({ type: "acc_me", token: st.token }).then((r) => { if (r.ok) slots(true); else { try { localStorage.removeItem("rdx_tok"); sessionStorage.removeItem("rdx_tok"); } catch {} st.token = ""; } });
 }
 
 /* ===== ссылки на бота ===== */
@@ -1580,7 +1843,7 @@ function smooth(){
   const S = { cur: scrollY, target: scrollY, jump: false, last: 0, touch: false, ty: 0, tt: 0, tv: 0 };
   const PH = () => innerWidth < 700;   // телефон: почти без ограничений, палец ведёт страницу 1:1
   const maxY = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
-  const native = (t) => !!(t && t.closest && t.closest("textarea, select, #mmenu, input[type=range]"));
+  const native = (t) => !!(t && t.closest && t.closest("textarea, select, #mmenu, input[type=range], .axp"));
   const inGal = (t) => !!(t && t.closest && t.closest(".gal"));
   // колесо и тачпад
   addEventListener("wheel", e => {
@@ -1806,7 +2069,7 @@ function clickBoom(){
 $("#year").textContent = new Date().getFullYear();
 splitTitle(); applyLang(); tgLinks();
 boot(() => { reveals(); titleFx(); scrambleWatch(); });
-smooth(); bg3d(); cursor(); embers(); bands(); navFx(); form(); faller(); scrollFx(); clickBoom(); liveStats();
+smooth(); bg3d(); account(); cursor(); embers(); bands(); navFx(); form(); faller(); scrollFx(); clickBoom(); liveStats();
 </script>
 </body>
 </html>
