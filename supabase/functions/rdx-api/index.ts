@@ -168,17 +168,16 @@ async function rankOf(uid: number): Promise<number | null> {
   const r = (await db("rdx_members?select=rank&active=eq.true&user_id=eq." + uid))?.[0];
   return r ? Number(r.rank) || 0 : null;
 }
-// класс по званию и разделу: 0 новичок · 1–4 стажёр · 5–8 основной · 9–10 старший · 11 главный · 12–13 командир · 14 и создатель — полный класс
+// класс по званию и разделу: 0 стажёр · 1–4 новичок · 5–8 старший · 9–10 главный · 11–13 командир · 14 и создатель — полный класс
 const DEPT_P: Record<string, [string, string]> = { "Наука": ["учёный", "учёных"], "Экономика": ["экономист", "экономистов"], "Штурм": ["штурмовик", "штурмовиков"] };
 const DEPT_ICON: Record<string, string> = { "Наука": "🔬", "Экономика": "💰", "Штурм": "⚔️" };
 function classOf(rank: number, dept: string | null, full = false) {
   if (full || rank >= 14) return "Полный класс";
   const [one, many] = DEPT_P[dept || ""] || ["боец", "бойцов"];
-  if (rank <= 0) return "Новичок " + one;
-  if (rank <= 4) return "Стажёр " + one;
-  if (rank <= 8) return one[0].toUpperCase() + one.slice(1);
-  if (rank <= 10) return "Старший " + one;
-  if (rank === 11) return "Главный " + one;
+  if (rank <= 0) return "Стажёр " + one;
+  if (rank <= 4) return "Новичок " + one;
+  if (rank <= 8) return "Старший " + one;
+  if (rank <= 10) return "Главный " + one;
   return "Командир " + many;
 }
 // строки для /tokens: раздел, класс, класс орудия
