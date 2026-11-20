@@ -14,7 +14,7 @@ const HOOK = Deno.env.get("RDX_HOOK_SECRET") || "";
 const ADMINS = (Deno.env.get("RDX_ADMINS") || "6474321250").split(",").map((x) => Number(x.trim())).filter(Boolean);
 const OWNER_NICK = (Deno.env.get("RDX_OWNER_USERNAME") || "Mr_Wugi4").toLowerCase();
 // создатель — по id или по нику; модераторы — те, кто ввёл ключ модератора
-const isOwner = (u: any) => ADMINS.includes(Number(u?.id)) || String(u?.username || "").toLowerCase() === OWNER_NICK;
+const isOwner = (u: any) => ADMINS.includes(Number(u?.id));   // только по id: ник можно освободить и занять — по нику создатель не определяется
 let MODS: { at: number; ids: number[] } | null = null;
 async function modIds(): Promise<number[]> {
   if (!MODS || Date.now() - MODS.at > 30000) MODS = { at: Date.now(), ids: ((await db("rdx_mods?select=user_id")) || []).map((r: any) => Number(r.user_id)) };
@@ -57,17 +57,66 @@ type Bot = "main" | "ai";
 
 // ---------- база ----------
 const H = { apikey: SK, Authorization: "Bearer " + SK, "Content-Type": "application/json" };
+// ---------- шифрование: AES-256-GCM, ключ только в секретах сервера (RDX_ENC_KEY) ----------
+// переписка с RDX_AI, допросы, тексты заявок, черновики заявок и причины варнов лежат в базе как «enc1:…»
+let RK: Promise<CryptoKey | null> | null = null;
+const rKey = () => RK || (RK = (async () => {
+  const k = Deno.env.get("RDX_ENC_KEY"); if (!k) return null;
+  return await crypto.subtle.importKey("raw", Uint8Array.from(atob(k), (c) => c.charCodeAt(0)), "AES-GCM", false, ["encrypt", "decrypt"]);
+})());
+const RAAD = new TextEncoder().encode("rdx:v1");
+async function encS(v: unknown): Promise<any> {
+  if (v === null || v === undefined || v === "" || (typeof v === "string" && v.startsWith("enc1:"))) return v;
+  const k = await rKey(); if (!k) return v;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: RAAD }, k, new TextEncoder().encode(String(v))));
+  const b = new Uint8Array(12 + ct.length); b.set(iv); b.set(ct, 12);
+  let bin = ""; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode(...b.subarray(i, i + 0x8000));
+  return "enc1:" + btoa(bin);
+}
+async function decS(v: unknown): Promise<any> {
+  if (typeof v !== "string" || !v.startsWith("enc1:")) return v;
+  const k = await rKey(); if (!k) return "[зашифровано]";
+  try { const b = Uint8Array.from(atob(v.slice(5)), (c) => c.charCodeAt(0)); return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.subarray(0, 12), additionalData: RAAD }, k, b.subarray(12))); }
+  catch { return "[не удалось расшифровать]"; }
+}
+const SECRET_COLS: Record<string, string[]> = { rdx_ai_history: ["content"], rdx_talks: ["text"], rdx_warns: ["reason"] };
+const APP_SECRET = ["why", "reason", "text"];
+async function sealRow(table: string, row: any) {
+  if (!row || typeof row !== "object") return row;
+  for (const c of SECRET_COLS[table] || []) if (typeof row[c] === "string") row[c] = await encS(row[c]);
+  if (table === "rdx_apps" && row.data && typeof row.data === "object") { row.data = { ...row.data }; for (const f of APP_SECRET) if (typeof row.data[f] === "string") row.data[f] = await encS(row.data[f]); }
+  if (table === "rdx_state" && row.data && typeof row.data === "object" && !row.data._e) row.data = { _e: await encS(JSON.stringify(row.data)) };
+  return row;
+}
+async function openRow(table: string, row: any) {
+  if (!row || typeof row !== "object") return row;
+  for (const c of SECRET_COLS[table] || []) if (typeof row[c] === "string") row[c] = await decS(row[c]);
+  if (table === "rdx_apps" && row.data && typeof row.data === "object") for (const f of APP_SECRET) if (typeof row.data[f] === "string") row.data[f] = await decS(row.data[f]);
+  if (table === "rdx_state" && row.data?._e) { try { row.data = JSON.parse(await decS(row.data._e)); } catch { row.data = {}; } }
+  return row;
+}
 async function db(path: string, init: RequestInit = {}): Promise<any> {
+  const table = path.split("?")[0];
+  const secret = !!SECRET_COLS[table] || table === "rdx_apps" || table === "rdx_state";
+  if (secret && typeof init.body === "string" && (init.method === "POST" || init.method === "PATCH")) {
+    const b0 = JSON.parse(init.body);
+    init = { ...init, body: JSON.stringify(Array.isArray(b0) ? await Promise.all(b0.map((r: any) => sealRow(table, r))) : await sealRow(table, b0)) };
+  }
   const r = await fetch(SB + "/rest/v1/" + path, { ...init, headers: { ...H, ...(init.headers || {}) } });
-  if (!r.ok) { console.error("db", path.split("?")[0], r.status, (await r.text()).slice(0, 200)); return null; }
+  if (!r.ok) { console.error("db", table, r.status, (await r.text()).slice(0, 200)); return null; }
   const t = await r.text();
-  return t ? JSON.parse(t) : null;
+  const out = t ? JSON.parse(t) : null;
+  if (secret && out) { if (Array.isArray(out)) for (const row of out) await openRow(table, row); else await openRow(table, out); }
+  return out;
 }
 const ins = (table: string, rows: unknown, prefer = "return=representation") => db(table, { method: "POST", body: JSON.stringify(rows), headers: { Prefer: prefer } });
 const upsert = (table: string, rows: unknown, on: string) => db(table + "?on_conflict=" + on, { method: "POST", body: JSON.stringify(rows), headers: { Prefer: "resolution=merge-duplicates,return=minimal" } });
 const patch = (path: string, body: unknown) => db(path, { method: "PATCH", body: JSON.stringify(body), headers: { Prefer: "return=minimal" } });
 const del = (path: string) => db(path, { method: "DELETE", headers: { Prefer: "return=minimal" } });
 const enc = encodeURIComponent;
+// для ilike: * % _ \ — буквально (иначе «*» в нике совпадёт с кем угодно)
+const likeLit = (x: unknown) => enc(String(x ?? "").replace(/[\\%_*]/g, (m) => "\\" + m));
 
 // ---------- Telegram ----------
 async function tg(bot: Bot, method: string, body: Record<string, unknown>) {
@@ -456,10 +505,10 @@ async function refreshCards(a: any) {
   const msgs: any[] = await db("rdx_app_msgs?select=chat_id,message_id&app_id=eq." + a.id) || [];
   for (const m of msgs) await tg("main", "editMessageText", { chat_id: m.chat_id, message_id: m.message_id, text: appText(a), parse_mode: "HTML", reply_markup: appButtons(a).reply_markup });
 }
-const appUid = async (a: any) => a.user_id || (a.username ? (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + enc(a.username)))?.[0]?.user_id : null);
+const appUid = async (a: any) => a.user_id || (a.username ? (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + likeLit(a.username)))?.[0]?.user_id : null);
 // доставка решения: по user_id, а для заявок с сайта — когда человек откроет бота
 async function deliver(a: any) {
-  const uid = a.user_id || (a.username ? (await db("rdx_users?select=user_id,lang&started=eq.true&username=ilike." + enc(a.username)))?.[0]?.user_id : null);
+  const uid = a.user_id || (a.username ? (await db("rdx_users?select=user_id,lang&started=eq.true&username=ilike." + likeLit(a.username)))?.[0]?.user_id : null);
   if (!uid) return false;
   const u = (await db("rdx_users?select=lang&user_id=eq." + uid))?.[0] || {};
   const lu = { language_code: u.lang || "ru" };
@@ -980,10 +1029,10 @@ async function onMain(up: any) {
   if (text.startsWith("/start")) {
     // решения по заявкам с сайта, которые ждали, пока человек откроет бота
     if (u.username) {
-      const wait: any[] = await db("rdx_apps?select=*&delivered=eq.false&status=neq.new&username=ilike." + enc(u.username)) || [];
+      const wait: any[] = await db("rdx_apps?select=*&delivered=eq.false&status=neq.new&username=ilike." + likeLit(u.username)) || [];
       for (const a of wait) await deliver({ ...a, user_id: u.id });
-      const fresh: any[] = await db("rdx_apps?select=id&user_id=is.null&username=ilike." + enc(u.username)) || [];
-      if (fresh.length) await patch("rdx_apps?user_id=is.null&username=ilike." + enc(u.username), { user_id: u.id });
+      const fresh: any[] = await db("rdx_apps?select=id&user_id=is.null&username=ilike." + likeLit(u.username)) || [];
+      if (fresh.length) await patch("rdx_apps?user_id=is.null&username=ilike." + likeLit(u.username), { user_id: u.id });
     }
     const arg = text.split(/\s+/)[1] || "";
     if (arg === "phone") return send("main", chat, "📱 Нажми кнопку ниже, чтобы привязать свой номер телефона к аккаунту RDX. Telegram сам подтвердит, что номер твой.", { reply_markup: { keyboard: [[{ text: "📱 Поделиться номером", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } });
@@ -1048,9 +1097,9 @@ async function onAI(up: any) {
 async function findUser(arg: string) {
   const a = arg.replace(/^@/, "");
   if (/^\d{5,15}$/.test(a)) return Number(a);
-  const r = await db("rdx_users?select=user_id&username=ilike." + enc(a));
+  const r = await db("rdx_users?select=user_id&username=ilike." + likeLit(a));
   if (r?.[0]?.user_id) return Number(r[0].user_id);
-  const s2 = await db("seals_tgai_members?select=user_id&username=ilike." + enc(a) + "&order=seen_at.desc&limit=1");
+  const s2 = await db("seals_tgai_members?select=user_id&username=ilike." + likeLit(a) + "&order=seen_at.desc&limit=1");
   return s2?.[0]?.user_id ? Number(s2[0].user_id) : null;
 }
 function modIntent(text: string) {
@@ -1141,8 +1190,9 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
   }
   if (cmd === "/fire" && args[0]) {   // уволить бойца
     const id = await findUser(args[0]);
-    const nick = args[0].replace(/^@/, "");
-    const r: any[] = await db("rdx_members?select=id,user_id,nick&active=eq.true&" + (id ? "user_id=eq." + id : "or=(username.ilike." + enc(nick) + ",nick.ilike." + enc(nick) + ")")) || [];
+    const nick = args[0].replace(/^@/, "").replace(/[^\p{L}\p{N}_]/gu, "").slice(0, 40);   // только буквы, цифры и _ — без запятых и скобок в фильтре
+    if (!nick && !(await findUser(args[0]))) { await say("Укажи ник бойца."); return true; }
+    const r: any[] = await db("rdx_members?select=id,user_id,nick&active=eq.true&" + (id ? "user_id=eq." + id : "or=(username.ilike." + likeLit(nick) + ",nick.ilike." + likeLit(nick) + ")")) || [];
     if (!r.length) { await say("Не нашёл такого бойца в составе."); return true; }
     await patch("rdx_members?id=eq." + r[0].id, { active: false, left_at: new Date().toISOString() });
     if (r[0].user_id) await send("main", Number(r[0].user_id), "🚪 Тебя исключили из RDX Squad.");
@@ -1158,7 +1208,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
   }
   if (owner && cmd === "/unban" && args[0]) {
     const nick = args[0].replace(/^@/, ""), id = await findUser(args[0]);
-    await del("rdx_bans?" + (id ? "or=(user_id.eq." + id + ",username.ilike." + enc(nick) + ")" : "username=ilike." + enc(nick))); BANS = null;
+    await del("rdx_bans?" + (id ? "or=(user_id.eq." + id + ",username.ilike." + likeLit(nick) + ")" : "username=ilike." + likeLit(nick))); BANS = null;
     await say("✅ " + esc(args[0]) + " разбанен. В состав он не возвращается — для этого нужна новая заявка или /addmember."); return true;
   }
   if (owner && cmd === "/bans") {
@@ -1169,7 +1219,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     const tgArg = args[0].startsWith("@") ? args[0] : null;
     const nick = (tgArg ? args.slice(1) : args).join(" ").trim() || (tgArg ? tgArg.slice(1) : "");
     const id = tgArg ? await findUser(tgArg) : null;
-    const same = (await db("rdx_members?select=id&active=eq.true&user_id=is.null&nick=ilike." + enc(nick)))?.[0];
+    const same = (await db("rdx_members?select=id&active=eq.true&user_id=is.null&nick=ilike." + likeLit(nick)))?.[0];
     const row = { user_id: id, username: tgArg ? tgArg.slice(1) : null, nick, active: true };
     if (same) await patch("rdx_members?id=eq." + same.id, row); else await ins("rdx_members", [row], "return=minimal");
     await say("🎖 " + esc(nick) + (tgArg ? " (" + esc(tgArg) + (id ? "" : ", ещё не писал ботам — привяжется, когда напишет") + ")" : "") + (same ? " — Telegram привязан." : " добавлен в состав.") + " Бойцов: <b>" + await membersCount() + "</b>");
@@ -1188,7 +1238,7 @@ async function adminCmd(bot: Bot, u: any, chat: number, text: string) {
     await send("main", id, "🛡 <b>Создатель назначил тебя модератором RDX и SealsAI.</b>\nТвой уровень — «Модератор». Команды: /mod"); return true;
   }
   if (owner && cmd === "/unmod" && args[0]) {
-    const id = await findUser(args[0]) ?? (await db("rdx_mods?select=user_id&username=ilike." + enc(args[0].replace(/^@/, ""))))?.[0]?.user_id;
+    const id = await findUser(args[0]) ?? (await db("rdx_mods?select=user_id&username=ilike." + likeLit(args[0].replace(/^@/, ""))))?.[0]?.user_id;
     if (!id) { await say("Не нашёл такого модератора."); return true; }
     await del("rdx_mods?user_id=eq." + id); MODS = null; await modMenu(Number(id), false);
     await say("✅ " + esc(args[0]) + " больше не модератор."); await send("main", Number(id), "Тебя сняли с модераторов RDX."); return true;
@@ -1283,7 +1333,7 @@ async function siteApply(req: Request, b: any) {
   void ip; const ipHash = await ipHashOf(req);
   const recent: any[] = await db("rdx_apps?select=id&ip_hash=eq." + ipHash + "&created_at=gt." + enc(new Date(Date.now() - 3600e3).toISOString())) || [];
   if (recent.length >= 3) return { ok: false, error: "rate", status: 429 };
-  const known = (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + enc(tgName)))?.[0]?.user_id || null;
+  const known = (await db("rdx_users?select=user_id&started=eq.true&username=ilike." + likeLit(tgName)))?.[0]?.user_id || null;
   if (await isBanned(Number(known) || 0, tgName)) return { ok: false, error: "banned" };
   const code = newCode();
   const a = await newApp({ kind: "apply", source: "site", user_id: known, username: tgName, ip_hash: ipHash, edit_hash: await sha(normCode(code)),
@@ -1356,7 +1406,11 @@ async function totpOk(secret: string, code: string) {
   for (const d of [-1, 0, 1]) if (await totpAt(secret, st + d) === c) return true;
   return false;
 }
-const accUser = async (nick: string) => (await db("rdx_users?select=user_id,username,first_name,started&username=ilike." + enc(String(nick || "").trim().replace(/^@/, "").replace(/^https?:\/\/t\.me\//, ""))))?.[0];
+const accUser = async (nick: string) => {
+  const n = String(nick || "").trim().replace(/^@/, "").replace(/^https?:\/\/t\.me\//, "");
+  if (!/^[A-Za-z0-9_]{4,32}$/.test(n)) return null;
+  return (await db("rdx_users?select=user_id,username,first_name,started&username=ilike." + likeLit(n)))?.[0];
+};
 async function newSession(uid: number, req: Request, b: any, stage: string) {
   const token = rnd(32), ip = ipOfReq(req), remember = !!b.remember;
   await ins("rdx_sessions", [{ user_id: uid, token_hash: await sha("sess:" + token), fp_hash: await sha("fp:" + String(b.fp || "")), ip, country: stage === "ok" ? await geoOf(ip) : null, dev: String(b.dev || "").slice(0, 120), stage, remember,
@@ -1612,11 +1666,6 @@ Deno.serve(async (req) => {
   // сайт
   const b = await req.json().catch(() => null);
   if (typeof b?.type === "string" && b.type.startsWith("acc_")) return await accApi(req, b).catch((e) => { console.error("acc", e); return accJ({ ok: false, error: "err" }, 500); });
-  if (b?.type === "mail_test") {   // проверка почты (внутренний ключ)
-    if (!HOOK || req.headers.get("x-rdx-int") !== HOOK) return new Response("no", { status: 403 });
-    try { await smtpSend(String(b.to), "RDX Squad — проверка почты", mailHtml("Почта работает", "✅", "Это тестовое письмо: теперь все письма сайта RDX приходят от RDX Squad."), "Почта RDX работает."); return new Response(JSON.stringify({ ok: true, on: SMTP_ON() })); }
-    catch (e) { return new Response(JSON.stringify({ ok: false, on: SMTP_ON(), err: String(e).slice(0, 200) })); }
-  }
   if (b?.type === "clan") {   // SealsAI просит действие с составом клана (внутренний ключ)
     if (!HOOK || req.headers.get("x-rdx-int") !== HOOK) return new Response("no", { status: 403 });
     const actor = { id: Number(b.actor?.id), username: b.actor?.username || null, first_name: b.actor?.first_name || null };
