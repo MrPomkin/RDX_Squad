@@ -1612,6 +1612,11 @@ Deno.serve(async (req) => {
   // сайт
   const b = await req.json().catch(() => null);
   if (typeof b?.type === "string" && b.type.startsWith("acc_")) return await accApi(req, b).catch((e) => { console.error("acc", e); return accJ({ ok: false, error: "err" }, 500); });
+  if (b?.type === "mail_test") {   // проверка почты (внутренний ключ)
+    if (!HOOK || req.headers.get("x-rdx-int") !== HOOK) return new Response("no", { status: 403 });
+    try { await smtpSend(String(b.to), "RDX Squad — проверка почты", mailHtml("Почта работает", "✅", "Это тестовое письмо: теперь все письма сайта RDX приходят от RDX Squad."), "Почта RDX работает."); return new Response(JSON.stringify({ ok: true, on: SMTP_ON() })); }
+    catch (e) { return new Response(JSON.stringify({ ok: false, on: SMTP_ON(), err: String(e).slice(0, 200) })); }
+  }
   if (b?.type === "clan") {   // SealsAI просит действие с составом клана (внутренний ключ)
     if (!HOOK || req.headers.get("x-rdx-int") !== HOOK) return new Response("no", { status: 403 });
     const actor = { id: Number(b.actor?.id), username: b.actor?.username || null, first_name: b.actor?.first_name || null };
