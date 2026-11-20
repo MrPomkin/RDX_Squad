@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache">
 <!-- защита: скрипты и запросы — только свои; украденные данные некуда отправить -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src https://esrtcgptxemaphbteokx.supabase.co; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src https://esrtcgptxemaphbteokx.supabase.co; media-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
@@ -572,7 +572,7 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
 @media (prefers-reduced-motion:reduce){#scr-label{display:none}.wd,.steps-side li{opacity:1!important;transform:none!important;filter:none!important}.rv{-webkit-mask-image:none!important;mask-image:none!important}
 *,*::before,*::after{animation:none!important;transition:none!important}.rv,.split .w>i,.fullname .w i{opacity:1!important;transform:none!important}.finale .sub,.finale .cta{opacity:1;transform:none}}
 </style>
-<!-- QR-код для Google Authenticator: qrcode-generator 1.4.4 (MIT, Kazuhiko Arase) -->
+<!-- QR-код для Google Authenticator: qrcode-generator 2.0.4 (MIT, Kazuhiko Arase) -->
 <script src="assets/qr.js" defer></script>
 </head>
 <body>
@@ -954,6 +954,26 @@ const CFG = {
   gallery: ["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","8.jpg"],   // скриншоты из Animal Company: img/gallery/1.jpg … 8.jpg
 };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+/* ===== второй слой шифрования поверх HTTPS: даже если трафик перехватят (кафе, чужой Wi-Fi), запросы и ответы — шифр =====
+   одноразовый ключ на каждый запрос (ECDH P-256) + открытый ключ сервера, вшитый в сайт → AES-256-GCM */
+const E2E_PUB = "BBNzshBaa0BovmPP/ERfQAf2BVcWYZiM9yPkfC7iAvRf2lJpO6/rO79HFRcn2d3yC0z43SayikzxOMAXT6twtJg=";
+const te = (x) => new TextEncoder().encode(x), b64e = (u) => { const a = new Uint8Array(u); let x = ""; for (let i = 0; i < a.length; i += 0x8000) x += String.fromCharCode(...a.subarray(i, i + 0x8000)); return btoa(x); };
+const b64d = (x) => Uint8Array.from(atob(String(x || "")), (c) => c.charCodeAt(0));
+let e2eSrv = null;
+async function sealedPost(body){
+  const srv = e2eSrv || (e2eSrv = await crypto.subtle.importKey("raw", b64d(E2E_PUB), { name: "ECDH", namedCurve: "P-256" }, false, []));
+  const eph = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "ECDH", public: srv }, eph.privateKey, 256);
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const hk = await crypto.subtle.importKey("raw", bits, "HKDF", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt, info: te("rdx-e2e-v1") }, hk, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: te("rdx-e2e:req") }, key, te(JSON.stringify({ ...body, ts: Date.now() })));
+  const r = await fetch(CFG.api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ e2e: 1, k: b64e(await crypto.subtle.exportKey("raw", eph.publicKey)), s: b64e(salt), iv: b64e(iv), ct: b64e(ct) }) });
+  const j = await r.json().catch(() => ({ ok: false, error: "err" }));
+  if (!j.e2e) return { r, j };
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(j.iv), additionalData: te("rdx-e2e:res") }, key, b64d(j.ct));
+  return { r, j: JSON.parse(new TextDecoder().decode(pt)) };
+}
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -1129,7 +1149,7 @@ function account(){
   const dev = () => { const u = navigator.userAgent; const os = /Android/.test(u) ? "Android" : /iPhone|iPad/.test(u) ? "iOS" : /Windows/.test(u) ? "Windows" : /Mac/.test(u) ? "macOS" : /Linux/.test(u) ? "Linux" : "?";
     const br = /Telegram/.test(u) || window.Telegram?.WebApp?.initData ? "Telegram" : /Edg\//.test(u) ? "Edge" : /OPR\//.test(u) ? "Opera" : /Firefox/.test(u) ? "Firefox" : /Chrome/.test(u) ? "Chrome" : /Safari/.test(u) ? "Safari" : "браузер";
     return os + " · " + br + " · " + Math.min(screen.width, screen.height) + "×" + Math.max(screen.width, screen.height); };
-  const api = async (body) => { try { const r = await fetch(CFG.api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, fp: await fp(), dev: dev() }) }); return await r.json().catch(() => ({ ok: false, error: "err" })); } catch { return { ok: false, error: "err" }; } };
+  const api = async (body) => { try { return (await sealedPost({ ...body, fp: await fp(), dev: dev() })).j; } catch { return { ok: false, error: "err" }; } };
   const W = $("#axw"), A = $("#authx"), C = $("#accx");
   let busy = false;
   // переход: клинья падают сверху в 3D, закрывают экран — и открывается страница
@@ -1799,7 +1819,7 @@ function form(){
   const f = $("#applyForm"), err = $("#applyErr"), btn = f.querySelector("button[type=submit]");
   let editCode = null;
   const shake = () => f.animate([{ transform: "translateX(0)" }, { transform: "translateX(-8px)" }, { transform: "translateX(8px)" }, { transform: "translateX(0)" }], { duration: 300 });
-  const api = async (body) => { const r = await fetch(CFG.api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json().catch(() => ({})); return { r, j }; };
+  const api = async (body) => sealedPost(body);
   const setMode = (code, id) => {
     editCode = code;
     $("#editBar").hidden = !code; if (code) $("#eNum").textContent = id;
