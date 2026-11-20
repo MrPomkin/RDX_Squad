@@ -966,6 +966,14 @@ async function onMain(up: any) {
   }
   const m = up.message;
   if (!m?.from || m.from.is_bot || m.chat?.type !== "private") return;
+  if (m.contact) {   // номер, которым поделились через кнопку: только свой
+    if (Number(m.contact.user_id) !== Number(m.from.id)) return send("main", m.chat.id, "Это не твой номер — нажми кнопку «📱 Поделиться номером».", { reply_markup: { remove_keyboard: true } });
+    const ph = "+" + String(m.contact.phone_number || "").replace(/\D/g, "");
+    if (!(await db("rdx_accounts?select=user_id&user_id=eq." + m.from.id))?.[0]) return send("main", m.chat.id, "Сначала зарегистрируйся на сайте RDX (Sign_In), потом привяжи номер.", { reply_markup: { remove_keyboard: true } });
+    await patch("rdx_accounts?user_id=eq." + m.from.id, { phone: ph, phone_verified: true });
+    await hist(Number(m.from.id), "security", "Телефон привязан: " + maskPhone(ph));
+    return send("main", m.chat.id, "✅ Телефон " + maskPhone(ph) + " привязан к аккаунту RDX. Его видно в настройках аккаунта на сайте.", { reply_markup: { remove_keyboard: true } });
+  }
   const u = m.from, chat = m.chat.id, text = String(m.text ?? m.caption ?? "").trim();
   if (!isOwner(u) && await isBanned(u.id, u.username)) return;   // забанен в клане — боты не отвечают
   await upsert("rdx_users", [{ user_id: u.id, username: u.username || null, first_name: u.first_name || null, lang: u.language_code || null, started: true, seen_at: new Date().toISOString() }], "user_id");
@@ -978,6 +986,7 @@ async function onMain(up: any) {
       if (fresh.length) await patch("rdx_apps?user_id=is.null&username=ilike." + enc(u.username), { user_id: u.id });
     }
     const arg = text.split(/\s+/)[1] || "";
+    if (arg === "phone") return send("main", chat, "📱 Нажми кнопку ниже, чтобы привязать свой номер телефона к аккаунту RDX. Telegram сам подтвердит, что номер твой.", { reply_markup: { keyboard: [[{ text: "📱 Поделиться номером", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } });
     if (arg === "site") return send("main", chat, "✅ Бот подключён к сайту.\nВернись на сайт RDX и нажми «Получить код» — код для входа придёт сюда.");
     return startFlow(u, chat, ["apply", "appeal", "help", "ai"].includes(arg) ? arg : "menu");
   }
@@ -1284,6 +1293,45 @@ async function siteApply(req: Request, b: any) {
   return { ok: true, id: a.id, code, bot: await botName("main") };
 }
 
+// ---------- письма от «RDX Squad»: SMTP по TLS (порт 465). Секреты: RDX_SMTP_USER, RDX_SMTP_PASS, [RDX_SMTP_HOST], [RDX_SMTP_NAME] ----------
+const SMTP_ON = () => !!(Deno.env.get("RDX_SMTP_USER") && Deno.env.get("RDX_SMTP_PASS"));
+const b64u = (x: string) => { const b = new TextEncoder().encode(x); let s0 = ""; for (const c of b) s0 += String.fromCharCode(c); return btoa(s0); };
+async function smtpSend(to: string, subject: string, html: string, text: string) {
+  const host = Deno.env.get("RDX_SMTP_HOST") || "smtp.gmail.com", user = Deno.env.get("RDX_SMTP_USER")!, pass = Deno.env.get("RDX_SMTP_PASS")!, name = Deno.env.get("RDX_SMTP_NAME") || "RDX Squad";
+  const conn = await Deno.connectTls({ hostname: host, port: 465 });
+  const dec = new TextDecoder(), enc2 = new TextEncoder(); let buf = "";
+  const read = async () => {   // ответ сервера (с многострочными 250-…)
+    for (;;) {
+      const lines = buf.split("\r\n"); for (let i = 0; i < lines.length - 1; i++) if (/^\d{3} /.test(lines[i])) { const code = Number(lines[i].slice(0, 3)); buf = lines.slice(i + 1).join("\r\n"); return code; }
+      const chunk = new Uint8Array(4096); const n = await conn.read(chunk); if (n === null) throw new Error("smtp closed"); buf += dec.decode(chunk.subarray(0, n));
+    }
+  };
+  const cmd = async (c: string, ok: number[]) => { await conn.write(enc2.encode(c + "\r\n")); const r = await read(); if (!ok.includes(r)) throw new Error("smtp " + c.split(" ")[0] + " " + r); };
+  try {
+    if (await read() !== 220) throw new Error("smtp greet");
+    await cmd("EHLO rdx.squad", [250]);
+    await cmd("AUTH LOGIN", [334]); await cmd(btoa(user), [334]); await cmd(btoa(pass), [235]);
+    await cmd("MAIL FROM:<" + user + ">", [250]); await cmd("RCPT TO:<" + to + ">", [250, 251]); await cmd("DATA", [354]);
+    const bd = "rdx" + rnd(8), wrap = (x: string) => b64u(x).replace(/.{1,76}/g, "$&\r\n");
+    const msg = ["From: =?UTF-8?B?" + b64u(name) + "?= <" + user + ">", "To: <" + to + ">", "Subject: =?UTF-8?B?" + b64u(subject) + "?=", "Date: " + new Date().toUTCString(), "MIME-Version: 1.0",
+      "Message-ID: <" + rnd(12) + "@rdx.squad>", 'Content-Type: multipart/alternative; boundary="' + bd + '"', "", "--" + bd, "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", wrap(text),
+      "--" + bd, "Content-Type: text/html; charset=UTF-8", "Content-Transfer-Encoding: base64", "", wrap(html), "--" + bd + "--", "."].join("\r\n");
+    await cmd(msg, [250]);
+    await cmd("QUIT", [221]).catch(() => null);
+  } finally { try { conn.close(); } catch { /* */ } }
+}
+function mailHtml(title: string, code: string, note: string) {
+  return '<div style="background:#121316;padding:32px 16px;font-family:Arial,sans-serif;color:#ecebe7"><div style="max-width:460px;margin:0 auto;background:#1b1d21;border:1px solid #2c2f35;border-radius:18px;padding:28px">'
+    + '<img src="' + SITE + 'assets/avatar-rdx.png" width="64" height="64" alt="RDX" style="border-radius:16px;display:block;margin-bottom:16px">'
+    + '<div style="font:900 22px Arial;letter-spacing:.5px;text-transform:uppercase">' + title + '</div><p style="color:#a7a9ad;line-height:1.5">' + note + '</p>'
+    + '<div style="font:700 34px monospace;letter-spacing:8px;color:#ff7a1a;background:#121316;border-radius:12px;padding:14px;text-align:center">' + code + '</div>'
+    + '<p style="color:#6f7278;font-size:12px;margin-top:18px">RDX Squad — Revolvers and Explosives · ' + SITE + '<br>Если это были не вы — просто проигнорируйте письмо.</p></div></div>';
+}
+async function mailCode(to: string, code: string, what: string) {
+  await smtpSend(to, "RDX Squad — код " + code, mailHtml("Код подтверждения", code, "Код для " + what + " на сайте RDX. Действует 10 минут, никому его не сообщайте."), "Код для " + what + " на сайте RDX: " + code + "\nДействует 10 минут. Если это были не вы — проигнорируйте письмо.");
+}
+const maskMail = (e: string) => e.replace(/^(.{2}).*(@.*)$/, "$1•••$2");
+const maskPhone = (p0: string) => p0.replace(/^(\+?\d{1,3})\d+(\d{2})$/, "$1 ••• •• $2");
 // ---------- аккаунты на сайте: вход по коду из Telegram, сессии по отпечатку устройства, 2FA для создателя ----------
 const rnd = (n = 32) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 const ipOfReq = (req: Request) => req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
@@ -1327,6 +1375,8 @@ async function loginDone(s0: any, req: Request, b: any) {   // сессия ак
   const ip = ipOfReq(req), country = await geoOf(ip), remember = !!b.remember || !!s0.remember;
   await patch("rdx_sessions?id=eq." + s0.id, { stage: "ok", country, ip, remember, expires_at: new Date(Date.now() + (remember ? 30 * 86400e3 : 12 * 3600e3)).toISOString() });
   await hist(Number(s0.user_id), "login", "Вход на сайт: " + country + " · IP " + ip + (s0.dev ? " · " + s0.dev : ""));
+  const accM = (await db("rdx_accounts?select=email,email_verified&user_id=eq." + s0.user_id))?.[0];
+  if (SMTP_ON() && accM?.email_verified && accM.email) smtpSend(accM.email, "RDX Squad — новый вход в аккаунт", mailHtml("Новый вход", "🔐", "Вход на сайт RDX: " + esc(country) + " · IP " + esc(ip) + (s0.dev ? " · " + esc(s0.dev) : "") + ". Если это не вы — сбросьте входы в боте RDX или на странице аккаунта."), "Новый вход на сайт RDX: " + country + ", IP " + ip).catch((e) => console.error("smtp", String(e)));
   await send("main", Number(s0.user_id), "🔐 <b>Новый вход в аккаунт RDX на сайте</b>\nСтрана: " + esc(country) + "\nIP: <code>" + esc(ip) + "</code>" + (s0.dev ? "\nУстройство: " + esc(s0.dev) : "") + "\n\nЕсли это не ты — нажми кнопку: все входы будут сброшены.", kb([[["🚫 Выкинуть всех из аккаунта", "acc:kill"]]]));
 }
 const accJ = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -1358,8 +1408,13 @@ async function accApi(req: Request, b: any): Promise<Response> {
     if (c0.code_hash !== await sha("code:" + uid + ":" + String(b.code || "").replace(/\D/g, ""))) { await patch("rdx_login_codes?id=eq." + c0.id, { tries: c0.tries + 1 }); return accJ({ ok: false, error: "code", left: 4 - c0.tries }); }
     await patch("rdx_login_codes?id=eq." + c0.id, { used: true });
     if (c0.mode === "signup") await upsert("rdx_accounts", [{ user_id: uid, username: u0.username }], "user_id");
+    const accU = (await db("rdx_accounts?select=*&user_id=eq." + uid))?.[0] || {};
+    if (!ADMINS.includes(uid) && accU.totp_enabled) {   // боец включил Google Authenticator
+      const pending = await newSession(uid, req, b, "totp");
+      return accJ({ ok: true, step: "totp", pending });
+    }
     if (ADMINS.includes(uid)) {   // создатель: почта + Google Authenticator
-      const acc = (await db("rdx_accounts?select=*&user_id=eq." + uid))?.[0] || {};
+      const acc = accU;
       const stage = !acc.email_verified ? "email" : !acc.totp_enabled ? "totp_setup" : "totp";
       const pending = await newSession(uid, req, b, stage);
       return accJ({ ok: true, step: stage, pending, ...(stage === "totp_setup" ? await totpSetup(uid) : {}) });
@@ -1374,14 +1429,30 @@ async function accApi(req: Request, b: any): Promise<Response> {
     const email = String(b.email || "").trim().toLowerCase();
     if (!/^[^@\s]{1,64}@[^@\s]{1,190}\.[a-z]{2,}$/.test(email)) return accJ({ ok: false, error: "email" });
     await patch("rdx_accounts?user_id=eq." + s0.user_id, { pending_email: email });
-    const r = await fetch(SB + "/auth/v1/otp?redirect_to=" + encodeURIComponent(SITE + "#rdx-email"), { method: "POST", headers: { apikey: SK, "Content-Type": "application/json" }, body: JSON.stringify({ email, create_user: true }) });
+    if (SMTP_ON()) {   // письмо от «RDX Squad» с кодом
+      const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
+      await ins("rdx_login_codes", [{ user_id: s0.user_id, ip_hash: await ipHashOf(req), code_hash: await sha("mail:" + s0.user_id + ":" + email + ":" + code), mode: "mail", expires_at: new Date(Date.now() + 10 * 60e3).toISOString() }], "return=minimal");
+      try { await mailCode(email, code, "подтверждения почты"); } catch (e) { console.error("smtp", String(e)); return accJ({ ok: false, error: "mail" }); }
+      return accJ({ ok: true, step: "email_code" });
+    }
+    const r = await fetch(SB + "/auth/v1/otp?redirect_to=" + encodeURIComponent(SITE), { method: "POST", headers: { apikey: SK, "Content-Type": "application/json" }, body: JSON.stringify({ email, create_user: true }) });
     if (!r.ok) { console.error("email otp", r.status, (await r.text()).slice(0, 200)); return accJ({ ok: false, error: r.status === 429 ? "rate" : "mail" }); }
     return accJ({ ok: true });
+  }
+  if (t === "acc_email_code") {   // создатель ввёл код из письма RDX
+    const s0 = await sessionOf(b, "pending"); if (!s0 || s0.stage !== "email") return accJ({ ok: false, error: "session" });
+    const acc = (await db("rdx_accounts?select=*&user_id=eq." + s0.user_id))?.[0];
+    if (!(await mailCodeOk(Number(s0.user_id), acc?.pending_email || "", b.code))) return accJ({ ok: false, error: "code" });
+    await patch("rdx_accounts?user_id=eq." + s0.user_id, { email: acc.pending_email, email_verified: true });
+    await hist(Number(s0.user_id), "security", "Почта подтверждена: " + maskMail(acc.pending_email));
+    await patch("rdx_sessions?id=eq." + s0.id, { stage: acc.totp_enabled ? "totp" : "totp_setup" });
+    return accJ({ ok: true, step: acc.totp_enabled ? "totp" : "totp_setup", ...(acc.totp_enabled ? {} : await totpSetup(Number(s0.user_id))) });
   }
   if (t === "acc_email_link") {   // создатель открыл ссылку из письма
     const s0 = await sessionOf(b, "pending"); if (!s0 || s0.stage !== "email") return accJ({ ok: false, error: "session" });
     const me: any = await fetch(SB + "/auth/v1/user", { headers: { apikey: SK, Authorization: "Bearer " + String(b.access_token || "") } }).then((x) => x.ok ? x.json() : null).catch(() => null);
     const acc = (await db("rdx_accounts?select=*&user_id=eq." + s0.user_id))?.[0];
+    if (!me?.email) console.error("email link: no user", String(b.access_token || "").length);
     if (!me?.email || !acc?.pending_email || me.email.toLowerCase() !== acc.pending_email) return accJ({ ok: false, error: "email_mismatch" });
     await patch("rdx_accounts?user_id=eq." + s0.user_id, { email: acc.pending_email, email_verified: true });
     await hist(Number(s0.user_id), "security", "Почта подтверждена: " + acc.pending_email);
@@ -1415,8 +1486,42 @@ async function accApi(req: Request, b: any): Promise<Response> {
       username: u0.username, name: u0.first_name, owner, staff: await isMod({ id: uid }),
       member: m ? { nick: m.nick, rank: rk, rankName: owner ? "Создатель" : RANKS[rk!], next: owner || rk! >= TOP_RANK ? null : RANKS[rk! + 1], top: TOP_RANK, chance: owner ? 100 : Number(m.promo_chance) || 0,
         dept: deptText(rk!, m.dept, owner), cls: classOf(rk!, m.dept, owner) + (m.weapon ? ", " + m.weapon : ""), type: m.weapon ? typeOf(rk!, m.weapon, owner) : "", weapon: weaponText(rk!, m.weapon, owner), joined: m.joined_at } : null,
-      warns: wn, history: hs || [], sessions: (ss || []).map((x: any) => ({ ...x, current: x.id === s0.id })),
+      warns: wn, security: await (async () => { const a = (await db("rdx_accounts?select=email,email_verified,phone,phone_verified,totp_enabled&user_id=eq." + uid))?.[0] || {};
+        return { email: a.email_verified && a.email ? maskMail(a.email) : null, phone: a.phone_verified && a.phone ? maskPhone(a.phone) : null, totp: !!a.totp_enabled, mail: SMTP_ON(), bot: await botName("main") }; })(),
+      history: hs || [], sessions: (ss || []).map((x: any) => ({ ...x, current: x.id === s0.id })),
     } });
+  }
+  if (t === "acc_sec_mail") {   // добавить почту: код в письме от RDX
+    if (!SMTP_ON()) return accJ({ ok: false, error: "nomail" });
+    const email = String(b.email || "").trim().toLowerCase();
+    if (!/^[^@\s]{1,64}@[^@\s]{1,190}\.[a-z]{2,}$/.test(email)) return accJ({ ok: false, error: "email" });
+    const hr = enc(new Date(Date.now() - 3600e3).toISOString());
+    if (((await db("rdx_login_codes?select=id&mode=eq.mail&user_id=eq." + uid + "&created_at=gt." + hr)) || []).length >= 4) return accJ({ ok: false, error: "rate" });
+    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
+    await patch("rdx_accounts?user_id=eq." + uid, { pending_email: email });
+    await ins("rdx_login_codes", [{ user_id: uid, ip_hash: await ipHashOf(req), code_hash: await sha("mail:" + uid + ":" + email + ":" + code), mode: "mail", expires_at: new Date(Date.now() + 10 * 60e3).toISOString() }], "return=minimal");
+    try { await mailCode(email, code, "привязки почты"); } catch (e) { console.error("smtp", String(e)); return accJ({ ok: false, error: "mail" }); }
+    return accJ({ ok: true });
+  }
+  if (t === "acc_sec_mail_ok") {
+    const acc = (await db("rdx_accounts?select=pending_email&user_id=eq." + uid))?.[0];
+    if (!acc?.pending_email || !(await mailCodeOk(uid, acc.pending_email, b.code))) return accJ({ ok: false, error: "code" });
+    await patch("rdx_accounts?user_id=eq." + uid, { email: acc.pending_email, email_verified: true });
+    await hist(uid, "security", "Почта привязана: " + maskMail(acc.pending_email));
+    return accJ({ ok: true });
+  }
+  if (t === "acc_sec_mail_del") {
+    if (owner) return accJ({ ok: false, error: "owner_mail" });
+    await patch("rdx_accounts?user_id=eq." + uid, { email: null, email_verified: false, pending_email: null });
+    await hist(uid, "security", "Почта отвязана"); return accJ({ ok: true });
+  }
+  if (t === "acc_sec_2fa") {   // Google Authenticator: setup → on (код) / off (код)
+    const acc = (await db("rdx_accounts?select=*&user_id=eq." + uid))?.[0] || {};
+    if (b.op === "setup") { if (acc.totp_enabled) return accJ({ ok: false, error: "already" }); if (!acc.totp_secret || !acc.totp_enabled) await patch("rdx_accounts?user_id=eq." + uid, { totp_secret: null }); return accJ({ ok: true, ...(await totpSetup(uid)) }); }
+    if (!acc.totp_secret || !(await totpOk(acc.totp_secret, b.code))) return accJ({ ok: false, error: "code" });
+    if (b.op === "on") { await patch("rdx_accounts?user_id=eq." + uid, { totp_enabled: true }); await hist(uid, "security", "Google Authenticator включён"); return accJ({ ok: true }); }
+    if (b.op === "off") { if (owner) return accJ({ ok: false, error: "owner_2fa" }); await patch("rdx_accounts?user_id=eq." + uid, { totp_enabled: false, totp_secret: null }); await hist(uid, "security", "Google Authenticator выключен"); return accJ({ ok: true }); }
+    return accJ({ ok: false, error: "type" });
   }
   if (t === "acc_logout") { await patch("rdx_sessions?id=eq." + s0.id, { revoked: true }); return accJ({ ok: true }); }
   if (t === "acc_kill") {   // выкинуть один вход или всех, кроме себя
@@ -1444,6 +1549,13 @@ async function accApi(req: Request, b: any): Promise<Response> {
       logins: logins.map((x) => ({ ...x, who: nm(x.user_id) })) });
   }
   return accJ({ ok: false, error: "type" }, 400);
+}
+async function mailCodeOk(uid: number, email: string, code: unknown) {
+  const c0 = (await db("rdx_login_codes?select=*&user_id=eq." + uid + "&mode=eq.mail&used=eq.false&order=created_at.desc&limit=1"))?.[0];
+  if (!c0 || Date.parse(c0.expires_at) < Date.now() || c0.tries >= 5) return false;
+  if (c0.code_hash !== await sha("mail:" + uid + ":" + email + ":" + String(code || "").replace(/\D/g, ""))) { await patch("rdx_login_codes?id=eq." + c0.id, { tries: c0.tries + 1 }); return false; }
+  await patch("rdx_login_codes?id=eq." + c0.id, { used: true });
+  return true;
 }
 async function totpSetup(uid: number) {
   const acc = (await db("rdx_accounts?select=totp_secret,username&user_id=eq." + uid))?.[0] || {};
