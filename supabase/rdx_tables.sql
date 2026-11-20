@@ -34,3 +34,13 @@ end $$;
 create table if not exists public.mod_ledger (id bigserial primary key, system text not null, mod_id bigint not null, kind text not null, amount int not null default 1, target text, at timestamptz not null default now());
 create table if not exists public.rdx_promo (code text primary key, tier text not null, days numeric not null, created_by bigint, created_at timestamptz not null default now(), used_by bigint, used_at timestamptz);
 alter table public.mod_ledger enable row level security; alter table public.rdx_promo enable row level security;
+
+-- аккаунты на сайте, сессии, история, варны, баны (RLS включён, политик нет — доступ только у сервера)
+create table if not exists public.rdx_accounts (user_id bigint primary key, username text, created_at timestamptz default now(), email text, pending_email text, email_verified boolean default false, totp_secret text, totp_enabled boolean default false, phone text, phone_verified boolean default false);
+create table if not exists public.rdx_sessions (id bigint generated always as identity primary key, user_id bigint not null, token_hash text unique not null, fp_hash text, ip text, country text, dev text, stage text default 'ok', remember boolean default false, created_at timestamptz default now(), last_seen timestamptz default now(), expires_at timestamptz, revoked boolean default false);
+create table if not exists public.rdx_login_codes (id bigint generated always as identity primary key, user_id bigint, ip_hash text, code_hash text, mode text, tries int default 0, used boolean default false, created_at timestamptz default now(), expires_at timestamptz);
+create table if not exists public.rdx_history (id bigint generated always as identity primary key, user_id bigint not null, kind text, text text, created_at timestamptz default now());
+create table if not exists public.rdx_warns (id bigint generated always as identity primary key, user_id bigint, member_id bigint, by_id bigint, reason text, created_at timestamptz default now(), expires_at timestamptz);
+create table if not exists public.rdx_bans (id bigint generated always as identity primary key, user_id bigint, username text, nick text, by_id bigint, created_at timestamptz default now());
+alter table public.rdx_members add column if not exists rank int not null default 0, add column if not exists dept text, add column if not exists weapon text, add column if not exists promo_chance int not null default 0;
+-- шифрование: rdx_ai_history.content, rdx_talks.text, rdx_warns.reason, тексты в rdx_apps.data, rdx_state.data — AES-256-GCM («enc1:…»), ключ RDX_ENC_KEY только в секретах функций
