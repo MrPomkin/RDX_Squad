@@ -478,6 +478,9 @@ footer{position:relative}
 .acc-adm th{color:var(--dim);font:600 11px var(--mono);letter-spacing:.06em}
 .acc-adm select,.acc-adm input{background:#16181b;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px;font:inherit;max-width:150px}
 .acc-scroll{overflow:auto}
+.acc-sec{display:flex;gap:8px;margin:10px 0}
+.acc-sec input{flex:1;min-width:0;background:#16181b;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit}
+.acc-row b .acc-btn{margin-left:6px}
 @media (prefers-reduced-motion:reduce){#axw{display:none}}
 /* секции «наезжают» при прокрутке */
 .curtain>.wrap{transform-origin:50% 30%;will-change:transform,opacity}
@@ -603,6 +606,11 @@ body.shake main{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
       <p class="ax-note" data-ax="emailNote">Для аккаунта создателя нужна защита: подтверди почту — придёт письмо со ссылкой.</p>
       <div class="fld"><input id="axEmail" type="email" placeholder=" " maxlength="120" autocomplete="email"><label for="axEmail">E-mail</label><i class="bar"></i></div>
       <button type="button" class="btn btn-or ax-go" id="axMail"><span class="lbl" data-ax="mail">Отправить письмо</span><span class="spin"></span></button>
+    </div>
+    <div class="ax-step" data-step="email_code" hidden>
+      <p class="ax-note">Письмо от RDX Squad с кодом отправлено на твою почту.</p>
+      <div class="fld"><input id="axMailCode" placeholder=" " maxlength="6" inputmode="numeric" autocomplete="one-time-code"><label for="axMailCode">Код из письма</label><i class="bar"></i></div>
+      <button type="button" class="btn btn-or ax-go" id="axMailOk"><span class="lbl">Подтвердить почту</span><span class="spin"></span></button>
     </div>
     <div class="ax-step" data-step="totp_setup" hidden>
       <p class="ax-note" data-ax="totpNote">Открой Google Authenticator → «+» → «Сканировать QR-код» (или введи ключ вручную), затем введи 6 цифр из приложения.</p>
@@ -1091,6 +1099,7 @@ function account(){
       need_bot: "Сначала открой бота и нажми «Старт», потом вернись сюда и запроси код снова:", exists: "Аккаунт уже есть — переключись на Log_In.", no_account: "Аккаунта нет — сначала зарегистрируйся (Sign_In).",
       rate: "Слишком много попыток. Подожди час.", banned: "Доступ закрыт: ты заблокирован в RDX.", code: "Неверный код.", expired: "Код устарел — запроси новый.", session: "Сессия устарела — войди заново.",
       mail: "Не удалось отправить письмо. Попробуй позже.", email: "Проверь адрес почты.", email_mismatch: "Почта не совпала — отправь письмо ещё раз.", err: "Ошибка сервера. Попробуй ещё раз.", sent: "Код отправлен в Telegram.",
+      nomail: "Почта на сайте пока не подключена — скоро будет.", already: "Уже включено.", owner_2fa: "Создателю нельзя выключить 2FA.", owner_mail: "Создателю нельзя отвязать почту.",
       mailSent: "Письмо отправлено. Открой его на этом устройстве и нажми ссылку — сайт продолжит вход.", account: "Аккаунт", nick: "Ник в Telegram (@username)", badnick: "Введи свой ник в Telegram, например @Mr_Wugi4." },
     en: { login: "Log in to RDX: enter your @username — the RDX bot will send a code in Telegram.", signup: "Sign up: first open the RDX bot and press Start, then enter your @username to get a code.",
       need_bot: "Open the bot and press Start first, then come back and request the code again:", exists: "You already have an account — switch to Log_In.", no_account: "No account yet — sign up first (Sign_In).",
@@ -1157,10 +1166,11 @@ function account(){
   }));
   $("#axVerify").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_verify", nick: st.nick, code: $("#axCode").value, remember: $("#axRem").checked }))));
   $("#axBack").addEventListener("click", () => step("nick"));
-  $("#axMail").addEventListener("click", (e) => load(e.currentTarget, async () => { const r = await api({ type: "acc_email", pending: st.pending, email: $("#axEmail").value }); if (r.ok) $("#axErr").textContent = ax("mailSent"); else err(r.error); }));
+  $("#axMail").addEventListener("click", (e) => load(e.currentTarget, async () => { const r = await api({ type: "acc_email", pending: st.pending, email: $("#axEmail").value }); if (r.ok && r.step === "email_code") step("email_code"); else if (r.ok) $("#axErr").textContent = ax("mailSent"); else err(r.error); }));
+  $("#axMailOk").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_email_code", pending: st.pending, code: $("#axMailCode").value }))));
   $("#axTotpSet").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_totp", pending: st.pending, code: $("#axTotp1").value, remember: $("#axRem").checked }))));
   $("#axTotpGo").addEventListener("click", (e) => load(e.currentTarget, async () => next(await api({ type: "acc_totp", pending: st.pending, code: $("#axTotp2").value, remember: $("#axRem").checked }))));
-  for (const [inp, btn] of [["#axNick", "#axSend"], ["#axCode", "#axVerify"], ["#axEmail", "#axMail"], ["#axTotp1", "#axTotpSet"], ["#axTotp2", "#axTotpGo"]]) $(inp).addEventListener("keydown", (e) => { if (e.key === "Enter") $(btn).click(); });
+  for (const [inp, btn] of [["#axMailCode", "#axMailOk"], ["#axNick", "#axSend"], ["#axCode", "#axVerify"], ["#axEmail", "#axMail"], ["#axTotp1", "#axTotpSet"], ["#axTotp2", "#axTotpGo"]]) $(inp).addEventListener("keydown", (e) => { if (e.key === "Enter") $(btn).click(); });
   A.querySelectorAll(".ax-tabs button").forEach((b) => b.addEventListener("click", () => { tabs(b.dataset.tab); step("nick"); }));
   [A, C].forEach((el) => el.querySelector("[data-close]").addEventListener("click", () => closePage(el)));
   addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!A.hidden) closePage(A); else if (!C.hidden) closePage(C); } });
@@ -1198,6 +1208,12 @@ function account(){
           <div class="acc-row"><span>Варны</span><b>${me.warns} / 5</b></div><div class="acc-row"><span>В составе с</span><b>${H(new Date(m.joined).toLocaleDateString("ru-RU"))}</b></div></div>`
         : `<div class="acc-card full"><h3>Статус</h3><p style="margin:0;color:var(--muted)">Ты пока не в составе RDX. Подай заявку на сайте или в боте — после принятия здесь появятся звание, раздел и класс.</p></div>`}
         <div class="acc-card"><h3>История</h3><ul class="acc-hist">${(me.history || []).map((h) => `<li><time>${tm(h.created_at)}</time><span>${ICON[h.kind] || "•"} ${H(h.text)}</span></li>`).join("") || '<li><span style="color:var(--dim)">Пока пусто</span></li>'}</ul></div>
+        <div class="acc-card"><h3>Безопасность</h3>
+          <div class="acc-row"><span>Почта</span><b>${me.security?.email ? H(me.security.email) + ' <button type="button" class="acc-btn" data-sec="mdel">Отвязать</button>' : '<span style="color:var(--dim)">не привязана</span>'}</b></div>
+          ${me.security?.email ? "" : `<div class="acc-sec" id="secMail"><input type="email" placeholder="почта" id="secMailIn"><button type="button" class="acc-btn or" data-sec="msend">Код на почту</button></div>`}
+          <div class="acc-row"><span>Телефон</span><b>${me.security?.phone ? H(me.security.phone) : `<a class="acc-btn" href="https://t.me/${H(me.security?.bot || CFG.bot)}?start=phone" target="_blank" rel="noopener">Привязать через Telegram</a>`}</b></div>
+          <div class="acc-row"><span>Google Authenticator</span><b>${me.security?.totp ? '✅ включён' + (me.owner ? "" : ' <button type="button" class="acc-btn red" data-sec="2off">Выключить</button>') : '<button type="button" class="acc-btn or" data-sec="2on">Включить</button>'}</b></div>
+          <div id="secBox"></div><p id="secMsg" style="color:var(--or);min-height:1.3em;margin:8px 0 0;font-size:13px"></p></div>
         <div class="acc-card"><h3>Входы в аккаунт</h3>${(me.sessions || []).map((x) => `<div class="acc-sess"><div>${H(x.country || "—")} · <code>${H(x.ip)}</code>${x.current ? ' <span class="tag">● это устройство</span>' : ""}<small>${H(x.dev || "")} · ${tm(x.last_seen)}${x.remember ? " · запомнен" : ""}</small></div>${x.current ? "" : `<button type="button" class="acc-btn red" data-kill="${x.id}">Выкинуть</button>`}</div>`).join("")}
           <button type="button" class="acc-btn red" data-kill="all" style="margin-top:14px">Выкинуть всех, кроме меня</button></div>
         ${me.owner ? '<div class="acc-card full"><h3>Админ-панель</h3><div id="accAdm" style="color:var(--dim)">Загрузка…</div></div>' : ""}
@@ -1207,6 +1223,21 @@ function account(){
     $("#accOut").onclick = async () => { await api({ type: "acc_logout", token: st.token }); try { localStorage.removeItem("rdx_tok"); sessionStorage.removeItem("rdx_tok"); } catch {} st.token = ""; slots(false); closePage(C); };
     C.querySelectorAll("[data-kill]").forEach((b) => b.onclick = async () => { b.disabled = true; await api({ type: "acc_kill", token: st.token, id: b.dataset.kill === "all" ? "all" : Number(b.dataset.kill) }); openAccount(); });
     if (me.owner) admin();
+    // безопасность: почта, Google Authenticator
+    const sm = (t) => $("#secMsg").textContent = t, box = $("#secBox");
+    const codeForm = (label, onOk) => { box.innerHTML = `<div class="acc-sec"><input inputmode="numeric" maxlength="6" placeholder="${label}" id="secCode"><button type="button" class="acc-btn or" id="secOk">OK</button></div>`; $("#secOk").onclick = () => onOk($("#secCode").value); $("#secCode").focus(); };
+    C.querySelectorAll("[data-sec]").forEach((b) => b.onclick = async () => {
+      const k = b.dataset.sec; sm("…");
+      if (k === "msend") { const r = await api({ type: "acc_sec_mail", token: st.token, email: $("#secMailIn").value }); if (!r.ok) return sm(ax(r.error)); sm("Письмо от RDX Squad отправлено — введи код."); codeForm("код из письма", async (c) => { const q = await api({ type: "acc_sec_mail_ok", token: st.token, code: c }); q.ok ? openAccount() : sm(ax(q.error)); }); }
+      if (k === "mdel") { if (!confirm("Отвязать почту?")) return sm(""); const r = await api({ type: "acc_sec_mail_del", token: st.token }); r.ok ? openAccount() : sm(ax(r.error)); }
+      if (k === "2on") { const r = await api({ type: "acc_sec_2fa", op: "setup", token: st.token }); if (!r.ok) return sm(ax(r.error));
+        box.innerHTML = '<p style="color:var(--muted);font-size:13px">Отсканируй QR в Google Authenticator и введи 6 цифр.</p><div class="ax-qr" id="secQr"></div><code class="ax-secret">' + H(r.secret) + "</code>";
+        const qf = window.qrcode || window.__qrmod?.default || window.__qrmod; if (typeof qf === "function") { const qr = qf(0, "M"); qr.addData(r.uri); qr.make(); $("#secQr").innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2 }); }
+        const f = document.createElement("div"); box.append(f); sm("");
+        f.innerHTML = '<div class="acc-sec" style="margin-top:10px"><input inputmode="numeric" maxlength="6" placeholder="код из приложения" id="secCode2"><button type="button" class="acc-btn or" id="secOk2">Включить</button></div>';
+        $("#secOk2").onclick = async () => { const q = await api({ type: "acc_sec_2fa", op: "on", token: st.token, code: $("#secCode2").value }); q.ok ? openAccount() : sm(ax(q.error)); }; }
+      if (k === "2off") { sm(""); codeForm("код из Google Authenticator", async (c) => { const q = await api({ type: "acc_sec_2fa", op: "off", token: st.token, code: c }); q.ok ? openAccount() : sm(ax(q.error)); }); }
+    });
   }
   async function admin(){
     const box = $("#accAdm"); const r = await api({ type: "acc_admin", token: st.token });
@@ -1229,7 +1260,7 @@ function account(){
   // создатель открыл ссылку из письма — продолжаем вход
   const hash = location.hash;
   if (/access_token=/.test(hash) && st.pending) {
-    const at = new URLSearchParams(hash.slice(1)).get("access_token");
+    const at = decodeURIComponent((hash.match(/access_token=([^&#]+)/) || [])[1] || "");
     history.replaceState(null, "", location.pathname + location.search);
     (async () => { try { $("#axRem").checked = localStorage.getItem("rdx_rem") === "1"; } catch {} tabs("login"); await openPage(A); const r = await api({ type: "acc_email_link", pending: st.pending, access_token: at }); if (r.ok) next(r); else { step("nick"); err(r.error); } })();
   } else if (st.token) api({ type: "acc_me", token: st.token }).then((r) => { if (r.ok) slots(true); else { try { localStorage.removeItem("rdx_tok"); sessionStorage.removeItem("rdx_tok"); } catch {} st.token = ""; } });
