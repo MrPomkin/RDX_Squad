@@ -180,6 +180,24 @@ function classOf(rank: number, dept: string | null, full = false) {
   if (rank <= 10) return "Главный " + one;
   return "Командир " + many;
 }
+// тип класса — по оружию, по той же лестнице: стажёр · новичок · старший · главный · командир (с 11-го звания и у создателя)
+function typeNoun(weapon: string | null): [string, string] {
+  const w = String(weapon || "").toLowerCase();
+  if (/рпг|гранат|взрыв|подрыв|c4|с4|динамит|мин[аы]/.test(w)) return ["подрывник", "подрывников"];
+  if (/револьв/.test(w)) return ["револьверщик", "револьверов"];
+  if (/ближ|нож|бит|меч|кулак|топор|кастет/.test(w)) return ["боец ближнего боя", "бойцов ближнего боя"];
+  if (/медик|аптеч|леч/.test(w)) return ["медик", "медиков"];
+  return ["стрелок дальнего боя", "стрелков дальнего боя"];
+}
+function typeOf(rank: number, weapon: string | null, full = false) {
+  if (!weapon) return "";
+  const [one, many] = typeNoun(weapon);
+  if (full || rank >= 11) return "Командир " + many;
+  if (rank <= 0) return "Стажёр " + one;
+  if (rank <= 4) return "Новичок " + one;
+  if (rank <= 8) return "Старший " + one;
+  return "Главный " + one;
+}
 // с 12-го звания (и у создателя): все разделы и все классы орудия, основной — в скобках
 const deptText = (rank: number, dept: string | null, full = false) => (full || rank >= 12) ? "Все разделы" + (dept ? " (" + dept + ")" : "") : dept ? (DEPT_ICON[dept] || "") + " " + dept : "не выбран";
 const weaponText = (rank: number, weapon: string | null, full = false) => (full || rank >= 12) ? "Все классы орудия" + (weapon ? " (" + weapon + ")" : "") : weapon || "";
@@ -191,6 +209,7 @@ async function classLines(uid: number) {
   const rk = Number(m.rank) || 0, wt = weaponText(rk, m.weapon, full);
   return "\n🗂 Раздел: <b>" + deptText(rk, m.dept, full) + "</b>"
     + "\n🎓 Класс: <b>" + classOf(rk, m.dept, full) + (m.weapon ? ", " + m.weapon : "") + "</b>"
+    + (m.weapon ? "\n🧩 Тип класса: <b>" + typeOf(rk, m.weapon, full) + "</b>" : "")
     + (wt ? "\n🔫 Класс орудия: <b>" + wt + "</b>" : "");
 }
 const isMarshal = async (u: any) => ((await rankOf(Number(u?.id))) ?? -1) >= MARSHAL;   // маршал и выше
@@ -503,15 +522,55 @@ async function clanCard(chat: number, id: number, ownerU = false) {
   const rk = Number(x.rank) || 0;
   const rows: [string, string][][] = [[["🚫 Бан", "cl:ask:ban:" + id], ["👢 Кик", "cl:ask:kick:" + id]], [["📄 Уволить (по заявлению)", "cl:ask:fire:" + id]]];
   if (ownerU) rows.unshift([["⬆️ Повысить", "cl:rk:" + id + ":up"], ["⬇️ Понизить", "cl:rk:" + id + ":down"]], [["🗂 Раздел", "cl:dp:" + id], ["🔫 Класс орудия", "cl:wp:" + id]]);
+  if (isOwner({ id: chat })) rows.unshift([["🎯 Шанс на повышение", "cl:ch:" + id]]);
+  rows.splice(rows.length - 1, 0, [["⚠️ Варн", "cl:ask:warn:" + id]]);
   rows.push([["👥 К списку", "cl:list"]]);
-  await send("main", chat, "🎖 <b>" + esc(x.nick || "Боец") + "</b>" + (x.username ? " · @" + esc(x.username) : "") + "\nЗвание: <b>" + rankName(rk) + "</b>\nРаздел: <b>" + deptText(rk, x.dept, ADMINS.includes(Number(x.user_id))) + "</b>" + (weaponText(rk, x.weapon, ADMINS.includes(Number(x.user_id))) ? "\nКласс орудия: <b>" + esc(weaponText(rk, x.weapon, ADMINS.includes(Number(x.user_id)))) + "</b>" : "") + "\nКласс: <b>" + classOf(rk, x.dept, ADMINS.includes(Number(x.user_id))) + (x.weapon ? ", " + esc(x.weapon) : "") + "</b>\nВ составе с " + d + (x.app_id ? " · заявка #" + x.app_id : "")
+  await send("main", chat, "🎖 <b>" + esc(x.nick || "Боец") + "</b>" + (x.username ? " · @" + esc(x.username) : "") + "\nЗвание: <b>" + rankName(rk) + "</b>\nРаздел: <b>" + deptText(rk, x.dept, ADMINS.includes(Number(x.user_id))) + "</b>" + (weaponText(rk, x.weapon, ADMINS.includes(Number(x.user_id))) ? "\nКласс орудия: <b>" + esc(weaponText(rk, x.weapon, ADMINS.includes(Number(x.user_id)))) + "</b>" : "") + "\nКласс: <b>" + classOf(rk, x.dept, ADMINS.includes(Number(x.user_id))) + (x.weapon ? ", " + esc(x.weapon) : "") + "</b>" + (x.weapon ? "\nТип класса: <b>" + typeOf(rk, x.weapon, ADMINS.includes(Number(x.user_id))) + "</b>" : "") + "\nШанс на повышение: <b>" + (Number(x.promo_chance) || 0) + "%</b> · варны: <b>" + (x.user_id ? await warnCount(Number(x.user_id)) : 0) + "/5</b>\nВ составе с " + d + (x.app_id ? " · заявка #" + x.app_id : "")
     + (tr ? "\nУровень в ботах: " + (TIERS[tr.tier] || TIERS.base).name : "\nTelegram не привязан — сообщения от ботов ему не дойдут"), kb(rows));
 }
 const CLAN_ACT: Record<string, [string, string, string]> = {
+  warn: ["⚠️ Выдать варн", "Варн: предупреждение на месяц. 5 активных варнов — автоматический бан.", "⚠️ получил варн"],
   ban: ["🚫 Забанить", "Бан: человек уйдёт из состава, а боты RDX, RDX_AI и SealsAI перестанут ему отвечать.", "🚫 забанен"],
   kick: ["👢 Кикнуть", "Кик: человек уйдёт из состава, бот напишет ему «Ты был выгнан из клана».", "👢 выгнан из клана"],
   fire: ["📄 Уволить", "Увольнение по заявлению: бот официально сообщит, что заявление рассмотрено и он уволен.", "📄 уволен"],
 };
+// история бойца (видна на сайте в аккаунте)
+const hist = (uid: number, kind: string, text: string) => ins("rdx_history", [{ user_id: uid, kind, text: text.slice(0, 500) }], "return=minimal").catch(() => null);
+async function warnCount(uid: number) {
+  const r: any[] = await db("rdx_warns?select=id&user_id=eq." + uid + "&expires_at=gt." + enc(new Date().toISOString())) || [];
+  return r.length;
+}
+// варн: создатель, модераторы и Админы; варн живёт месяц; 5 активных — бан
+async function warnMember(actor: any, id: number, reason: string): Promise<{ ok: boolean; text: string }> {
+  if (!(await isMod(actor))) return { ok: false, text: "Варны выдают создатель, модераторы и Админы." };
+  const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
+  if (!x || !x.active) return { ok: false, text: "Этого бойца нет в составе." };
+  const tid = x.user_id ? Number(x.user_id) : null;
+  if (!tid) return { ok: false, text: "У бойца не привязан Telegram — варн выдать нельзя." };
+  if (ADMINS.includes(tid)) return { ok: false, text: "👑 Создателю варн не выдать." };
+  if (tid === Number(actor.id)) return { ok: false, text: "Себе варн выдать нельзя." };
+  if (!isOwner(actor) && (await modIds()).includes(tid)) return { ok: false, text: "Модератору варн выдаёт только создатель." };
+  await ins("rdx_warns", [{ user_id: tid, member_id: id, by_id: Number(actor.id), reason: reason || null, expires_at: new Date(Date.now() + 30 * 86400e3).toISOString() }], "return=minimal");
+  const n = await warnCount(tid);
+  await hist(tid, "warn", "Предупреждение " + n + "/5" + (reason ? ": " + reason : "") + " (сгорит через месяц)");
+  await notifyAny(tid, "⚠️ <b>Вам выдано предупреждение в RDX Squad</b> (" + n + " из 5)." + (reason ? "\nПричина: " + esc(reason) : "") + "\nПредупреждение сгорит через месяц. При 5 активных предупреждениях — бан.");
+  if (!isOwner(actor)) for (const a of ADMINS) await send("main", a, "⚠️ Модератор " + who(actor) + " выдал варн: " + esc(memName(x)) + " (" + n + "/5)");
+  if (n >= 5) {
+    const b = await clanAct(actor, "ban", id);
+    return { ok: true, text: esc(memName(x)) + " — 5/5 варнов. " + b.text };
+  }
+  return { ok: true, text: "⚠️ " + esc(memName(x)) + ": варн " + n + "/5 (сгорит через месяц)." };
+}
+// шанс на повышение 0–100% (только создатель)
+async function setChance(actor: any, id: number, v: number): Promise<{ ok: boolean; text: string }> {
+  if (!isOwner(actor)) return { ok: false, text: "Шанс на повышение ставит только создатель." };
+  v = Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+  const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
+  if (!x || !x.active) return { ok: false, text: "Этого бойца нет в составе." };
+  await patch("rdx_members?id=eq." + id, { promo_chance: v });
+  if (x.user_id) await hist(Number(x.user_id), "chance", "Шанс на повышение: " + v + "%");
+  return { ok: true, text: "🎯 " + esc(memName(x)) + ": шанс на повышение — <b>" + v + "%</b>" };
+}
 // личное сообщение: сначала ботом RDX, если человек его не открывал — ботом SealsAI
 async function notifyAny(uid: number, html: string) {
   const r: any = await send("main", uid, html);
@@ -534,7 +593,8 @@ async function setRank(actor: any, id: number, k: number): Promise<{ ok: boolean
   if (adminA && (k > MARSHAL || old > MARSHAL)) return { ok: false, text: "Админ меняет звания только до Маршала. Модератора и Админа назначает создатель." };
   if (adminA && Number(x.user_id) === Number(actor.id)) return { ok: false, text: "Себе звание менять нельзя." };
   if (old === k) return { ok: true, text: esc(memName(x)) + " уже " + rankName(k) + "." };
-  await patch("rdx_members?id=eq." + id, { rank: k });
+  await patch("rdx_members?id=eq." + id, k > old ? { rank: k, promo_chance: 0 } : { rank: k });
+  if (x.user_id) await hist(Number(x.user_id), k > old ? "rank_up" : "rank_down", (k > old ? "Повышение: " : "Понижение: ") + RANKS[old] + " → " + RANKS[k] + " (" + k + "/" + TOP_RANK + ")");
   // Модератор (13) и Админ (14) — сразу модераторы RDX и SealsAI; ниже — права модератора снимаются
   if (x.user_id && k >= MOD_RANK) { await upsert("rdx_mods", [{ user_id: Number(x.user_id), username: x.username || null, first_name: x.nick || null, added_at: new Date().toISOString() }], "user_id"); MODS = null; }
   if (x.user_id && k < MOD_RANK && old >= MOD_RANK) { await del("rdx_mods?user_id=eq." + Number(x.user_id)); MODS = null; }
@@ -559,6 +619,7 @@ async function setClass(actor: any, id: number, field: "dept" | "weapon", value:
   if (!x || !x.active) return { ok: false, text: "Этого бойца нет в составе." };
   if (x[field] === value) return { ok: true, text: esc(memName(x)) + ": уже " + esc(value) + "." };
   await patch("rdx_members?id=eq." + id, { [field]: value });
+  if (x.user_id) await hist(Number(x.user_id), field, field === "dept" ? "Перевод в раздел: " + value : "Класс орудия: " + value);
   const rk = Number(x.rank) || 0, nd = field === "dept" ? value : x.dept, nw = field === "weapon" ? value : x.weapon;
   const cls = classOf(rk, nd, ADMINS.includes(Number(x.user_id))) + (nw ? ", " + nw : "");
   let sent = false;
@@ -570,6 +631,7 @@ async function setClass(actor: any, id: number, field: "dept" | "weapon", value:
 const RANK_WORDS: [RegExp, number][] = [[/^рядов/, 0], [/^ефрейт/, 1], [/^младш/, 2], [/^сержант/, 3], [/^старшин/, 4], [/^прапор/, 5], [/^лейтенант/, 6], [/^капитан/, 8], [/^майор/, 9], [/^полковн/, 10], [/^генерал/, 11], [/^маршал/, 12], [/^модер/, 13], [/^админ/, 14]];
 // действие над бойцом: ban | kick | fire. actor — кто просит (создатель или модератор)
 async function clanAct(actor: any, act: string, id: number): Promise<{ ok: boolean; text: string }> {
+  if (act === "warn") return await warnMember(actor, id, "");
   const x = (await db("rdx_members?select=*&id=eq." + id))?.[0];
   if (!x || !x.active || !CLAN_ACT[act]) return { ok: false, text: "Этого бойца уже нет в составе." };
   if (!(await isMod(actor))) return { ok: false, text: "Это могут только создатель и модераторы RDX." };
@@ -578,7 +640,8 @@ async function clanAct(actor: any, act: string, id: number): Promise<{ ok: boole
   if (tid === Number(actor.id)) return { ok: false, text: "Себя убрать нельзя — подай заявление на выход через меню бота RDX." };
   if (!isOwner(actor) && tid && (await modIds()).includes(tid)) return { ok: false, text: "Модератора может убрать только создатель." };
   await patch("rdx_members?id=eq." + id, { active: false, left_at: new Date().toISOString() });
-  if (act === "ban") { await ins("rdx_bans", [{ user_id: tid, username: x.username || null, nick: x.nick || null, by_id: Number(actor.id) }], "return=minimal"); BANS = null; }
+  if (act === "ban") { await ins("rdx_bans", [{ user_id: tid, username: x.username || null, nick: x.nick || null, by_id: Number(actor.id) }], "return=minimal"); BANS = null; if (tid) await patch("rdx_sessions?user_id=eq." + tid, { revoked: true }); }
+  if (tid && act !== "ban") await hist(tid, act, act === "kick" ? "Выгнан из клана" : "Уволен по заявлению");
   if (act === "fire" && tid) {   // открытое заявление на выход — закрываем
     const lv: any[] = await db("rdx_apps?select=*&kind=eq.leave&status=eq.new&user_id=eq." + tid) || [];
     for (const a of lv) { await patch("rdx_apps?id=eq." + a.id, { status: "left", decided_by: String(actor.id), decided_at: new Date().toISOString() }); await refreshCards({ ...a, status: "left" }); }
@@ -626,6 +689,7 @@ async function clanApi(actor: any, act: string, q: string, rank?: number | null,
   if (!f.length) return { ok: false, text: "В составе RDX нет никого по «" + esc(q) + "»." };
   if (f.length > 1) return { ok: false, text: "Под «" + esc(q) + "» подходят несколько бойцов — уточни ник:\n" + f.slice(0, 10).map(memLine).join("\n") };
   if (act === "dept" || act === "weapon") return await setClass(actor, Number(f[0].id), act, String(value || ""));
+  if (act === "warn") return await warnMember(actor, Number(f[0].id), String(value || ""));
   if (act === "rank" || act === "promote" || act === "demote") {
     const cur = Number(f[0].rank) || 0;
     const k = rank !== null && rank !== undefined && !Number.isNaN(Number(rank)) ? Number(rank) : act === "promote" ? cur + 1 : act === "demote" ? cur - 1 : NaN;
@@ -754,6 +818,11 @@ async function onMain(up: any) {
     tg("main", "answerCallbackQuery", { callback_query_id: c.id });
     if (!isOwner(u) && await isBanned(u.id, u.username)) return;
     if (data.startsWith("go:")) return startFlow(u, chat, data.slice(3));
+    if (data === "acc:kill") {
+      await patch("rdx_sessions?user_id=eq." + u.id + "&revoked=eq.false", { revoked: true });
+      await hist(u.id, "security", "Все входы на сайт сброшены из Telegram");
+      return send("main", chat, "🚫 Все входы в твой аккаунт на сайте RDX сброшены. Заходи заново — код придёт сюда.");
+    }
     const st = await getState("main", u.id);
     if (data.startsWith("cl:")) {
       if (!(await isMod(u))) return;
@@ -811,7 +880,20 @@ async function onMain(up: any) {
       }
       if (op === "do") {
         await tg("main", "editMessageReplyMarkup", { chat_id: chat, message_id: c.message.message_id, reply_markup: { inline_keyboard: [] } });
+        if (a1 === "warn") { const r = await warnMember(u, Number(a2), ""); return send("main", chat, r.text, kb([[["🎖 Карточка", "cl:m:" + Number(a2)], ["👥 Состав", "cl:list"]]])); }
         return clanDo(u, chat, a1, Number(a2));
+      }
+      if (op === "ch") {   // шанс на повышение (только создатель)
+        if (!isOwner(u)) return;
+        const grid: [string, string][][] = [];
+        for (let v = 0; v <= 100; v += 30) grid.push([0, 10, 20].filter((d0) => v + d0 <= 100).map((d0) => [(v + d0) + "%", "cl:cs:" + Number(a1) + ":" + (v + d0)] as [string, string]));
+        grid.push([["100%", "cl:cs:" + Number(a1) + ":100"]], [["↩️ Назад", "cl:m:" + Number(a1)]]);
+        return send("main", chat, "🎯 Шанс на повышение — от 0 до 100%. Его видно на сайте в аккаунте бойца.", kb(grid));
+      }
+      if (op === "cs") {
+        if (!isOwner(u)) return;
+        const r = await setChance(u, Number(a1), Number(a2));
+        return send("main", chat, r.text, kb([[["🎖 Карточка", "cl:m:" + Number(a1)], ["👥 Состав", "cl:list"]]]));
       }
       return;
     }
@@ -895,6 +977,7 @@ async function onMain(up: any) {
       if (fresh.length) await patch("rdx_apps?user_id=is.null&username=ilike." + enc(u.username), { user_id: u.id });
     }
     const arg = text.split(/\s+/)[1] || "";
+    if (arg === "site") return send("main", chat, "✅ Бот подключён к сайту.\nВернись на сайт RDX и нажми «Получить код» — код для входа придёт сюда.");
     return startFlow(u, chat, ["apply", "appeal", "help", "ai"].includes(arg) ? arg : "menu");
   }
   if (text === "/menu" || text === "/cancel") return startFlow(u, chat, "menu");
@@ -1200,6 +1283,174 @@ async function siteApply(req: Request, b: any) {
   return { ok: true, id: a.id, code, bot: await botName("main") };
 }
 
+// ---------- аккаунты на сайте: вход по коду из Telegram, сессии по отпечатку устройства, 2FA для создателя ----------
+const rnd = (n = 32) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+const ipOfReq = (req: Request) => req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "?";
+async function geoOf(ip: string) {
+  try {
+    const r: any = await fetch("https://ipwho.is/" + encodeURIComponent(ip) + "?fields=success,country,city,flag", { signal: AbortSignal.timeout(3000) }).then((x) => x.json());
+    return r?.success ? ((r.flag?.emoji || "") + " " + r.country + (r.city ? ", " + r.city : "")).trim() : "неизвестно";
+  } catch { return "неизвестно"; }
+}
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+const b32enc = (b: Uint8Array) => { let bits = 0, v = 0, o = ""; for (const x of b) { v = (v << 8) | x; bits += 8; while (bits >= 5) { o += B32[(v >>> (bits - 5)) & 31]; bits -= 5; } } if (bits) o += B32[(v << (5 - bits)) & 31]; return o; };
+const b32dec = (s0: string) => { const s1 = s0.replace(/=+$/, "").toUpperCase(); let bits = 0, v = 0; const o: number[] = []; for (const ch of s1) { const i = B32.indexOf(ch); if (i < 0) continue; v = (v << 5) | i; bits += 5; if (bits >= 8) { o.push((v >>> (bits - 8)) & 255); bits -= 8; } } return new Uint8Array(o); };
+async function totpAt(secret: string, step: number) {
+  const key = await crypto.subtle.importKey("raw", b32dec(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+  const msg = new Uint8Array(8); let c = step; for (let i = 7; i >= 0; i--) { msg[i] = c & 255; c = Math.floor(c / 256); }
+  const h = new Uint8Array(await crypto.subtle.sign("HMAC", key, msg)); const o = h[19] & 15;
+  return String((((h[o] & 127) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) % 1e6).padStart(6, "0");
+}
+async function totpOk(secret: string, code: string) {
+  const c = String(code || "").replace(/\D/g, ""); if (c.length !== 6) return false;
+  const st = Math.floor(Date.now() / 30000);
+  for (const d of [-1, 0, 1]) if (await totpAt(secret, st + d) === c) return true;
+  return false;
+}
+const accUser = async (nick: string) => (await db("rdx_users?select=user_id,username,first_name,started&username=ilike." + enc(String(nick || "").trim().replace(/^@/, "").replace(/^https?:\/\/t\.me\//, ""))))?.[0];
+async function newSession(uid: number, req: Request, b: any, stage: string) {
+  const token = rnd(32), ip = ipOfReq(req), remember = !!b.remember;
+  await ins("rdx_sessions", [{ user_id: uid, token_hash: await sha("sess:" + token), fp_hash: await sha("fp:" + String(b.fp || "")), ip, country: stage === "ok" ? await geoOf(ip) : null, dev: String(b.dev || "").slice(0, 120), stage, remember,
+    expires_at: new Date(Date.now() + (stage !== "ok" ? 20 * 60e3 : remember ? 30 * 86400e3 : 12 * 3600e3)).toISOString() }], "return=minimal");
+  return token;
+}
+async function sessionOf(b: any, stage = "ok") {
+  const t = String(b.token || b.pending || ""); if (!t) return null;
+  const s0 = (await db("rdx_sessions?select=*&token_hash=eq." + (await sha("sess:" + t)) + "&revoked=eq.false"))?.[0];
+  if (!s0 || s0.stage !== stage && !(stage === "pending" && s0.stage !== "ok")) return null;
+  if (Date.parse(s0.expires_at) < Date.now()) return null;
+  if (s0.fp_hash !== await sha("fp:" + String(b.fp || ""))) return null;   // другое устройство — сессия не подходит
+  return s0;
+}
+async function loginDone(s0: any, req: Request, b: any) {   // сессия активна: уведомление о входе в Telegram
+  const ip = ipOfReq(req), country = await geoOf(ip), remember = !!b.remember || !!s0.remember;
+  await patch("rdx_sessions?id=eq." + s0.id, { stage: "ok", country, ip, remember, expires_at: new Date(Date.now() + (remember ? 30 * 86400e3 : 12 * 3600e3)).toISOString() });
+  await hist(Number(s0.user_id), "login", "Вход на сайт: " + country + " · IP " + ip + (s0.dev ? " · " + s0.dev : ""));
+  await send("main", Number(s0.user_id), "🔐 <b>Новый вход в аккаунт RDX на сайте</b>\nСтрана: " + esc(country) + "\nIP: <code>" + esc(ip) + "</code>" + (s0.dev ? "\nУстройство: " + esc(s0.dev) : "") + "\n\nЕсли это не ты — нажми кнопку: все входы будут сброшены.", kb([[["🚫 Выкинуть всех из аккаунта", "acc:kill"]]]));
+}
+const accJ = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+async function accApi(req: Request, b: any): Promise<Response> {
+  const t = String(b.type);
+  if (t === "acc_code") {   // шаг 1: ник → код в Telegram
+    const mode = b.mode === "signup" ? "signup" : "login";
+    const u0 = await accUser(b.nick);
+    if (!u0?.started) return accJ({ ok: false, error: "need_bot", bot: await botName("main") });
+    const uid = Number(u0.user_id);
+    if (!ADMINS.includes(uid) && await isBanned(uid, u0.username)) return accJ({ ok: false, error: "banned" });
+    const acc = (await db("rdx_accounts?select=user_id&user_id=eq." + uid))?.[0];
+    if (mode === "signup" && acc) return accJ({ ok: false, error: "exists" });
+    if (mode === "login" && !acc) return accJ({ ok: false, error: "no_account" });
+    const ipH = await ipHashOf(req), hr = enc(new Date(Date.now() - 3600e3).toISOString());
+    const [byU, byIp] = await Promise.all([db("rdx_login_codes?select=id&user_id=eq." + uid + "&created_at=gt." + hr), db("rdx_login_codes?select=id&ip_hash=eq." + ipH + "&created_at=gt." + hr)]);
+    if ((byU || []).length >= 5 || (byIp || []).length >= 12) return accJ({ ok: false, error: "rate" });
+    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
+    await ins("rdx_login_codes", [{ user_id: uid, ip_hash: ipH, code_hash: await sha("code:" + uid + ":" + code), mode, expires_at: new Date(Date.now() + 10 * 60e3).toISOString() }], "return=minimal");
+    const r: any = await send("main", uid, "🔐 Код для " + (mode === "signup" ? "регистрации" : "входа") + " на сайте RDX: <code>" + code + "</code>\nДействует 10 минут. Никому его не сообщай — даже командирам.\nЕсли это не ты — просто проигнорируй.");
+    if (!r?.ok) return accJ({ ok: false, error: "need_bot", bot: await botName("main") });
+    return accJ({ ok: true });
+  }
+  if (t === "acc_verify") {   // шаг 2: код из Telegram
+    const u0 = await accUser(b.nick); if (!u0) return accJ({ ok: false, error: "bad" });
+    const uid = Number(u0.user_id);
+    const c0 = (await db("rdx_login_codes?select=*&user_id=eq." + uid + "&used=eq.false&order=created_at.desc&limit=1"))?.[0];
+    if (!c0 || Date.parse(c0.expires_at) < Date.now() || c0.tries >= 5) return accJ({ ok: false, error: "expired" });
+    if (c0.code_hash !== await sha("code:" + uid + ":" + String(b.code || "").replace(/\D/g, ""))) { await patch("rdx_login_codes?id=eq." + c0.id, { tries: c0.tries + 1 }); return accJ({ ok: false, error: "code", left: 4 - c0.tries }); }
+    await patch("rdx_login_codes?id=eq." + c0.id, { used: true });
+    if (c0.mode === "signup") await upsert("rdx_accounts", [{ user_id: uid, username: u0.username }], "user_id");
+    if (ADMINS.includes(uid)) {   // создатель: почта + Google Authenticator
+      const acc = (await db("rdx_accounts?select=*&user_id=eq." + uid))?.[0] || {};
+      const stage = !acc.email_verified ? "email" : !acc.totp_enabled ? "totp_setup" : "totp";
+      const pending = await newSession(uid, req, b, stage);
+      return accJ({ ok: true, step: stage, pending, ...(stage === "totp_setup" ? await totpSetup(uid) : {}) });
+    }
+    const token = await newSession(uid, req, b, "pending");
+    const s0 = await sessionOf({ token, fp: b.fp }, "pending");
+    await loginDone(s0, req, b);
+    return accJ({ ok: true, step: "done", token });
+  }
+  if (t === "acc_email") {   // создатель: почта → письмо со ссылкой
+    const s0 = await sessionOf(b, "pending"); if (!s0 || s0.stage !== "email") return accJ({ ok: false, error: "session" });
+    const email = String(b.email || "").trim().toLowerCase();
+    if (!/^[^@\s]{1,64}@[^@\s]{1,190}\.[a-z]{2,}$/.test(email)) return accJ({ ok: false, error: "email" });
+    await patch("rdx_accounts?user_id=eq." + s0.user_id, { pending_email: email });
+    const r = await fetch(SB + "/auth/v1/otp?redirect_to=" + encodeURIComponent(SITE + "#rdx-email"), { method: "POST", headers: { apikey: SK, "Content-Type": "application/json" }, body: JSON.stringify({ email, create_user: true }) });
+    if (!r.ok) { console.error("email otp", r.status, (await r.text()).slice(0, 200)); return accJ({ ok: false, error: r.status === 429 ? "rate" : "mail" }); }
+    return accJ({ ok: true });
+  }
+  if (t === "acc_email_link") {   // создатель открыл ссылку из письма
+    const s0 = await sessionOf(b, "pending"); if (!s0 || s0.stage !== "email") return accJ({ ok: false, error: "session" });
+    const me: any = await fetch(SB + "/auth/v1/user", { headers: { apikey: SK, Authorization: "Bearer " + String(b.access_token || "") } }).then((x) => x.ok ? x.json() : null).catch(() => null);
+    const acc = (await db("rdx_accounts?select=*&user_id=eq." + s0.user_id))?.[0];
+    if (!me?.email || !acc?.pending_email || me.email.toLowerCase() !== acc.pending_email) return accJ({ ok: false, error: "email_mismatch" });
+    await patch("rdx_accounts?user_id=eq." + s0.user_id, { email: acc.pending_email, email_verified: true });
+    await hist(Number(s0.user_id), "security", "Почта подтверждена: " + acc.pending_email);
+    await patch("rdx_sessions?id=eq." + s0.id, { stage: acc.totp_enabled ? "totp" : "totp_setup" });
+    return accJ({ ok: true, step: acc.totp_enabled ? "totp" : "totp_setup", ...(acc.totp_enabled ? {} : await totpSetup(Number(s0.user_id))) });
+  }
+  if (t === "acc_totp") {   // код из Google Authenticator
+    const s0 = await sessionOf(b, "pending"); if (!s0 || !["totp", "totp_setup"].includes(s0.stage)) return accJ({ ok: false, error: "session" });
+    const acc = (await db("rdx_accounts?select=*&user_id=eq." + s0.user_id))?.[0];
+    if (!acc?.totp_secret || !(await totpOk(acc.totp_secret, b.code))) return accJ({ ok: false, error: "code" });
+    if (s0.stage === "totp_setup") { await patch("rdx_accounts?user_id=eq." + s0.user_id, { totp_enabled: true }); await hist(Number(s0.user_id), "security", "Google Authenticator подключён"); }
+    await loginDone(s0, req, b);
+    return accJ({ ok: true, step: "done", token: String(b.pending) });
+  }
+  // дальше — только с активной сессией
+  const s0 = await sessionOf(b);
+  if (!s0) return accJ({ ok: false, error: "session" });
+  const uid = Number(s0.user_id), owner = ADMINS.includes(uid);
+  if (!owner && await isBanned(uid, null)) return accJ({ ok: false, error: "banned" });
+  patch("rdx_sessions?id=eq." + s0.id, { last_seen: new Date().toISOString(), ip: ipOfReq(req) }).catch(() => null);
+  if (t === "acc_me") {
+    const [u0, m, hs, ss, wn] = await Promise.all([
+      db("rdx_users?select=username,first_name&user_id=eq." + uid).then((r: any) => r?.[0] || {}),
+      db("rdx_members?select=*&active=eq.true&user_id=eq." + uid).then((r: any) => r?.[0] || null),
+      db("rdx_history?select=kind,text,created_at&user_id=eq." + uid + "&order=created_at.desc&limit=40"),
+      db("rdx_sessions?select=id,ip,country,dev,created_at,last_seen,remember&user_id=eq." + uid + "&revoked=eq.false&stage=eq.ok&expires_at=gt." + enc(new Date().toISOString()) + "&order=last_seen.desc"),
+      warnCount(uid),
+    ]);
+    const rk = m ? Number(m.rank) || 0 : null;
+    return accJ({ ok: true, me: {
+      username: u0.username, name: u0.first_name, owner, staff: await isMod({ id: uid }),
+      member: m ? { nick: m.nick, rank: rk, rankName: owner ? "Создатель" : RANKS[rk!], next: owner || rk! >= TOP_RANK ? null : RANKS[rk! + 1], top: TOP_RANK, chance: owner ? 100 : Number(m.promo_chance) || 0,
+        dept: deptText(rk!, m.dept, owner), cls: classOf(rk!, m.dept, owner) + (m.weapon ? ", " + m.weapon : ""), type: m.weapon ? typeOf(rk!, m.weapon, owner) : "", weapon: weaponText(rk!, m.weapon, owner), joined: m.joined_at } : null,
+      warns: wn, history: hs || [], sessions: (ss || []).map((x: any) => ({ ...x, current: x.id === s0.id })),
+    } });
+  }
+  if (t === "acc_logout") { await patch("rdx_sessions?id=eq." + s0.id, { revoked: true }); return accJ({ ok: true }); }
+  if (t === "acc_kill") {   // выкинуть один вход или всех, кроме себя
+    if (b.id === "all") await patch("rdx_sessions?user_id=eq." + uid + "&id=neq." + s0.id + "&revoked=eq.false", { revoked: true });
+    else await patch("rdx_sessions?user_id=eq." + uid + "&id=eq." + Number(b.id), { revoked: true });
+    await hist(uid, "security", b.id === "all" ? "Все другие входы сброшены с сайта" : "Вход сброшен с сайта");
+    return accJ({ ok: true });
+  }
+  if (t === "acc_admin" || t === "acc_admin_do") {   // админ-панель — только аккаунт создателя
+    if (!owner) return accJ({ ok: false, error: "forbidden" }, 403);
+    if (t === "acc_admin_do") {
+      const actor = { id: uid, username: OWNER_NICK };
+      const id = Number(b.member), act = String(b.act);
+      const r = act === "rank" ? await setRank(actor, id, Number(b.value)) : act === "chance" ? await setChance(actor, id, Number(b.value)) : act === "warn" ? await warnMember(actor, id, String(b.value || ""))
+        : act === "dept" || act === "weapon" ? await setClass(actor, id, act, String(b.value || "")) : CLAN_ACT[act] ? await clanAct(actor, act, id) : { ok: false, text: "?" };
+      return accJ({ ok: r.ok, text: r.text.replace(/<[^>]+>/g, "") });
+    }
+    const all = await clanAll();
+    const warns: any[] = await db("rdx_warns?select=user_id&expires_at=gt." + enc(new Date().toISOString())) || [];
+    const logins: any[] = await db("rdx_sessions?select=user_id,ip,country,dev,created_at&stage=eq.ok&order=created_at.desc&limit=25") || [];
+    const names: any[] = await db("rdx_users?select=user_id,username") || [];
+    const nm = (id: number) => names.find((x) => Number(x.user_id) === Number(id))?.username || String(id);
+    return accJ({ ok: true, members: all.map((x) => ({ id: x.id, nick: x.nick, username: x.username, rank: Number(x.rank) || 0, chance: Number(x.promo_chance) || 0, dept: x.dept, weapon: x.weapon, owner: ADMINS.includes(Number(x.user_id)),
+      warns: warns.filter((w) => Number(w.user_id) === Number(x.user_id)).length })), ranks: RANKS, depts: DEPTS, weapons: WEAPONS,
+      logins: logins.map((x) => ({ ...x, who: nm(x.user_id) })) });
+  }
+  return accJ({ ok: false, error: "type" }, 400);
+}
+async function totpSetup(uid: number) {
+  const acc = (await db("rdx_accounts?select=totp_secret,username&user_id=eq." + uid))?.[0] || {};
+  let secret = acc.totp_secret;
+  if (!secret) { secret = b32enc(crypto.getRandomValues(new Uint8Array(20))); await patch("rdx_accounts?user_id=eq." + uid, { totp_secret: secret }); }
+  return { secret, uri: "otpauth://totp/" + encodeURIComponent("RDX Squad:" + (acc.username || uid)) + "?secret=" + secret + "&issuer=RDX%20Squad&digits=6&period=30" };
+}
+
 // ---------- настройка ботов ----------
 async function setup(url: string) {
   const out: Record<string, unknown> = {};
@@ -1247,6 +1498,7 @@ Deno.serve(async (req) => {
   }
   // сайт
   const b = await req.json().catch(() => null);
+  if (typeof b?.type === "string" && b.type.startsWith("acc_")) return await accApi(req, b).catch((e) => { console.error("acc", e); return accJ({ ok: false, error: "err" }, 500); });
   if (b?.type === "clan") {   // SealsAI просит действие с составом клана (внутренний ключ)
     if (!HOOK || req.headers.get("x-rdx-int") !== HOOK) return new Response("no", { status: 403 });
     const actor = { id: Number(b.actor?.id), username: b.actor?.username || null, first_name: b.actor?.first_name || null };
