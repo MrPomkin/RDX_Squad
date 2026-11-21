@@ -1269,12 +1269,13 @@ function account(){
   async function admin(){
     const box = $("#accAdm"); const r = await api({ type: "acc_admin", token: st.token });
     if (!r.ok) { box.textContent = "Нет доступа"; return; }
-    box.innerHTML = `<div class="acc-scroll"><table class="acc-adm"><tr><th>БОЕЦ</th><th>ЗВАНИЕ</th><th>ШАНС</th><th>РАЗДЕЛ</th><th>ОРУДИЕ</th><th>ВАРНЫ</th><th></th></tr>
+    box.innerHTML = `<div class="acc-scroll"><table class="acc-adm"><tr><th>БОЕЦ</th><th>ЗВАНИЕ</th><th>ШАНС</th><th>РАЗДЕЛ</th><th>ОРУДИЕ</th><th>ОСОБОЕ</th><th>ВАРНЫ</th><th></th></tr>
       ${r.members.map((x) => `<tr data-id="${x.id}"><td>${H(x.nick || "")}${x.username ? "<br><small style='color:var(--dim)'>@" + H(x.username) + "</small>" : ""}</td>
         <td>${x.owner ? "👑" : `<select data-act="rank">${r.ranks.map((n, i) => `<option value="${i}"${i === x.rank ? " selected" : ""}>${i} · ${H(n)}</option>`).join("")}</select>`}</td>
         <td>${x.owner ? "—" : `<select data-act="chance">${Array.from({ length: 11 }, (_, i) => i * 10).map((v) => `<option value="${v}"${v === x.chance ? " selected" : ""}>${v}%</option>`).join("")}</select>`}</td>
         <td><select data-act="dept"><option value="">—</option>${r.depts.map((d) => `<option${d === x.dept ? " selected" : ""}>${H(d)}</option>`).join("")}</select></td>
         <td><input data-act="weapon" value="${H(x.weapon || "")}" placeholder="оружие" list="accW"></td>
+        <td>${x.owner ? "👑 всё" : [["all_weapons", "w", "Все классы орудия"], ["full_class", "c", "Полный класс"], ["full_type", "t", "Полный тип класса"]].map(([col, k, nm]) => `<label style="display:block;white-space:nowrap;font-size:.85em"><input type="checkbox" data-fx="${col}"${x[k] ? " checked" : ""}> ${nm}</label>`).join("")}</td>
         <td>${x.warns}/5</td><td>${x.owner ? "" : '<button type="button" class="acc-btn" data-do="warn">Варн</button>'}</td></tr>`).join("")}</table>
       <datalist id="accW">${r.weapons.map((w) => `<option value="${H(w)}">`).join("")}</datalist></div>
       <p id="accAdmMsg" style="color:var(--or);min-height:1.4em"></p>
@@ -1282,6 +1283,7 @@ function account(){
     const doAct = async (id, act, value) => { const m2 = $("#accAdmMsg"); m2.textContent = "…"; const q = await api({ type: "acc_admin_do", token: st.token, member: id, act, value }); m2.textContent = q.text || (q.ok ? "Готово" : "Ошибка"); if (act === "warn" || act === "rank") setTimeout(admin, 900); };
     box.querySelectorAll("select[data-act]").forEach((sel) => sel.onchange = () => sel.value !== "" && doAct(Number(sel.closest("tr").dataset.id), sel.dataset.act, sel.value));
     box.querySelectorAll("input[data-act]").forEach((inp) => inp.onchange = () => inp.value.trim() && doAct(Number(inp.closest("tr").dataset.id), "weapon", inp.value.trim()));
+    box.querySelectorAll("input[data-fx]").forEach((cb) => cb.onchange = () => { const nm = cb.parentElement.textContent.trim(); if (!confirm((cb.checked ? "Назначить «" : "Снять «") + nm + "»?")) { cb.checked = !cb.checked; return; } doAct(Number(cb.closest("tr").dataset.id), cb.dataset.fx, cb.checked ? "1" : "0"); });
     box.querySelectorAll("[data-do=warn]").forEach((b) => b.onclick = () => { if (confirm("Выдать варн?")) doAct(Number(b.closest("tr").dataset.id), "warn", ""); });
   }
   // создатель открыл ссылку из письма — продолжаем вход
