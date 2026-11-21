@@ -1275,7 +1275,7 @@ function account(){
         <td>${x.owner ? "—" : `<select data-act="chance">${Array.from({ length: 11 }, (_, i) => i * 10).map((v) => `<option value="${v}"${v === x.chance ? " selected" : ""}>${v}%</option>`).join("")}</select>`}</td>
         <td><select data-act="dept"><option value="">—</option>${r.depts.map((d) => `<option${d === x.dept ? " selected" : ""}>${H(d)}</option>`).join("")}</select></td>
         <td><input data-act="weapon" value="${H(x.weapon || "")}" placeholder="оружие" list="accW"></td>
-        <td>${x.owner ? "👑 всё" : [["all_weapons", "w", "Все классы орудия"], ["full_class", "c", "Полный класс"], ["full_type", "t", "Полный тип класса"]].map(([col, k, nm]) => `<label style="display:block;white-space:nowrap;font-size:.85em"><input type="checkbox" data-fx="${col}"${x[k] ? " checked" : ""}> ${nm}</label>`).join("")}</td>
+        <td>${x.owner ? "👑 всё" : [["all_depts", "d", "Все разделы"], ["all_weapons", "w", "Все классы орудия"], ["full_class", "c", "Полный класс"], ["full_type", "t", "Полный тип класса"]].map(([col, k, nm]) => `<label style="display:block;white-space:nowrap;font-size:.85em"><input type="checkbox" data-fx="${col}"${x[k] ? " checked" : ""}> ${nm}</label>`).join("")}</td>
         <td>${x.warns}/5</td><td>${x.owner ? "" : '<button type="button" class="acc-btn" data-do="warn">Варн</button>'}</td></tr>`).join("")}</table>
       <datalist id="accW">${r.weapons.map((w) => `<option value="${H(w)}">`).join("")}</datalist></div>
       <p id="accAdmMsg" style="color:var(--or);min-height:1.4em"></p>
