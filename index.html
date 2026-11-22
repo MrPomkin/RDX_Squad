@@ -1341,7 +1341,7 @@ function account(){
       body = `<div class="acc-scroll"><table class="acc-adm"><tr><th>БОЕЦ</th><th>ЗВАНИЕ</th><th>ВАРНЫ</th><th></th></tr>${r.members.map((x) => {
         const canRank = false;   // в панели модератора звания не меняются ни у кого
         const rk = canRank ? `<select data-rank>${r.ranks.map((n, i) => i <= P.maxRank || i === x.rank ? `<option value="${i}"${i === x.rank ? " selected" : ""}${i > P.maxRank ? " disabled" : ""}>${i} · ${H(n)}</option>` : "").join("")}</select>` : (x.owner ? "👑 Создатель" : H(r.ranks[x.rank] || ""));
-        const acts = '<button type="button" class="acc-btn" data-ma="card">🎖 Карточка</button> ' + (x.owner || (x.mod && !P.owner) ? "" : MA.map(([k, n, c]) => `<button type="button" class="acc-btn ${c}" data-ma="${k}">${n}</button>`).join(" "));
+        const acts = '<button type="button" class="acc-btn" data-ma="card">🪪 Карточка</button> ' + (x.owner || (x.mod && !P.owner) ? "" : MA.map(([k, n, c]) => `<button type="button" class="acc-btn ${c}" data-ma="${k}">${n}</button>`).join(" "));
         return `<tr data-mid="${Number(x.id)}"><td>${H(x.nick || "")}${x.username ? "<br><small style='color:var(--dim)'>@" + H(x.username) + "</small>" : ""}${x.mod && !x.owner ? " 🛡" : ""}</td><td>${rk}</td><td>${Number(x.warns)}/5</td><td style="white-space:nowrap">${acts}</td></tr>`;
       }).join("")}</table></div><p style="color:var(--dim);font-size:12px">Звания меняет только создатель.</p>`;
     } else {
